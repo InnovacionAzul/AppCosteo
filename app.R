@@ -31,10 +31,16 @@ boxHeaderUI <- function(){
   )
 }
 
-CostUnitUI <- function(titleId, costId, costLabel, unitId, unitLabel){
+CostUnitUI <- function(titleId, pairId, costLabel, unitLabel){
   
-  costDefault <- max(c(cost_data$valor_unitario_usd[cost_data$id == costId], 0), na.rm = T)
+  # Define inputId labels for cost and units
+  costId <- paste0("c_", pairId)
+  unitId <- paste0("u_", pairId)
   
+  # Define cost and unit defaults for numeric inputs
+  costDefault <- cost_data$valor_unitario_usd[cost_data$id == pairId]
+  unitDefault <- cost_data$estimacion_de_unidades_requeridas[cost_data$id == pairId]
+
   tagList(
     titleId,
     fluidRow(
