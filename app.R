@@ -12,6 +12,7 @@ library(shinydashboard)
 library(magrittr)
 library(tidyverse)
 library(cowplot)
+library(plotly)
 
 cost_data <- read.csv("www/cost_data.csv",
                       stringsAsFactors = F,
@@ -382,7 +383,7 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                   box(title = "Presupuesto",
                                       width = 6,
                                       status = "primary",
-                                      plotOutput(outputId = "plot1"))))
+                                      plotlyOutput(outputId = "plot1"))))
                       ))
 )
 
@@ -481,7 +482,7 @@ server <- function(input, output){
     total <- cost_data %>% 
       select(fase, concepto, subactividad, periodicidad, id) %>% 
       mutate(anos = case_when(periodicidad == "Anual" ~ 1 * input$anos,
-                              periodicidad == "Bianal" ~ 0.5 * input$anos,
+                              periodicidad == "Bianal" ~ floor(0.5 * input$anos),
                               periodicidad == "Mensual" ~ 12 * input$anos,
                               TRUE ~ 1)) %>% 
       left_join(inputs(), by = "id") %>% 
@@ -496,20 +497,25 @@ server <- function(input, output){
             color = "light-blue")
   })
   
-  output$plot1 <- renderPlot({
-    cost_data %>% 
+  output$plot1 <- renderPlotly({
+    plot1 <- cost_data %>% 
       select(fase, concepto, subactividad, periodicidad, id) %>% 
       mutate(anos = case_when(periodicidad == "Anual" ~ 1 * input$anos,
-                              periodicidad == "Bianal" ~ 0.5 * input$anos,
-                              periodicidad == "Mensual" ~ 12 * input$anos)) %>% 
+                              periodicidad == "Bianal" ~ floor(0.5 * input$anos),
+                              periodicidad == "Mensual" ~ 12 * input$anos,
+                              TRUE ~ 1)) %>% 
       left_join(inputs(), by = "id") %>% 
       mutate(total = costs * units * anos) %>% 
       group_by(fase, concepto, subactividad) %>% 
       summarize(total = sum(total, na.rm = T)) %>% 
       ungroup() %>% 
-      ggplot(aes(x = fase, y = total, fill = concepto)) +
-      geom_col() +
-      theme_cowplot()
+      ggplot(aes(x = fase, y = total, fill = concepto, label = subactividad)) +
+      geom_col(color = "black") +
+      theme_cowplot() +
+      scale_fill_brewer(palette = "Set1") +
+      theme(text = element_text(size = 10))
+    
+    ggplotly(plot1)
   })
   
 }
