@@ -58,32 +58,30 @@ Operacion,Recurrente,Anual,Salarios y Beneficios,Presentacion de resultados,Enca
 Operacion,Recurrente,Anual,Salarios y Beneficios,Presentacion de resultados,Asistente de proyecto,Honorarios de personal involucrado en taller anual para la presentacion de resultados (biologico y de vigilancia comunitaria),$/dia,43,,2,
 Renovacion,Recurrente,Establecida por la reserva,Salarios y Beneficios,Actividades de renovacion,Encargado de proyecto,Honorarios de personal involucrado en la renovacion de la reserva marina,$/dia,75,,10,
 Renovacion,Recurrente,Establecida por la reserva,Salarios y Beneficios,Actividades de renovacion,Asistente de proyecto,Honorarios de personal involucrado en la renovacion de la reserva marina,$/dia,43,,10,
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alimentos,Costos de alimentacion por pescador durante el periodo de monitoreo,$/pescador/dia,,,0,c_vyc_mo_alimento
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Hospedaje,Costos de hospedaje por pescador para el periodo de monitoreo,$/pescador/dia,,,0,c_vyc_re_hospedaje
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Viaje,Costos de viaje por pescador para el periodo de monitoreo,$/dia,,,0,c_vyc_mo_viaje
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alquiler de embarcacion,Costos de alquiler de embarcacion por dia para el monitoreo,$/hora,38,,40,c_vyc_mo_embarcacion
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Gasolina,Costo de gasolina por litro,$/litro,1,PEMEX,600,c_vyc_mo_gasolina
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Aceite,Aceite para motores de 2 tiempos,$/litro,5,,1,c_vyc_mo_aceite
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Encuestas,Costos de campo para encuestas / cuestionarios para conocer las opiniones de los pescadores,$/dia,500,,1,c_vyc_re_encuestas
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Taller preliminar (renovacion),Costos de campo de taller para la renovacion de la reserva marina,$/taller,432,,3,c_vyc_re_taller
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Hospedaje,Talleres en campo para la renovacion de una reserva marina,$/dia,43,,3,c_vyc_mo_hospedaje
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alimentos,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,c_vyc_re_alimentos
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alquiler de automovil,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,c_vyc_re_auto
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Gasolina,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/litro,1,PEMEX,80,c_vyc_re_gasolina
-Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Curso de buceo para pescadores,Costo por pescador para su certificacion PADI Open Water o equivalente,$/pescador,292,Si se contrata un instructor PADI,8,c_vyc_curso
-Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Certificacion de buceo,Costo por buzo para la certificacion PADI y materiales,$/pescador,55,,8,c_vyc_certificacion
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Taller preliminar (objetivos),Costos de campo de taller para explicar las reservas y desarrollar objetivos,$/taller,1000,,1,c_vyc_do_taller
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Hospedaje,Talleres en campo para definir los objetivos de la reserva,$/dia,43,,4,c_vyc_do_hospedaje
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alimentos,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,4,c_vyc_do_alimentos
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Gasolina,Talleres en campo para definir los objetivos de la reserva,$/litro,1,PEMEX,80,c_vyc_do_gasolina_2
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alquiler de automovil,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,2,c_vyc_do_auto_1
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Gasolina,Talleres en campo para definir los objetivos de la reserva,$/litro,1,PEMEX,80,c_vyc_do_gasolina_1
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alquiler de automovil,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,10,c_vyc_do_auto_2
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Taller preliminar (diseno),Costos de campo para taller que permita decidir la ubicacion de la reserva marina,$/taller,432,,2,c_vyc_dr_taller
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Hospedaje,Talleres en campo para el diseno de una reserva marina,$/dia,43,,6,c_vyc_pr_hospedaje
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Alimentos,Talleres en campo para el diseno de una reserva marina,$/dia,33,,6,c_vyc_dr_alimentos
-Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Hospedaje,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,43,,4,c_vyc_dr_hospedaje
-Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alimentos,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,c_vyc_pr_alimentos
-Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alquiler de automovil,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,c_vyc_pr_auto
-Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Gasolina,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/litro,1,PEMEX,80,c_vyc_pr_gasolina
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alimentos,Costos de alimentacion por pescador durante el periodo de monitoreo,$/pescador/dia,,,0,vyc_mo_alimento
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Hospedaje,Costos de hospedaje por pescador para el periodo de monitoreo,$/pescador/dia,,,0,vyc_re_hospedaje
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Viaje,Costos de viaje por pescador para el periodo de monitoreo,$/dia,,,0,vyc_mo_viaje
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alquiler de embarcacion,Costos de alquiler de embarcacion por dia para el monitoreo,$/hora,38,,40,vyc_mo_embarcacion
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Gasolina,Costo de gasolina por litro,$/litro,1,PEMEX,600,vyc_mo_gasolina
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Aceite,Aceite para motores de 2 tiempos,$/litro,5,,1,vyc_mo_aceite
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Encuestas,Costos de campo para encuestas / cuestionarios para conocer las opiniones de los pescadores,$/dia,500,,1,vyc_re_encuestas
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Taller preliminar (renovacion),Costos de campo de taller para la renovacion de la reserva marina,$/taller,432,,3,vyc_re_taller
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Hospedaje,Talleres en campo para la renovacion de una reserva marina,$/dia,43,,3,vyc_mo_hospedaje
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alimentos,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,vyc_re_alimentos
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alquiler de automovil,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,vyc_re_auto
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Gasolina,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/litro,1,PEMEX,80,vyc_re_gasolina
+Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Curso de buceo para pescadores,Costo por pescador para su certificacion PADI Open Water o equivalente,$/pescador,292,Si se contrata un instructor PADI,8,vyc_curso
+Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Certificacion de buceo,Costo por buzo para la certificacion PADI y materiales,$/pescador,55,,8,vyc_certificacion
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Taller preliminar (objetivos),Costos de campo de taller para explicar las reservas y desarrollar objetivos,$/taller,1000,,1,vyc_do_taller
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Hospedaje,Talleres en campo para definir los objetivos de la reserva,$/dia,43,,4,vyc_do_hospedaje
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alimentos,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,4,vyc_do_alimentos
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Gasolina,Talleres en campo para definir los objetivos de la reserva,$/litro,1,PEMEX,80,vyc_do_gasolina
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alquiler de automovil,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,2,vyc_do_auto
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Taller preliminar (diseno),Costos de campo para taller que permita decidir la ubicacion de la reserva marina,$/taller,432,,2,vyc_dr_taller
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Hospedaje,Talleres en campo para el diseno de una reserva marina,$/dia,43,,6,vyc_pr_hospedaje
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Alimentos,Talleres en campo para el diseno de una reserva marina,$/dia,33,,6,vyc_dr_alimentos
+Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Hospedaje,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,43,,4,vyc_dr_hospedaje
+Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alimentos,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,vyc_pr_alimentos
+Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alquiler de automovil,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,vyc_pr_auto
+Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Gasolina,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/litro,1,PEMEX,80,vyc_pr_gasolina
 Operacion,Recurrente,Mensual,Viajes y Salidas a campo,Vigilancia,Gasolina,Costos de combustible para embarcacion de vigilancia (costos mensuales basados en una estimacion de distancia recorrida - km),$/litro,1,PEMEX,600,
