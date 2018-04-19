@@ -5,8 +5,8 @@ account: turfeffect
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 320366
-bundleId: 1314772
+bundleId: 1326818
 url: https://turfeffect.shinyapps.io/AppCosteo/
-when: 1523500901.85947
+when: 1524107719.33302
 asMultiple: FALSE
 asStatic: FALSE

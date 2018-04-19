@@ -129,7 +129,11 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                   ),
                                   fluidRow(
                                     infoBoxOutput(
-                                      outputId = "total",
+                                      outputId = "totalUSD",
+                                      width = 12)),
+                                  fluidRow(
+                                    infoBoxOutput(
+                                      outputId = "totalMXP",
                                       width = 12))
                                   
                       )
@@ -146,7 +150,12 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                                  label = "Duración del proyecto (años)",
                                                  value = 5,
                                                  min = 1,
-                                                 max = 50)
+                                                 max = 50),
+                                    numericInput(inputId = "usd2mxp",
+                                                 label = "Precio del dolar (1 USD = ? MXP)",
+                                                 value = 17,
+                                                 min = 0,
+                                                 max = NA) #Let's home the economy doesn't crash and we don't really need an undefined maximum on the dollar price
                                     )),
                         tabItem(tabName = "viaticos_campo",
                                 fluidRow(
@@ -219,27 +228,27 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                       CostUnitUI(titleId = "Alimento",
                                                  pairId = "vyc_mo_alimento",
                                                  costLabel = "$ / pescador/ día",
-                                                 unitLabel = ""),
+                                                 unitLabel = "Días"),
                                       CostUnitUI(titleId = "Alquiler embarcación",
                                                  pairId = "vyc_mo_embarcacion",
                                                  costLabel = "$ / hora",
-                                                 unitLabel = ""),
+                                                 unitLabel = "Horas"),
                                       CostUnitUI(titleId = "Aceite embarcación",
                                                  pairId = "vyc_mo_aceite",
                                                  costLabel = "$ / litro",
-                                                 unitLabel = ""),
+                                                 unitLabel = "Litros"),
                                       CostUnitUI(titleId = "Gasolina embarcación",
                                                  pairId = "vyc_mo_gasolina",
                                                  costLabel = "$ / litro",
-                                                 unitLabel = ""),
+                                                 unitLabel = "Litros"),
                                       CostUnitUI(titleId = "Hospedaje",
                                                  pairId = "vyc_mo_hospedaje",
                                                  costLabel = "$ / pescador / día",
-                                                 unitLabel = ""),
+                                                 unitLabel = "Días"),
                                       CostUnitUI(titleId = "Viaje",
                                                  pairId = "vyc_mo_viaje",
                                                  costLabel = "$ / pescador",
-                                                 unitLabel = "")
+                                                 unitLabel = "Num. pescadores")
                                       )
                                   ),
                                 fluidRow(
@@ -302,46 +311,196 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                   box(title = "Definición de objetivos",
                                       width = 3,
                                       status = "primary",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Encargado del proyecto",
+                                                 pairId = "syb_do_encargado",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días"),
+                                      CostUnitUI(titleId = "Asistente del proyecto",
+                                                 pairId = "syb_do_asistente",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días")),
                                   box(title = "Diseñar reservas",
                                       width = 3,
                                       status = "info",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Encargado del proyecto",
+                                                 pairId = "syb_dr_encargado",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días"),
+                                      CostUnitUI(titleId = "Asistente del proyecto",
+                                                 pairId = "syb_dr_asistente",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días")),
                                   box(title = "Elaboracón ETJ",
                                       width = 3,
                                       status = "primary",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Encargado del proyecto",
+                                                 pairId = "syb_ej_encargado",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días"),
+                                      CostUnitUI(titleId = "Asistente del proyecto",
+                                                 pairId = "syb_ej_asistente",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días")),
                                   box(title = "Monitoreo",
                                       width = 3,
                                       status = "info",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Encargado del proyecto",
+                                                 pairId = "syb_mo_encargado",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días"),
+                                      CostUnitUI(titleId = "Asistente del proyecto",
+                                                 pairId = "syb_mo_asistente",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días")),
                                   box(title = "Análisis de datos",
                                       width = 3,
                                       status = "primary",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Encargado del proyecto",
+                                                 pairId = "syb_ad_encargado",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días"),
+                                      CostUnitUI(titleId = "Asistente del proyecto",
+                                                 pairId = "syb_ad_asistente",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días")),
                                   box(title = "Presentación de resultados",
                                       width = 3,
                                       status = "info",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Encargado del proyecto",
+                                                 pairId = "syb_pr_encargado",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días"),
+                                      CostUnitUI(titleId = "Asistente del proyecto",
+                                                 pairId = "syb_pr_asistente",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días")),
                                   box(title = "Renovación",
                                       width = 3,
                                       status = "primary",
-                                      collapsible = T))
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Encargado del proyecto",
+                                                 pairId = "syb_re_encargado",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días"),
+                                      CostUnitUI(titleId = "Asistente del proyecto",
+                                                 pairId = "syb_re_asistente",
+                                                 costLabel = "$ / día",
+                                                 unitLabel = "Días")
+                                      )
+                                  )
                         ),
                         tabItem("equipo",
                                 fluidRow(
                                   box(title = "Compra",
                                       width = 3,
                                       status = "primary",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "Cintas de transecto",
+                                                 pairId = "equ_ce_cinta",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Tubos de PVC para monitoreo",
+                                                 pairId = "equ_ce_tubo",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Chalecos buceo (BCD)",
+                                                 pairId = "equ_ce_bcd",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Reguladores",
+                                                 pairId = "equ_ce_reg",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Tanques",
+                                                 pairId = "equ_ce_tanque",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Plomos",
+                                                 pairId = "equ_ce_plomos",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Computadoras",
+                                                 pairId = "equ_ce_computadora",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Equipo de snorkel",
+                                                 pairId = "equ_ce_snorkel",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Brújula",
+                                                 pairId = "equ_ce_brujula",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Tablas de monitoreo",
+                                                 pairId = "equ_ce_tabla",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Sonda de profundidad",
+                                                 pairId = "equ_ce_sonda",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Transductor de sonda",
+                                                 pairId = "equ_ce_transductor",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "GPS",
+                                                 pairId = "equ_ce_gps",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Radio marino",
+                                                 pairId = "equ_ce_radio",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Botiquín de primeros auxilios",
+                                                 pairId = "equ_ce_auxilios",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Botiquín oxígeno DAN",
+                                                 pairId = "equ_ce_oxydan",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Caja pelican",
+                                                 pairId = "equ_ce_pelican",
+                                                 costLabel = "",
+                                                 unitLabel = ""),
+                                      CostUnitUI(titleId = "Reloj",
+                                                 pairId = "equ_ce_reloj",
+                                                 costLabel = "",
+                                                 unitLabel = "")),
                                   box(title = "Mantenimiento",
                                       width = 3,
                                       status = "info",
-                                      collapsible = T),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "",
+                                                 pairId = "",
+                                                 costLabel = "",
+                                                 unitLabel = "")),
                                   box(title = "Vigilancia",
                                       width = 3,
                                       status = "primary",
-                                      collapsible = T))),
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      CostUnitUI(titleId = "",
+                                                 pairId = "",
+                                                 costLabel = "",
+                                                 unitLabel = ""))
+                                  )
+                                ),
                         tabItem("costos_directos",
                                 fluidRow(
                                   box(title = "Elaboracón ETJ",
@@ -380,11 +539,66 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                       collapsible = T))),
                         tabItem("presupuesto",
                                 fluidRow(
+                                  box(title = "Control de gráficas",
+                                      width = 12,
+                                      collapsible = T,
+                                      collapsed = T,
+                                  box(width = 2,
+                                      status = "primary",
+                                      checkboxInput(inputId = "costs_in_mxp",
+                                                    label = "Gráficas en pesos",
+                                                    value = F)
+                                      
+                                  ),
+                                  box(width = 2,
+                                      status = "primary",
+                                      numericInput(inputId = "text_size",
+                                                   label = "Tamaño del texto",
+                                                   value = 10,
+                                                   min = 10,
+                                                   max = 20)
+                                      
+                                  ),
+                                  box(width = 2,
+                                      status = "primary",
+                                      selectInput(inputId = "color_scheme",
+                                                  label = "Esquema de colores",
+                                                  choices = c("COBI" = "Blues",
+                                                              "Pares" = "Paired",
+                                                              "Set1" = "Set1",
+                                                              "Set2" = "Set2",
+                                                              "Set3" = "Set3"),
+                                                  selected = "COBI")
+                                      
+                                  ))
+                                ),
+                                fluidRow(
                                   box(title = "Presupuesto",
                                       width = 6,
                                       status = "primary",
-                                      plotlyOutput(outputId = "plot1"))))
-                      ))
+                                      plotlyOutput(outputId = "plot1")
+                                  ),
+                                  box(title = "Presupuesto 2",
+                                      width = 6,
+                                      status = "primary",
+                                      plotlyOutput(outputId = "plot2")
+                                  )
+                                ),
+                                fluidRow(
+                                  box(title = "Presupuesto3",
+                                      width = 6,
+                                      status = "primary",
+                                      plotlyOutput(outputId = "plot3")
+                                  ),
+                                  box(title = "Presupuesto 4",
+                                      width = 6,
+                                      status = "primary",
+                                      plotlyOutput(outputId = "plot4")
+                                  )
+                                )
+                        )
+                      )
+                    )
 )
 
 # Define server logic
@@ -419,7 +633,40 @@ server <- function(input, output){
         "vyc_re_encuestas",
         "vyc_re_gasolina",
         "vyc_re_hospedaje",
-        "vyc_re_taller"),
+        "vyc_re_taller",
+        "syb_do_encargado",
+        "syb_do_asistente",
+        "syb_ej_encargado",
+        "syb_ej_asistente",
+        "syb_dr_encargado",
+        "syb_dr_asistente",
+        "syb_mo_encargado",
+        "syb_mo_asistente",
+        "syb_ad_encargado",
+        "syb_ad_asistente",
+        "syb_pr_encargado",
+        "syb_pr_asistente",
+        "syb_re_encargado",
+        "syb_re_asistente",
+        "equ_ce_cinta",
+        "equ_ce_tubo",
+        "equ_ce_bcd",
+        "equ_ce_reg",
+        "equ_ce_tanque",
+        "equ_ce_plomos",
+        "equ_ce_computadora",
+        "equ_ce_snorkel",
+        "equ_ce_brujula",
+        "equ_ce_tabla",
+        "equ_ce_sonda",
+        "equ_ce_transductor",
+        "equ_ce_gps",
+        "equ_ce_radio",
+        "equ_ce_auxilios",
+        "equ_ce_oxydan",
+        "equ_ce_pelican",
+        "equ_ce_reloj"
+      ),
       costs = c(
         input$c_vyc_certificacion,
         input$c_vyc_curso,
@@ -446,7 +693,40 @@ server <- function(input, output){
         input$c_vyc_re_encuestas,
         input$c_vyc_re_gasolina,
         input$c_vyc_re_hospedaje,
-        input$c_vyc_re_taller),
+        input$c_vyc_re_taller,
+        input$c_syb_do_encargado,
+        input$c_syb_do_asistente,
+        input$c_syb_ej_encargado,
+        input$c_syb_ej_asistente,
+        input$c_syb_dr_encargado,
+        input$c_syb_dr_asistente,
+        input$c_syb_mo_encargado,
+        input$c_syb_mo_asistente,
+        input$c_syb_ad_encargado,
+        input$c_syb_ad_asistente,
+        input$c_syb_pr_encargado,
+        input$c_syb_pr_asistente,
+        input$c_syb_re_encargado,
+        input$c_syb_re_asistente,
+        input$c_equ_ce_cinta,
+        input$c_equ_ce_tubo,
+        input$c_equ_ce_bcd,
+        input$c_equ_ce_reg,
+        input$c_equ_ce_tanque,
+        input$c_equ_ce_plomos,
+        input$c_equ_ce_computadora,
+        input$c_equ_ce_snorkel,
+        input$c_equ_ce_brujula,
+        input$c_equ_ce_tabla,
+        input$c_equ_ce_sonda,
+        input$c_equ_ce_transductor,
+        input$c_equ_ce_gps,
+        input$c_equ_ce_radio,
+        input$c_equ_ce_auxilios,
+        input$c_equ_ce_oxydan,
+        input$c_equ_ce_pelican,
+        input$c_equ_ce_reloj
+      ),
       units = c(
         input$u_vyc_certificacion,
         input$u_vyc_curso,
@@ -473,11 +753,44 @@ server <- function(input, output){
         input$u_vyc_re_encuestas,
         input$u_vyc_re_gasolina,
         input$u_vyc_re_hospedaje,
-        input$u_vyc_re_taller)
+        input$u_vyc_re_taller,
+        input$u_syb_do_encargado,
+        input$u_syb_do_asistente,
+        input$u_syb_ej_encargado,
+        input$u_syb_ej_asistente,
+        input$u_syb_dr_encargado,
+        input$u_syb_dr_asistente,
+        input$u_syb_mo_encargado,
+        input$u_syb_mo_asistente,
+        input$u_syb_ad_encargado,
+        input$u_syb_ad_asistente,
+        input$u_syb_pr_encargado,
+        input$u_syb_pr_asistente,
+        input$u_syb_re_encargado,
+        input$u_syb_re_asistente,
+        input$u_equ_ce_cinta,
+        input$u_equ_ce_tubo,
+        input$u_equ_ce_bcd,
+        input$u_equ_ce_reg,
+        input$u_equ_ce_tanque,
+        input$u_equ_ce_plomos,
+        input$u_equ_ce_computadora,
+        input$u_equ_ce_snorkel,
+        input$u_equ_ce_brujula,
+        input$u_equ_ce_tabla,
+        input$u_equ_ce_sonda,
+        input$u_equ_ce_transductor,
+        input$u_equ_ce_gps,
+        input$u_equ_ce_radio,
+        input$u_equ_ce_auxilios,
+        input$u_equ_ce_oxydan,
+        input$u_equ_ce_pelican,
+        input$u_equ_ce_reloj
+      )
     )
   })
   
-  output$total <- renderInfoBox({
+  output$totalUSD <- renderInfoBox({
     
     total <- cost_data %>% 
       select(fase, concepto, subactividad, periodicidad, id) %>% 
@@ -497,27 +810,71 @@ server <- function(input, output){
             color = "light-blue")
   })
   
-  output$plot1 <- renderPlotly({
-    plot1 <- cost_data %>% 
+  output$totalMXP <- renderInfoBox({
+    
+    total <- cost_data %>% 
       select(fase, concepto, subactividad, periodicidad, id) %>% 
       mutate(anos = case_when(periodicidad == "Anual" ~ 1 * input$anos,
                               periodicidad == "Bianal" ~ floor(0.5 * input$anos),
                               periodicidad == "Mensual" ~ 12 * input$anos,
                               TRUE ~ 1)) %>% 
       left_join(inputs(), by = "id") %>% 
-      mutate(total = costs * units * anos) %>% 
-      group_by(fase, concepto, subactividad) %>% 
-      summarize(total = sum(total, na.rm = T)) %>% 
-      ungroup() %>% 
-      ggplot(aes(x = fase, y = total, fill = concepto, label = subactividad)) +
-      geom_col(color = "black") +
-      theme_cowplot() +
-      scale_fill_brewer(palette = "Set1") +
-      theme(text = element_text(size = 10))
+      mutate(total = costs * units * anos) %$% 
+      sum(total, na.rm = T)
     
-    ggplotly(plot1)
+    infoBox(title = "Costo total",
+            value = round(total * input$usd2mxp),
+            subtitle = "MXP",
+            icon = icon("usd"),
+            fill = T,
+            color = "blue")
   })
   
+  correct_fases <- tibble(fase = c("Implementacion",
+                                   "Monitoreo",
+                                   "Operacion",
+                                   "Renovacion"),
+                          Fase = c("Implementación",
+                                   "Monitoreo",
+                                   "Operación",
+                                   "Renovación"))
+  
+    output$plot1 <- renderPlotly({
+      
+      plot1_data <- cost_data %>% 
+        select(fase, concepto, subactividad, periodicidad, id) %>% 
+        mutate(anos = case_when(periodicidad == "Anual" ~ 1 * input$anos,
+                                periodicidad == "Bianal" ~ floor(0.5 * input$anos),
+                                periodicidad == "Mensual" ~ 12 * input$anos,
+                                TRUE ~ 1)) %>% 
+        left_join(inputs(), by = "id") %>% 
+        left_join(correct_fases, by = "fase") %>% 
+        mutate(total = costs * units * anos) %>% 
+        group_by(Fase, concepto, subactividad) %>% 
+        summarize(total = sum(total, na.rm = T)) %>% 
+        ungroup()
+      
+      if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp / 1e3}
+      
+      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (USD)")
+      
+      plot1 <- plot1_data %>% 
+        rename(Concepto = concepto, Subactividad = subactividad, Total = total) %>% 
+        ggplot(aes(x = Fase, y = Total, fill = Concepto, label = Subactividad)) +
+        geom_col(color = "black") +
+        theme_cowplot() +
+        scale_fill_brewer(palette = input$color_scheme) +
+        labs(x = "Fase del proyecto", y = y_label) +
+        theme(text = element_text(size = input$text_size),
+              axis.text = element_text(size = input$text_size - 2))
+      
+      p <- ggplotly(plot1)
+      
+      p$elementId <- NULL
+      
+      p
+    })
+    
 }
 
 # Run the application 
