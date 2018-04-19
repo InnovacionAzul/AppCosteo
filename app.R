@@ -540,6 +540,7 @@ ui <- dashboardPage(title = "Costeo de COBI",
                         tabItem("presupuesto",
                                 fluidRow(
                                   box(title = "Control de gráficas",
+                                      status = "primary",
                                       width = 12,
                                       collapsible = T,
                                       collapsed = T,
@@ -582,9 +583,7 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                       width = 6,
                                       status = "primary",
                                       plotlyOutput(outputId = "plot2")
-                                  )
-                                ),
-                                fluidRow(
+                                  ),
                                   box(title = "Presupuesto3",
                                       width = 6,
                                       status = "primary",
@@ -870,8 +869,8 @@ server <- function(input, output){
       
       p <- ggplotly(plot1)
       
+      # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
       p$elementId <- NULL
-      
       p
     })
     
