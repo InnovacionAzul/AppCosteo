@@ -1,7 +1,7 @@
 Fase,Tipo_de_inversion,Periodicidad,Concepto,Subactividad,Elemento,Descripcion,Unidad, Valor_unitario_USD ,Fuente_de_informacion,Estimacion_de_unidades_requeridas,id
 Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alimentos,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,4,imp_do_alimentos
-Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alquiler de automovil,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,2,imp_do_auto
 Implementacion,Unica,N/A,Salarios y Beneficios,Definir objetivos de la reserva,Asistente de proyecto,Honorarios de personal involucrado en el diseno de los objetivos de la reserva marina,$/dia,43,COBI,4,imp_do_asistente
+Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Alquiler de automovil,Talleres en campo para definir los objetivos de la reserva,$/dia,33,,2,imp_do_auto
 Implementacion,Unica,N/A,Salarios y Beneficios,Definir objetivos de la reserva,Encargado de proyecto,Honorarios de personal involucrado en el diseno de los objetivos de la reserva marina,$/dia,75,COBI,4,imp_do_encargado
 Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Gasolina,Talleres en campo para definir los objetivos de la reserva,$/litro,1,PEMEX,80,imp_do_gasolina
 Implementacion,Unica,N/A,Viajes y Salidas a campo,Definir objetivos de la reserva,Hospedaje,Talleres en campo para definir los objetivos de la reserva,$/dia,43,,4,imp_do_hospedaje
@@ -11,77 +11,77 @@ Implementacion,Unica,N/A,Salarios y Beneficios,Diseno de la reserva marina,Asist
 Implementacion,Unica,N/A,Salarios y Beneficios,Diseno de la reserva marina,Encargado de proyecto,Honorarios de personal involucrado en el diseno de la reserva marina,$/dia,75,,5,imp_dr_encargado
 Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Hospedaje,Talleres en campo para el diseno de una reserva marina,$/dia,43,,6,imp_dr_hospedaje
 Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Taller preliminar (diseno),Costos de campo para taller que permita decidir la ubicacion de la reserva marina,$/taller,432,,2,imp_dr_taller
+Implementacion,Unica,N/A,Comunicacion,Estrategias de comunicacion,Estrategia de comunicacion,"Costos relacionados con la implementacion de una estrategia de comunicacion en la comunidad (beneficios de las reservas, folletos, carteles, mapas, actividades)",$/comunidad,11000,,1,imp_ec_estrategia
 Implementacion,Unica,N/A,Salarios y Beneficios,Elaboracion del estudio justificativo para la reserva,Asistente de proyecto,Honorarios de personal involucrado en la elaboracion del estudio justificativo de la creacion de la reserva,$/dia,43,,12,imp_ej_asistente
 Implementacion,Unica,N/A,Salarios y Beneficios,Elaboracion del estudio justificativo para la reserva,Encargado de proyecto,Honorarios de personal involucrado en la elaboracion del estudio justificativo de la creacion de la reserva,$/dia,75,,8,imp_ej_encargado
 Implementacion,Unica,N/A,Costos Directos,Elaboracion del estudio justificativo para la reserva,Trabajo de oficina,Costos de impresion y envio de documentos por mensajeria,$/estudio,11,,10,imp_ej_oficina
-Implementacion,Unica,N/A,Comunicacion,Estrategias de comunicacion,Estrategia de comunicacion,"Costos relacionados con la implementacion de una estrategia de comunicacion en la comunidad (beneficios de las reservas, folletos, carteles, mapas, actividades)",$/comunidad,11000,,1,imp_ec_estrategia
 Implementacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,imp_ot_otro
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alimentos,Costos de alimentacion por pescador durante el periodo de monitoreo,$/pescador/dia,,,0,mon_mo_alimento
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alquiler de embarcacion,Costos de alquiler de embarcacion por dia para el monitoreo,$/hora,38,,40,mon_mo_embarcacion
-Monitoreo,Recurrente,Anual,Salarios y Beneficios,Actividades de monitoreo,Asistente de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (logistica/organizacion y trabajo de campo),$/dia,43,,9,mon_mo_asistente
+Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Asistente de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,43,,10,mon_ad_asistente
+Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Encargado de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,75,,10,mon_ad_encargado
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de primeros auxilios,Costos de compra del kit de primeros auxilios,$/unidad,54,,1,mon_ce_auxilios
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Chaleco,Compra de chaleco BCD para buceo,$/unidad,282,,20,mon_ce_bcd
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Brujula,Compra de brujula para buceo SCUBA,$/unidad,55,,10,mon_ce_brujula
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Cinta de transecto,Costo de compra de cinta de transecto para UVC,$/unidad,16,,100,mon_ce_cinta
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Computadora,Compra de computadora de buceo SCUBA,$/unidad,243,,10,mon_ce_computadora
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Localizador GPS,Costo de compra de localizador GPS,$/unidad,215,,1,mon_ce_gps
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de oxigeno DAN,"Costos de compra del kit de tanque de oxigeno de emergencia DAN (Dive Alert Network) para accidentes por buceo SCUBA, con caja seca",$/unidad,324,,10,mon_ce_oxydan
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Caja seca Pelican,Costo de compra de caja seca Pelican para proteccion impermeable de equipo ,$/unidad,190,,50,mon_ce_pelican
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Plomos,Compra de plomos para buceo SCUBA,$/kg,5,,10,mon_ce_plomos
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Radio marino,Costo de compra de radio marino,$/unidad,270,,1,mon_ce_radio
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Regulador,Compra de regulador para buceo SCUBA ,$/unidad,426,,50,mon_ce_reg
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Reloj,Compra de reloj impermeable,$/unidad,16,,0,mon_ce_reloj
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,"Equipo de buceo - Mascara, Aletas, Snorkel",Compra de equipo basico de snorkel,$/unidad,55,,10,mon_ce_snorkel
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Sonda de profundidad,Costo de compra de sonda de profundidad eg Lowrance serie HD ,$/unidad,585,,1,mon_ce_sonda
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Pizarrones de monitoreo,Costo de compra de pizarron de monitoreo para UVC,$/unidad,27,,1,mon_ce_tabla
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Tanque,Compra de tanque de aire para buceo SCUBA,$/unidad,210,,10,mon_ce_tanque
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Sonda de profundidad - Transductor,Costo de compra de transductor para sonda de profundidad,$/unidad,780,,2,mon_ce_transductor
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Tubo de PVC para monitoreo,Costo de compra de tubo de PVC para UVC,$/unidad,1,,100,mon_ce_tubo
+Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Certificacion de buceo,Costo por buzo para la certificacion PADI y materiales,$/pescador,55,,8,mon_certificacion
+Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Curso de buceo para pescadores,Costo por pescador para su certificacion PADI Open Water o equivalente,$/pescador,292,Si se contrata un instructor PADI,8,mon_curso
+Monitoreo,Recurrente,Bianual,Consultores,Evaluacion de pescadores,Evaluacion externa de buzos,Costos de consultoria de la evaluacion externa del grupo de buzos,$/dia,2700,,1,mon_evaluacion_pescadores
+Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Equipo de buceo - Mantenimiento,Compra de equipo de mantenimiento,$/monitoreo,11,,1,mon_me_equipomantenimiento
+Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Costos de remplazo de equipo,Costos de recolocacion de equipo para monitoreo UVC. Promedio por monitoreo ,$/monitoreo,33,,10,mon_me_equiporeemplazo
+Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Impresion de formatos para toma de datos,Costo por lote (por monitoreo) de impresion de formatos para la toma de datos en el monitoreo,$/unidad,1,,10,mon_me_impresion
+Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Formato para datos,Costo de compra de hoja de papel impermeable para formato para la toma de datos,$/unidad,0,,1,mon_me_polypap
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Aceite,Aceite para motores de 2 tiempos,$/litro,5,,1,mon_mo_aceite
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Gasolina,Costo de gasolina por litro,$/litro,1,PEMEX,600,mon_mo_gasolina
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alimentos,Costos de alimentacion por pescador durante el periodo de monitoreo,$/pescador/dia,,,0,mon_mo_alimento
+Monitoreo,Recurrente,Anual,Salarios y Beneficios,Actividades de monitoreo,Asistente de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (logistica/organizacion y trabajo de campo),$/dia,43,,9,mon_mo_asistente
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alquiler de embarcacion,Costos de alquiler de embarcacion por dia para el monitoreo,$/hora,38,,40,mon_mo_embarcacion
 Monitoreo,Recurrente,Anual,Salarios y Beneficios,Actividades de monitoreo,Encargado de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (logistica/organizacion y trabajo de campo),$/dia,75,,9,mon_mo_encargado
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Gasolina,Costo de gasolina por litro,$/litro,1,PEMEX,600,mon_mo_gasolina
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Hospedaje,Costos de hospedaje por pescador para el periodo de monitoreo,$/pescador/dia,,,0,mon_mo_hospedaje
 Monitoreo,Recurrente,Anual,Consultores,Actividades de monitoreo,Salario para pescadores,Salario por pescador por dia de pesca perdido durante la participacion en el monitoreo. Recomendacion: equivalente al promedio de un dia bueno y un dia malo de pesca.,$/pescador/dia,37,Periodo de monitoreo de 5 dias,0,mon_mo_salarios
 Monitoreo,Recurrente,Anual,Costos Directos,Actividades de monitoreo,Seguro de buceo anual,Poliza anual del seguro de buceo DAN,$/pescador,89,DANWorld,1,mon_mo_seguro
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Viaje,Costos de viaje por pescador para el periodo de monitoreo,$/dia,,,0,mon_mo_viaje
-Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Asistente de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,43,,10,mon_ad_asistente
-Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Encargado de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,75,,10,mon_ad_encargado
-Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Certificacion de buceo,Costo por buzo para la certificacion PADI y materiales,$/pescador,55,,8,mon_certificacion
-Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Curso de buceo para pescadores,Costo por pescador para su certificacion PADI Open Water o equivalente,$/pescador,292,Si se contrata un instructor PADI,8,mon_curso
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Caja seca Pelican,Costo de compra de caja seca Pelican para proteccion impermeable de equipo ,$/unidad,190,,50,mon_ce_pelican
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Cinta de transecto,Costo de compra de cinta de transecto para UVC,$/unidad,16,,100,mon_ce_cinta
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Brujula,Compra de brujula para buceo SCUBA,$/unidad,55,,10,mon_ce_brujula
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Chaleco,Compra de chaleco BCD para buceo,$/unidad,282,,20,mon_ce_bcd
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Computadora,Compra de computadora de buceo SCUBA,$/unidad,243,,10,mon_ce_computadora
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,"Equipo de buceo - Mascara, Aletas, Snorkel",Compra de equipo basico de snorkel,$/unidad,55,,10,mon_ce_snorkel
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Plomos,Compra de plomos para buceo SCUBA,$/kg,5,,10,mon_ce_plomos
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Regulador,Compra de regulador para buceo SCUBA ,$/unidad,426,,50,mon_ce_reg
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Reloj,Compra de reloj impermeable,$/unidad,16,,0,mon_ce_reloj
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Tanque,Compra de tanque de aire para buceo SCUBA,$/unidad,210,,10,mon_ce_tanque
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de oxigeno DAN,"Costos de compra del kit de tanque de oxigeno de emergencia DAN (Dive Alert Network) para accidentes por buceo SCUBA, con caja seca",$/unidad,324,,10,mon_ce_oxydan
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de primeros auxilios,Costos de compra del kit de primeros auxilios,$/unidad,54,,1,mon_ce_auxilios
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Localizador GPS,Costo de compra de localizador GPS,$/unidad,215,,1,mon_ce_gps
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Pizarrones de monitoreo,Costo de compra de pizarron de monitoreo para UVC,$/unidad,27,,1,mon_ce_tabla
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Radio marino,Costo de compra de radio marino,$/unidad,270,,1,mon_ce_radio
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Sonda de profundidad,Costo de compra de sonda de profundidad eg Lowrance serie HD ,$/unidad,585,,1,mon_ce_sonda
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Sonda de profundidad - Transductor,Costo de compra de transductor para sonda de profundidad,$/unidad,780,,2,mon_ce_transductor
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Tubo de PVC para monitoreo,Costo de compra de tubo de PVC para UVC,$/unidad,1,,100,mon_ce_tubo
-Monitoreo,Recurrente,Bianual,Consultores,Evaluacion de pescadores,Evaluacion externa de buzos,Costos de consultoria de la evaluacion externa del grupo de buzos,$/dia,2700,,1,mon_evaluacion_pescadores
-Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Costos de remplazo de equipo,Costos de recolocacion de equipo para monitoreo UVC. Promedio por monitoreo ,$/monitoreo,33,,10,mon_me_equiporeemplazo
-Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Equipo de buceo - Mantenimiento,Compra de equipo de mantenimiento,$/monitoreo,11,,1,mon_me_equipomantenimiento
-Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Formato para datos,Costo de compra de hoja de papel impermeable para formato para la toma de datos,$/unidad,0,,1,mon_me_polypap
-Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Impresion de formatos para toma de datos,Costo por lote (por monitoreo) de impresion de formatos para la toma de datos en el monitoreo,$/unidad,1,,10,mon_me_impresion
 Monitoreo,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro
 Operacion,Recurrente,Bianual,Comunicacion,Estrategias de comunicacion,Materiales de comunicacion,"Posters, folletos, reportes para transmitir la informacion en la comunidad ",$/lote,540,,1,ope_ec_comunicacion
 Operacion,Unica,N/A,Comunicacion,Estrategias de comunicacion,Senalizacion permenente para la reserva marina,Senalizacion de forma permanente,$/senalamiento,0,,0,ope_ec_senalizacion
-Operacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otros
+Operacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otro
 Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alimentos,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,ope_pr_alimentos
-Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alquiler de automovil,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,ope_pr_auto
 Operacion,Recurrente,Anual,Salarios y Beneficios,Presentacion de resultados,Asistente de proyecto,Honorarios de personal involucrado en taller anual para la presentacion de resultados (biologico y de vigilancia comunitaria),$/dia,43,,2,ope_pr_asistente
+Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alquiler de automovil,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,ope_pr_auto
 Operacion,Recurrente,Anual,Salarios y Beneficios,Presentacion de resultados,Encargado de proyecto,Honorarios de personal involucrado en taller anual para la presentacion de resultados (biologico y de vigilancia comunitaria),$/dia,75,,4,ope_pr_encargado
 Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Gasolina,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/litro,1,PEMEX,80,ope_pr_gasolina
 Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Hospedaje,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,43,,4,ope_pr_hospedaje
 Operacion,Unica,N/A,Equipo,Vigilancia,Boya,"Compra de boya para vertices de la reserva marina y costos relacionados (cadena, base, sujetadores)",$/reserva,130,COBI. 4 boyas por reserva  <10m profundidad,1,ope_vi_boya
 Operacion,Unica,N/A,Equipo,Vigilancia,Boya - Instalacion,"Instalacion de boya (bote, gasolina, costos de tiempo)",$/reserva,435,COBI. 4 boyas por reserva  <10m profundidad,1,ope_vi_boyainst
 Operacion,Unica,N/A,Equipo,Vigilancia,Camara,Camara para la embarcacion de vigilancia,$/unidad,550,COBI,4,ope_vi_camara
+Operacion,Unica,N/A,Equipo,Vigilancia,Vigilancia - Embarcacion,Costo de una embarcacion de 28' con accesorios,$/embarcacion,7850,COBI,1,ope_vi_embarcacion
 Operacion,Recurrente,Mensual,Viajes y Salidas a campo,Vigilancia,Gasolina,Costos de combustible para embarcacion de vigilancia (costos mensuales basados en una estimacion de distancia recorrida - km),$/litro,1,PEMEX,600,ope_vi_gasolina
 Operacion,Unica,N/A,Equipo,Vigilancia,Localizador GPS,Lozalizador GPS para embarcacion de vigilancia,$/unidad,215,COBI,0,ope_vi_gps
-Operacion,Unica,N/A,Equipo,Vigilancia,Radio ,Radio para embarcacion de vigilancia,$/unidad,245,COBI,1,ope_vi_radio
-Operacion,Recurrente,Mensual,Consultores,Vigilancia,Salario para el equipo de vigilancia,Salario pagado a pescadores por guardia de vigilancia ,$/mes,,,4,ope_vi_salariovig
-Operacion,Unica,N/A,Equipo,Vigilancia,Vigilancia - Embarcacion,Costo de una embarcacion de 28' con accesorios,$/embarcacion,7850,COBI,1,ope_vi_embarcacion
 Operacion,Recurrente,Anual,Equipo,Vigilancia,Vigilancia - Mantenimiento de embarcacion ,"Incluye aceite, costos de servicio tecnico, refacciones",$/ano,540,,1,ope_vi_mantenimiento
 Operacion,Unica,N/A,Equipo,Vigilancia,Vigilancia - Motor para embarcacion,"Costo de un motor (100 HP, 4 tiempos)",$/motor,975,COBI,4,ope_vi_motor
+Operacion,Unica,N/A,Equipo,Vigilancia,Radio ,Radio para embarcacion de vigilancia,$/unidad,245,COBI,1,ope_vi_radio
 Operacion,Unica,N/A,Equipo,Vigilancia,Vigilancia - Registro de embarcacion,Registro (matricula de la embarcacion),$/ano,38,COBI,10,ope_vi_registro
+Operacion,Recurrente,Mensual,Consultores,Vigilancia,Salario para el equipo de vigilancia,Salario pagado a pescadores por guardia de vigilancia ,$/mes,,,4,ope_vi_salariovig
 Operacion,Recurrente,Anual,Equipo,Vigilancia,Vigilancia - Seguro de embarcacion,Seguro para embarcacion de vigilancia,$/ano,1730,,1,ope_vi_seguro
+Renovacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro
 Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alimentos,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,ren_re_alimentos
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alquiler de automovil,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,ren_re_auto
 Renovacion,Recurrente,Establecida por la reserva,Salarios y Beneficios,Actividades de renovacion,Asistente de proyecto,Honorarios de personal involucrado en la renovacion de la reserva marina,$/dia,43,,10,ren_re_asistente
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alquiler de automovil,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,ren_re_auto
 Renovacion,Recurrente,Establecida por la reserva,Salarios y Beneficios,Actividades de renovacion,Encargado de proyecto,Honorarios de personal involucrado en la renovacion de la reserva marina,$/dia,75,,10,ren_re_encargado
 Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Encuestas,Costos de campo para encuestas / cuestionarios para conocer las opiniones de los pescadores,$/dia,500,,1,ren_re_encuestas
 Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Gasolina,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/litro,1,PEMEX,80,ren_re_gasolina
 Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Hospedaje,Talleres en campo para la renovacion de una reserva marina,$/dia,43,,3,ren_re_hospedaje
-Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Taller preliminar (renovacion),Costos de campo de taller para la renovacion de la reserva marina,$/taller,432,,3,ren_re_taller
 Renovacion,Recurrente,Establecida por la reserva,Costos Directos,Actividades de renovacion,Trabajo de oficina,Costos de trabajo administrativo para lograr el decreto oficial de las reservas,$/unidad,50,,1,ren_re_oficina
-Renovacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro
+Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Taller preliminar (renovacion),Costos de campo de taller para la renovacion de la reserva marina,$/taller,432,,3,ren_re_taller
