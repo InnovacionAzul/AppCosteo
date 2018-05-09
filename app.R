@@ -235,6 +235,17 @@ ui <- dashboardPage(title = "Costeo de COBI",
                         ),
                         tabItem("monitoreo",
                                 fluidRow(
+                                  box(title = "Información del proyecto",
+                                      width = 3,
+                                      status = "info",
+                                      numericInput(inputId = "mon_dur",
+                                                   label = "Duración de la fase de Monitoreo (años)",
+                                                   value = 5,
+                                                   min = 1,
+                                                   max = 50)
+                                  )
+                                ),
+                                fluidRow(
                                   box(title = "Actividades de monitoreo",
                                       width = 3,
                                       status = "primary",
