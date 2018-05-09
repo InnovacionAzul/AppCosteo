@@ -690,6 +690,15 @@ ui <- dashboardPage(title = "Costeo de COBI",
 # Define server logic
 server <- function(input, output){
   
+  periods <- reactive({
+    tibble(
+      etapa = c("imp", "mon", "ope", "ren"),
+      duracion_fase = c(1,
+                        input$mon_dur,
+                        input$ope_dur,
+                        1)
+    )
+  })
   
   inputs <- reactive({
     tibble(
@@ -699,6 +708,8 @@ server <- function(input, output){
         "imp_do_gasolina",
         "imp_do_hospedaje",
         "imp_do_taller",
+        "imp_do_asistente",
+        "imp_do_encargado",
         "imp_dr_alimentos",
         "imp_dr_asistente",
         "imp_dr_encargado",
@@ -709,6 +720,8 @@ server <- function(input, output){
         "imp_ej_encargado",
         "imp_ej_oficina",
         "imp_ot_otro",
+        "mon_certificacion",
+        "mon_curso",
         "mon_ce_auxilios",
         "mon_ce_bcd",
         "mon_ce_brujula",
@@ -728,7 +741,7 @@ server <- function(input, output){
         "mon_ce_transductor",
         "mon_ce_tubo",
         "mon_evaluacion_pescadores",
-        "mon_me_equipomanatenimiento",
+        "mon_me_equipomantenimiento",
         "mon_me_equiporeemplazo",
         "mon_me_impresion",
         "mon_me_polypap",
@@ -743,7 +756,7 @@ server <- function(input, output){
         "mon_ot_otro",
         "ope_ec_comunicacion",
         "ope_ec_senalizacion",
-        "ope_ot_otros",
+        "ope_ot_otro",
         "ope_pr_alimentos",
         "ope_pr_asistente",
         "ope_pr_auto",
@@ -762,7 +775,7 @@ server <- function(input, output){
         "ope_vi_registro",
         "ope_vi_salariovig",
         "ope_vi_seguro",
-        "ren_ot_otros",
+        "ren_ot_otro",
         "ren_re_alimentos",
         "ren_re_asistente",
         "ren_re_auto",
@@ -771,21 +784,20 @@ server <- function(input, output){
         "ren_re_gasolina",
         "ren_re_hospedaje",
         "ren_re_taller",
-        "syb_ad_asistente",
-        "syb_ad_encargado",
-        "syb_dr_asistente",
-        "syb_dr_encargado",
-        "syb_mo_asistente",
-        "syb_mo_encargado",
-        "vyc_certificacion",
-        "vyc_curso"
+        "ren_re_oficina",
+        "mon_ad_asistente",
+        "mon_ad_encargado",
+        "mon_mo_asistente",
+        "mon_mo_encargado"
       ),
-      costs = c(
+      costos = c(
         input$c_imp_do_alimentos,
         input$c_imp_do_auto,
         input$c_imp_do_gasolina,
         input$c_imp_do_hospedaje,
         input$c_imp_do_taller,
+        input$c_imp_do_asistente,
+        input$c_imp_do_encargado,
         input$c_imp_dr_alimentos,
         input$c_imp_dr_asistente,
         input$c_imp_dr_encargado,
@@ -796,6 +808,8 @@ server <- function(input, output){
         input$c_imp_ej_encargado,
         input$c_imp_ej_oficina,
         input$c_imp_ot_otro,
+        input$c_mon_certificacion,
+        input$c_mon_curso,
         input$c_mon_ce_auxilios,
         input$c_mon_ce_bcd,
         input$c_mon_ce_brujula,
@@ -815,7 +829,7 @@ server <- function(input, output){
         input$c_mon_ce_transductor,
         input$c_mon_ce_tubo,
         input$c_mon_evaluacion_pescadores,
-        input$c_mon_me_equipomanatenimiento,
+        input$c_mon_me_equipomantenimiento,
         input$c_mon_me_equiporeemplazo,
         input$c_mon_me_impresion,
         input$c_mon_me_polypap,
@@ -830,7 +844,7 @@ server <- function(input, output){
         input$c_mon_ot_otro,
         input$c_ope_ec_comunicacion,
         input$c_ope_ec_senalizacion,
-        input$c_ope_ot_otros,
+        input$c_ope_ot_otro,
         input$c_ope_pr_alimentos,
         input$c_ope_pr_asistente,
         input$c_ope_pr_auto,
@@ -849,7 +863,7 @@ server <- function(input, output){
         input$c_ope_vi_registro,
         input$c_ope_vi_salariovig,
         input$c_ope_vi_seguro,
-        input$c_ren_ot_otros,
+        input$c_ren_ot_otro,
         input$c_ren_re_alimentos,
         input$c_ren_re_asistente,
         input$c_ren_re_auto,
@@ -858,21 +872,22 @@ server <- function(input, output){
         input$c_ren_re_gasolina,
         input$c_ren_re_hospedaje,
         input$c_ren_re_taller,
-        input$c_syb_ad_asistente,
-        input$c_syb_ad_encargado,
-        input$c_syb_dr_asistente,
-        input$c_syb_dr_encargado,
-        input$c_syb_mo_asistente,
-        input$c_syb_mo_encargado,
-        input$c_vyc_certificacion,
-        input$c_vyc_curso
+        input$c_ren_re_oficina,
+        input$c_mon_ad_asistente,
+        input$c_mon_ad_encargado,
+        input$c_mon_dr_asistente,
+        input$c_mon_dr_encargado,
+        input$c_mon_mo_asistente,
+        input$c_mon_mo_encargado
       ),
-      units = c(
+      unidades = c(
         input$u_imp_do_alimentos,
         input$u_imp_do_auto,
         input$u_imp_do_gasolina,
         input$u_imp_do_hospedaje,
         input$u_imp_do_taller,
+        input$u_imp_do_asistente,
+        input$u_imp_do_encargado,
         input$u_imp_dr_alimentos,
         input$u_imp_dr_asistente,
         input$u_imp_dr_encargado,
@@ -883,6 +898,8 @@ server <- function(input, output){
         input$u_imp_ej_encargado,
         input$u_imp_ej_oficina,
         input$u_imp_ot_otro,
+        input$u_mon_certificacion,
+        input$u_mon_curso,
         input$u_mon_ce_auxilios,
         input$u_mon_ce_bcd,
         input$u_mon_ce_brujula,
@@ -902,7 +919,7 @@ server <- function(input, output){
         input$u_mon_ce_transductor,
         input$u_mon_ce_tubo,
         input$u_mon_evaluacion_pescadores,
-        input$u_mon_me_equipomanatenimiento,
+        input$u_mon_me_equipomantenimiento,
         input$u_mon_me_equiporeemplazo,
         input$u_mon_me_impresion,
         input$u_mon_me_polypap,
@@ -917,7 +934,7 @@ server <- function(input, output){
         input$u_mon_ot_otro,
         input$u_ope_ec_comunicacion,
         input$u_ope_ec_senalizacion,
-        input$u_ope_ot_otros,
+        input$u_ope_ot_otro,
         input$u_ope_pr_alimentos,
         input$u_ope_pr_asistente,
         input$u_ope_pr_auto,
@@ -936,7 +953,7 @@ server <- function(input, output){
         input$u_ope_vi_registro,
         input$u_ope_vi_salariovig,
         input$u_ope_vi_seguro,
-        input$u_ren_ot_otros,
+        input$u_ren_ot_otro,
         input$u_ren_re_alimentos,
         input$u_ren_re_asistente,
         input$u_ren_re_auto,
@@ -945,29 +962,33 @@ server <- function(input, output){
         input$u_ren_re_gasolina,
         input$u_ren_re_hospedaje,
         input$u_ren_re_taller,
-        input$u_syb_ad_asistente,
-        input$u_syb_ad_encargado,
-        input$u_syb_dr_asistente,
-        input$u_syb_dr_encargado,
-        input$u_syb_mo_asistente,
-        input$u_syb_mo_encargado,
-        input$u_vyc_certificacion,
-        input$u_vyc_curso
+        input$u_ren_re_oficina,
+        input$u_mon_ad_asistente,
+        input$u_mon_ad_encargado,
+        input$u_mon_dr_asistente,
+        input$u_mon_dr_encargado,
+        input$u_mon_mo_asistente,
+        input$u_mon_mo_encargado
       )
     )
   })
   
+  totals <- reactive({cost_data %>% 
+      select(fase, concepto, subactividad, periodicidad, id) %>% 
+      left_join(inputs(), by = "id") %>% 
+      mutate(etapa = substr(x = id, start = 1, stop = 3)) %>% 
+      left_join(periods(), by = "etapa") %>% 
+      mutate(eventos = case_when(periodicidad == "Anual" ~ 1 * duracion_fase,
+                            periodicidad == "Bianual" ~ floor(0.5 * duracion_fase),
+                            periodicidad == "Mensual" ~ 12 * duracion_fase,
+                            TRUE ~ 1)) %>% 
+      mutate(total = costos * unidades * eventos) %>% 
+      select(id, fase, concepto, subactividad, duracion_fase, periodicidad, eventos, costos, unidades, total, -etapa)
+    })
+  
   output$totalUSD <- renderInfoBox({
     
-    total <- cost_data %>% 
-      select(fase, concepto, subactividad, periodicidad, id) %>% 
-      mutate(anos = case_when(periodicidad == "Anual" ~ 1 * input$anos,
-                              periodicidad == "Bianal" ~ floor(0.5 * input$anos),
-                              periodicidad == "Mensual" ~ 12 * input$anos,
-                              TRUE ~ 1)) %>% 
-      left_join(inputs(), by = "id") %>% 
-      mutate(total = costs * units * anos) %$% 
-      sum(total, na.rm = T)
+    total <- sum(totals()$total)
     
     infoBox(title = "Costo total",
             value = total,
@@ -979,15 +1000,7 @@ server <- function(input, output){
   
   output$totalMXP <- renderInfoBox({
     
-    total <- cost_data %>% 
-      select(fase, concepto, subactividad, periodicidad, id) %>% 
-      mutate(anos = case_when(periodicidad == "Anual" ~ 1 * input$anos,
-                              periodicidad == "Bianal" ~ floor(0.5 * input$anos),
-                              periodicidad == "Mensual" ~ 12 * input$anos,
-                              TRUE ~ 1)) %>% 
-      left_join(inputs(), by = "id") %>% 
-      mutate(total = costs * units * anos) %$% 
-      sum(total, na.rm = T)
+    total <- sum(totals()$total)
     
     infoBox(title = "Costo total",
             value = round(total * input$usd2mxp),
