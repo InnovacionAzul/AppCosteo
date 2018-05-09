@@ -97,6 +97,20 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                     icon = icon("bar-chart") # cambiar por hand-holding-usd
                                   ),
                                   fluidRow(
+                                    box(title = "Precio del dolar",
+                                        status = "primary",
+                                        background = "blue",
+                                        width = 12,
+                                        collapsible = T,
+                                        collapsed = T,
+                                        numericInput(inputId = "usd2mxp",
+                                                     label = "1 USD = ? MXP",
+                                                     value = 17,
+                                                     min = 0,
+                                                     max = NA)
+                                    )
+                                  ),
+                                  fluidRow(
                                     infoBoxOutput(
                                       outputId = "totalUSD",
                                       width = 12)),
