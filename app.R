@@ -669,16 +669,6 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                       width = 6,
                                       status = "primary",
                                       plotlyOutput(outputId = "plot2")
-                                  ),
-                                  box(title = "Presupuesto por año",
-                                      width = 6,
-                                      status = "primary",
-                                      plotlyOutput(outputId = "plot3")
-                                  ),
-                                  box(title = "Presupuesto 4",
-                                      width = 6,
-                                      status = "primary",
-                                      plotlyOutput(outputId = "plot4")
                                   )
                                 )
                         )
@@ -1021,25 +1011,20 @@ server <- function(input, output){
   
     output$plot1 <- renderPlotly({
       
-      plot1_data <- cost_data %>% 
-        select(fase, concepto, subactividad, periodicidad, id) %>% 
-        mutate(anos = case_when(periodicidad == "Anual" ~ 1 * input$anos,
-                                periodicidad == "Bianal" ~ floor(0.5 * input$anos),
-                                periodicidad == "Mensual" ~ 12 * input$anos,
-                                TRUE ~ 1)) %>% 
-        left_join(inputs(), by = "id") %>% 
-        left_join(correct_fases, by = "fase") %>% 
-        mutate(total = costs * units * anos) %>% 
-        group_by(Fase, concepto, subactividad) %>% 
-        summarize(total = sum(total, na.rm = T)) %>% 
+      plot1_data <- totals() %>% 
+        group_by(fase, concepto, subactividad) %>% 
+        summarize(total = sum(total, na.rm = T) / 1e3) %>% 
         ungroup()
       
-      if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp / 1e3}
+      if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
       
-      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (USD)")
+      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
       
       plot1 <- plot1_data %>% 
-        rename(Concepto = concepto, Subactividad = subactividad, Total = total) %>% 
+        rename(Concepto = concepto,
+               Subactividad = subactividad,
+               Total = total,
+               Fase = fase) %>% 
         ggplot(aes(x = Fase, y = Total, fill = Concepto, label = Subactividad)) +
         geom_col(color = "black") +
         theme_cowplot() +
@@ -1055,6 +1040,37 @@ server <- function(input, output){
       p
     })
     
+    output$plot2 <- renderPlotly({
+      
+      plot2_data <- totals() %>% 
+        group_by(fase, concepto, subactividad) %>% 
+        summarize(total = sum(total, na.rm = T) / 1e3) %>% 
+        ungroup()
+      
+      if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
+      
+      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
+      
+      plot2 <- plot2_data %>% 
+        rename(Concepto = concepto,
+               Subactividad = subactividad,
+               Total = total,
+               Fase = fase) %>% 
+        ggplot(aes(x = Concepto, y = Total, fill = Fase, label = Subactividad)) +
+        geom_col(color = "black") +
+        theme_cowplot() +
+        scale_fill_brewer(palette = input$color_scheme) +
+        labs(x = "Fase del proyecto", y = y_label) +
+        theme(text = element_text(size = input$text_size),
+              axis.text = element_text(size = input$text_size - 2)) +
+        coord_flip()
+      
+      p <- ggplotly(plot2)
+      
+      # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
+      p$elementId <- NULL
+      p
+    })
 }
 
 # Run the application 
