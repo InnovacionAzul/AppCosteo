@@ -79,10 +79,6 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                     tabName = "inicio",
                                     icon = icon(name = "info")),
                                   menuItem(
-                                    text = "Datos Generales",
-                                           tabName = "datos_generales",
-                                           icon = icon(name = "list")),
-                                  menuItem(
                                     text = "Ingresar Costos",
                                     tabName = "costos",
                                     icon = icon(name = "usd"),
