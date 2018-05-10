@@ -14,6 +14,8 @@ library(tidyverse)
 library(cowplot)
 library(plotly)
 
+rm(list = ls())
+
 cost_data <- read.csv("www/cost_data.csv",
                       stringsAsFactors = F,
                       strip.white = T,
@@ -117,7 +119,11 @@ ui <- dashboardPage(title = "Costeo de COBI",
                                   fluidRow(
                                     infoBoxOutput(
                                       outputId = "totalMXP",
-                                      width = 12))
+                                      width = 12)),
+                                  fluidRow(
+                                    downloadButton(outputId = "download_total",
+                                                   label = "Descargar presupuesto")
+                                  )
                                   
                       )
                     ),
@@ -1071,6 +1077,23 @@ server <- function(input, output){
       p$elementId <- NULL
       p
     })
+    
+    output$download_total <- downloadHandler(filename = "Presupuesto.xlsx",
+                                             content = function(file){
+                                               write.xlsx(x = totals(),
+                                                          file = file,
+                                                          sheetName = "Presupuesto",
+                                                          row.names = F,
+                                                          showNA = T)
+                                             }
+      # This function should write data to a file given to it by
+      # the argument 'file'.
+      # content = function(file) {
+      #   # Write to a file specified by the 'file' argument
+      #   write.table(datasetInput(), file, sep = sep,
+      #               row.names = FALSE)
+      # }
+    )
 }
 
 # Run the application 
