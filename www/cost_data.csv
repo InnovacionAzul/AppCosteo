@@ -11,11 +11,15 @@ Implementacion,Unica,N/A,Salarios y Beneficios,Diseno de la reserva marina,Asist
 Implementacion,Unica,N/A,Salarios y Beneficios,Diseno de la reserva marina,Encargado de proyecto,Honorarios de personal involucrado en el diseno de la reserva marina,$/dia,75,,5,imp_dr_encargado
 Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Hospedaje,Talleres en campo para el diseno de una reserva marina,$/dia,43,,6,imp_dr_hospedaje
 Implementacion,Unica,N/A,Viajes y Salidas a campo,Diseno de la reserva marina,Taller preliminar (diseno),Costos de campo para taller que permita decidir la ubicacion de la reserva marina,$/taller,432,,2,imp_dr_taller
-Implementacion,Unica,N/A,Comunicacion,Estrategias de comunicacion,Estrategia de comunicacion,"Costos relacionados con la implementacion de una estrategia de comunicacion en la comunidad (beneficios de las reservas, folletos, carteles, mapas, actividades)",$/comunidad,11000,,1,imp_ec_estrategia
+Implementacion,Unica,N/A,Comunicacion,Estrategias de comunicacion,Estrategia de comunicacion,"Costos relacionados con la implementacion de una estrategia de comunicacion en la comunidad (beneficios de las reservas, folletos, carteles, mapas, actividades)",$/comunidad,5000,,1,imp_ec_estrategia
 Implementacion,Unica,N/A,Salarios y Beneficios,Elaboracion del estudio justificativo para la reserva,Asistente de proyecto,Honorarios de personal involucrado en la elaboracion del estudio justificativo de la creacion de la reserva,$/dia,43,,12,imp_ej_asistente
 Implementacion,Unica,N/A,Salarios y Beneficios,Elaboracion del estudio justificativo para la reserva,Encargado de proyecto,Honorarios de personal involucrado en la elaboracion del estudio justificativo de la creacion de la reserva,$/dia,75,,8,imp_ej_encargado
 Implementacion,Unica,N/A,Costos Directos,Elaboracion del estudio justificativo para la reserva,Trabajo de oficina,Costos de impresion y envio de documentos por mensajeria,$/estudio,11,,10,imp_ej_oficina
-Implementacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,imp_ot_otro
+Implementacion,Unica,N/A,Otro1,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,imp_ot_otro1
+Implementacion,Unica,N/A,Otro2,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,imp_ot_otro2
+Implementacion,Unica,N/A,Otro3,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,imp_ot_otro3
+Implementacion,Unica,N/A,Otro4,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,imp_ot_otro4
+Implementacion,Unica,N/A,Otro5,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,imp_ot_otro5
 Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Asistente de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,43,,10,mon_ad_asistente
 Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Encargado de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,75,,10,mon_ad_encargado
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de primeros auxilios,Costos de compra del kit de primeros auxilios,$/unidad,54,,1,mon_ce_auxilios
@@ -53,10 +57,18 @@ Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Hos
 Monitoreo,Recurrente,Anual,Consultores,Actividades de monitoreo,Salario para pescadores,Salario por pescador por dia de pesca perdido durante la participacion en el monitoreo. Recomendacion: equivalente al promedio de un dia bueno y un dia malo de pesca.,$/pescador/dia,37,Periodo de monitoreo de 5 dias,0,mon_mo_salarios
 Monitoreo,Recurrente,Anual,Costos Directos,Actividades de monitoreo,Seguro de buceo anual,Poliza anual del seguro de buceo DAN,$/pescador,89,DANWorld,1,mon_mo_seguro
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Viaje,Costos de viaje por pescador para el periodo de monitoreo,$/dia,,,0,mon_mo_viaje
-Monitoreo,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro
+Monitoreo,Unica,N/A,Otro1,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro1
+Monitoreo,Unica,N/A,Otro2,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro2
+Monitoreo,Unica,N/A,Otro3,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro3
+Monitoreo,Unica,N/A,Otro4,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro4
+Monitoreo,Unica,N/A,Otro5,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro5
 Operacion,Recurrente,Bianual,Comunicacion,Estrategias de comunicacion,Materiales de comunicacion,"Posters, folletos, reportes para transmitir la informacion en la comunidad ",$/lote,540,,1,ope_ec_comunicacion
 Operacion,Unica,N/A,Comunicacion,Estrategias de comunicacion,Senalizacion permenente para la reserva marina,Senalizacion de forma permanente,$/senalamiento,0,,0,ope_ec_senalizacion
-Operacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otro
+Operacion,Unica,N/A,Otro1,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otro1
+Operacion,Unica,N/A,Otro2,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otro2
+Operacion,Unica,N/A,Otro3,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otro3
+Operacion,Unica,N/A,Otro4,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otro4
+Operacion,Unica,N/A,Otro5,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ope_ot_otro5
 Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alimentos,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,ope_pr_alimentos
 Operacion,Recurrente,Anual,Salarios y Beneficios,Presentacion de resultados,Asistente de proyecto,Honorarios de personal involucrado en taller anual para la presentacion de resultados (biologico y de vigilancia comunitaria),$/dia,43,,2,ope_pr_asistente
 Operacion,Recurrente,Anual,Viajes y Salidas a campo,Presentacion de resultados,Alquiler de automovil,"Talleres en campo para presentar resultados (biologicos, vigilancia comunitaria)",$/dia,33,,4,ope_pr_auto
@@ -75,7 +87,11 @@ Operacion,Unica,N/A,Equipo,Vigilancia,Radio ,Radio para embarcacion de vigilanci
 Operacion,Unica,N/A,Equipo,Vigilancia,Vigilancia - Registro de embarcacion,Registro (matricula de la embarcacion),$/ano,38,COBI,10,ope_vi_registro
 Operacion,Recurrente,Mensual,Consultores,Vigilancia,Salario para el equipo de vigilancia,Salario pagado a pescadores por guardia de vigilancia ,$/mes,,,4,ope_vi_salariovig
 Operacion,Recurrente,Anual,Equipo,Vigilancia,Vigilancia - Seguro de embarcacion,Seguro para embarcacion de vigilancia,$/ano,1730,,1,ope_vi_seguro
-Renovacion,Unica,N/A,Otro,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro
+Renovacion,Unica,N/A,Otro1,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro1
+Renovacion,Unica,N/A,Otro2,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro2
+Renovacion,Unica,N/A,Otro3,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro3
+Renovacion,Unica,N/A,Otro4,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro4
+Renovacion,Unica,N/A,Otro5,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,ren_ot_otro5
 Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alimentos,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,ren_re_alimentos
 Renovacion,Recurrente,Establecida por la reserva,Salarios y Beneficios,Actividades de renovacion,Asistente de proyecto,Honorarios de personal involucrado en la renovacion de la reserva marina,$/dia,43,,10,ren_re_asistente
 Renovacion,Recurrente,Establecida por la reserva,Viajes y Salidas a campo,Actividades de renovacion,Alquiler de automovil,Talleres en campo para la renovacion de una reserva marina,$/dia,33,,3,ren_re_auto
