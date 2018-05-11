@@ -226,7 +226,7 @@ ui <- dashboardPage(title = "Costeo de Reservas",
                                                  costLabel = "$ / día",
                                                  unitLabel = "Días")
                                       ),
-                                  box(title = "Elaboración ETJ",
+                                  box(title = "Elaboración de propuesta",
                                       width = 3,
                                       status = "primary",
                                       collapsible = T,
