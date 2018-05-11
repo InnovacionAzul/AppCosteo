@@ -1161,7 +1161,8 @@ server <- function(input, output){
   
     output$plot1 <- renderPlotly({
       
-      plot1_data <- totals() %>% 
+      plot1_data <- totals()  %>% 
+        filter(total > 0) %>% 
         group_by(fase, concepto, subactividad) %>% 
         summarize(total = sum(total, na.rm = T) / 1e3) %>% 
         ungroup()
@@ -1192,7 +1193,8 @@ server <- function(input, output){
     
     output$plot2 <- renderPlotly({
       
-      plot2_data <- totals() %>% 
+      plot2_data <- totals()  %>% 
+        filter(total > 0) %>% 
         group_by(fase, concepto, subactividad) %>% 
         summarize(total = sum(total, na.rm = T) / 1e3) %>% 
         ungroup()
