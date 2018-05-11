@@ -53,6 +53,7 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel){
   # Define cost and unit defaults for numeric inputs
   costDefault <- cost_data$valor_unitario_usd[cost_data$id == pairId]
   unitDefault <- cost_data$estimacion_de_unidades_requeridas[cost_data$id == pairId]
+  tooltipText <- cost_data$descripcion[cost_data$id == pairId]
 
   tagList(
     titleId,
@@ -67,14 +68,19 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel){
              numericInput(inputId = unitId,
                           label = unitLabel,
                           value = unitDefault,
-                          min = 0)))
+                          min = 0))),
+    bsTooltip(id = costId,
+              title = tooltipText,
+              placement = "right",
+              trigger = "hover",
+              options = list(container = "body"))
   )
 }
 
 # Define UI for application that draws a histogram
-ui <- dashboardPage(title = "Costeo de COBI",
+ui <- dashboardPage(title = "Costeo de Reservas",
                     header = dashboardHeader(
-                      title = "Costeo de Reservas"
+                      title = img(src = "img/COBI_logo.png", height = "52px")
                     ),
                     sidebar = dashboardSidebar(
                       width = 275,
