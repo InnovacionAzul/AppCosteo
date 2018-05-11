@@ -10,9 +10,12 @@
 library(shiny)
 library(shinydashboard)
 library(magrittr)
-library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
 library(cowplot)
 library(plotly)
+library(shinyBS)
 
 rm(list = ls())
 
