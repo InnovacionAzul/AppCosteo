@@ -23,23 +23,23 @@ Implementacion,Unica,N/A,Otro5,Otra,[Costo definido por el usuario],Definido por
 Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Asistente de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,43,,10,mon_ad_asistente
 Monitoreo,Recurrente,Anual,Salarios y Beneficios,Analisis de datos,Encargado de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (analisis posterior al monitoreo y elaboracion de reportes),$/dia,75,,10,mon_ad_encargado
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de primeros auxilios,Costos de compra del kit de primeros auxilios,$/unidad,54,,1,mon_ce_auxilios
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Chaleco,Compra de chaleco BCD para buceo,$/unidad,282,,20,mon_ce_bcd
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Brujula,Compra de brujula para buceo SCUBA,$/unidad,55,,10,mon_ce_brujula
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Cinta de transecto,Costo de compra de cinta de transecto para UVC,$/unidad,16,,100,mon_ce_cinta
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Computadora,Compra de computadora de buceo SCUBA,$/unidad,243,,10,mon_ce_computadora
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Chaleco,Compra de chaleco BCD para buceo,$/unidad,282,,8,mon_ce_bcd
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Brujula,Compra de brujula para buceo SCUBA,$/unidad,55,,8,mon_ce_brujula
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Cinta de transecto,Costo de compra de cinta de transecto para UVC,$/unidad,16,,10,mon_ce_cinta
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Computadora,Compra de computadora de buceo SCUBA,$/unidad,243,,8,mon_ce_computadora
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Localizador GPS,Costo de compra de localizador GPS,$/unidad,215,,1,mon_ce_gps
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de oxigeno DAN,"Costos de compra del kit de tanque de oxigeno de emergencia DAN (Dive Alert Network) para accidentes por buceo SCUBA, con caja seca",$/unidad,324,,10,mon_ce_oxydan
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Caja seca Pelican,Costo de compra de caja seca Pelican para proteccion impermeable de equipo ,$/unidad,190,,50,mon_ce_pelican
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Caja seca Pelican,Costo de compra de caja seca Pelican para proteccion impermeable de equipo ,$/unidad,190,,1,mon_ce_pelican
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Plomos,Compra de plomos para buceo SCUBA,$/kg,5,,10,mon_ce_plomos
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Radio marino,Costo de compra de radio marino,$/unidad,270,,1,mon_ce_radio
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Regulador,Compra de regulador para buceo SCUBA ,$/unidad,426,,50,mon_ce_reg
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Radio marino,Costo de compra de radio marino,$/unidad,270,,2,mon_ce_radio
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Regulador,Compra de regulador para buceo SCUBA ,$/unidad,426,,8,mon_ce_reg
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Reloj,Compra de reloj impermeable,$/unidad,16,,0,mon_ce_reloj
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,"Equipo de buceo - Mascara, Aletas, Snorkel",Compra de equipo basico de snorkel,$/unidad,55,,10,mon_ce_snorkel
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,"Equipo de buceo - Mascara, Aletas, Snorkel",Compra de equipo basico de snorkel,$/unidad,55,,8,mon_ce_snorkel
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Sonda de profundidad,Costo de compra de sonda de profundidad eg Lowrance serie HD ,$/unidad,585,,1,mon_ce_sonda
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Pizarrones de monitoreo,Costo de compra de pizarron de monitoreo para UVC,$/unidad,27,,1,mon_ce_tabla
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Tanque,Compra de tanque de aire para buceo SCUBA,$/unidad,210,,10,mon_ce_tanque
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Sonda de profundidad - Transductor,Costo de compra de transductor para sonda de profundidad,$/unidad,780,,2,mon_ce_transductor
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Tubo de PVC para monitoreo,Costo de compra de tubo de PVC para UVC,$/unidad,1,,100,mon_ce_tubo
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Pizarrones de monitoreo,Costo de compra de pizarron de monitoreo para UVC,$/unidad,27,,8,mon_ce_tabla
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Tanque,Compra de tanque de aire para buceo SCUBA,$/unidad,210,,8,mon_ce_tanque
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Sonda de profundidad - Transductor,Costo de compra de transductor para sonda de profundidad,$/unidad,780,,1,mon_ce_transductor
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Tubo de PVC para monitoreo,Costo de compra de tubo de PVC para UVC,$/unidad,1,,10,mon_ce_tubo
 Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Certificacion de buceo,Costo por buzo para la certificacion PADI y materiales,$/pescador,55,,8,mon_certificacion
 Monitoreo,Unica,N/A,Viajes y Salidas a campo,Capacitacion de pescadores,Curso de buceo para pescadores,Costo por pescador para su certificacion PADI Open Water o equivalente,$/pescador,292,Si se contrata un instructor PADI,8,mon_curso
 Monitoreo,Recurrente,Bianual,Consultores,Evaluacion de pescadores,Evaluacion externa de buzos,Costos de consultoria de la evaluacion externa del grupo de buzos,$/dia,2700,,1,mon_evaluacion_pescadores
@@ -48,14 +48,14 @@ Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Costos de remplazo de 
 Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Impresion de formatos para toma de datos,Costo por lote (por monitoreo) de impresion de formatos para la toma de datos en el monitoreo,$/unidad,1,,10,mon_me_impresion
 Monitoreo,Recurrente,Anual,Equipo,Mantenimiento de equipo,Formato para datos,Costo de compra de hoja de papel impermeable para formato para la toma de datos,$/unidad,0,,1,mon_me_polypap
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Aceite,Aceite para motores de 2 tiempos,$/litro,5,,1,mon_mo_aceite
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alimentos,Costos de alimentacion por pescador durante el periodo de monitoreo,$/pescador/dia,,,0,mon_mo_alimento
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alimentos,"Costos de alimentación por dia, por todo el grupo, durante el monitoreo",$/dia,,,0,mon_mo_alimento
 Monitoreo,Recurrente,Anual,Salarios y Beneficios,Actividades de monitoreo,Asistente de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (logistica/organizacion y trabajo de campo),$/dia,43,,9,mon_mo_asistente
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Alquiler de embarcacion,Costos de alquiler de embarcacion por dia para el monitoreo,$/hora,38,,40,mon_mo_embarcacion
 Monitoreo,Recurrente,Anual,Salarios y Beneficios,Actividades de monitoreo,Encargado de proyecto,Honorarios de personal involucrado en el monitoreo de la reserva marina (logistica/organizacion y trabajo de campo),$/dia,75,,9,mon_mo_encargado
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Embarcacion - Gasolina,Costo de gasolina por litro,$/litro,1,PEMEX,600,mon_mo_gasolina
-Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Hospedaje,Costos de hospedaje por pescador para el periodo de monitoreo,$/pescador/dia,,,0,mon_mo_hospedaje
-Monitoreo,Recurrente,Anual,Consultores,Actividades de monitoreo,Salario para pescadores,Salario por pescador por dia de pesca perdido durante la participacion en el monitoreo. Recomendacion: equivalente al promedio de un dia bueno y un dia malo de pesca.,$/pescador/dia,37,Periodo de monitoreo de 5 dias,0,mon_mo_salarios
-Monitoreo,Recurrente,Anual,Costos Directos,Actividades de monitoreo,Seguro de buceo anual,Poliza anual del seguro de buceo DAN,$/pescador,89,DANWorld,1,mon_mo_seguro
+Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Hospedaje,"Costos de hospedaje por día, por todo el grupo, durante el monitoreo",$/dia,,,0,mon_mo_hospedaje
+Monitoreo,Recurrente,Anual,Consultores,Actividades de monitoreo,Salario para pescadores,Salario total por día para el grupo de pescadores. Recomendación: equivalente al promedio de un día bueno y un día malo de pesca,$/dia,37,Periodo de monitoreo de 5 dias,0,mon_mo_salarios
+Monitoreo,Recurrente,Anual,Costos Directos,Actividades de monitoreo,Seguro de buceo anual,Poliza anual del seguro de buceo DAN,$/pescador,89,DANWorld,8,mon_mo_seguro
 Monitoreo,Recurrente,Anual,Viajes y Salidas a campo,Actividades de monitoreo,Viaje,Costos de viaje por pescador para el periodo de monitoreo,$/dia,,,0,mon_mo_viaje
 Monitoreo,Unica,N/A,Otro1,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro1
 Monitoreo,Unica,N/A,Otro2,Otra,[Costo definido por el usuario],Definido por el usuario,Definido por el usuario,0,,0,mon_ot_otro2
