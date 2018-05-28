@@ -28,9 +28,9 @@ Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Brujula,Compra de 
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Cinta de transecto,Costo de compra de cinta de transecto para UVC,$/unidad,16,,10,mon_ce_cinta
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Computadora,Compra de computadora de buceo SCUBA,$/unidad,243,,8,mon_ce_computadora
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Localizador GPS,Costo de compra de localizador GPS,$/unidad,215,,1,mon_ce_gps
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de oxigeno DAN,"Costos de compra del kit de tanque de oxigeno de emergencia DAN (Dive Alert Network) para accidentes por buceo SCUBA, con caja seca",$/unidad,324,,10,mon_ce_oxydan
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Kit de oxigeno DAN,"Costos de compra del kit de tanque de oxigeno de emergencia DAN (Dive Alert Network) para accidentes por buceo SCUBA, con caja seca",$/unidad,324,,1,mon_ce_oxydan
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Caja seca Pelican,Costo de compra de caja seca Pelican para proteccion impermeable de equipo ,$/unidad,190,,1,mon_ce_pelican
-Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Plomos,Compra de plomos para buceo SCUBA,$/kg,5,,10,mon_ce_plomos
+Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Plomos,Compra de plomos para buceo SCUBA,$/kg,5,,8,mon_ce_plomos
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Radio marino,Costo de compra de radio marino,$/unidad,270,,2,mon_ce_radio
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Regulador,Compra de regulador para buceo SCUBA ,$/unidad,426,,8,mon_ce_reg
 Monitoreo,Unica,N/A,Equipo,Compra de equipo,Equipo de buceo - Reloj,Compra de reloj impermeable,$/unidad,16,,0,mon_ce_reloj
