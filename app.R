@@ -18,7 +18,6 @@ library(cowplot)
 library(plotly)
 library(shinyBS)
 
-rm(list = ls())
 
 cost_data <- read.csv("www/cost_data.csv",
                       stringsAsFactors = F,
@@ -167,6 +166,20 @@ ui <- dashboardPage(title = "Costeo de Reservas",
                         ),
                         tabItem(tabName = "implementacion",
                                 fluidRow(
+                                  box(title = "Test",
+                                      width = 3,
+                                      status = "primary",
+                                      collapsible = T,
+                                      boxHeaderUI(),
+                                      filter(cost_data, fase == "Implementacion",
+                                             subactividad == "Definir objetivos de la reserva") %$% 
+                                        pmap(.l = list(elemento,
+                                                       id,
+                                                       unidad,
+                                                       "dias"),
+                                             .f = CostUnitUI)
+                                      ),
+                                  
                                   box(title = "Definición de objetivos",
                                       width = 3,
                                       status = "primary",
