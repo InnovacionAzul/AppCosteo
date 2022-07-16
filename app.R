@@ -77,8 +77,30 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel){
   )
 }
 
+makeUnit <- function(data, phase, subactivity){
+  
+  fluidRow(
+    box(title = subactivity,
+        width = 3,
+        status = "primary",
+        collapsible = T,
+        boxHeaderUI(),
+        
+        filter(data,
+               fase == phase,
+               subactividad == subactivity) %$%
+          pmap(.l = list(elemento,
+                         id,
+                         unidad,
+                         stringr::str_remove_all(unidad, "[$/]")),
+               .f = CostUnitUI)
+    )
+  )
+  
+}
+
 # Define UI for application that draws a histogram
-ui <- dashboardPage(title = "Costeo de Reservas",
+ui <- dashboardPage(title = "Costeo de Intervenciones",
                     header = dashboardHeader(
                       title = img(src = "img/COBI_logo.png", height = "52px")
                     ),
@@ -90,41 +112,29 @@ ui <- dashboardPage(title = "Costeo de Reservas",
                                     tabName = "inicio",
                                     icon = icon(name = "info")),
                                   menuItem(
-                                    text = "Ingresar Costos",
-                                    tabName = "costos",
-                                    icon = icon(name = "usd"),
-                                    menuSubItem(text = "Implementación",
-                                                tabName = "implementacion"),
-                                    menuSubItem(text = "Monitoreo",
-                                                tabName = "monitoreo"),
-                                    menuSubItem(text = "Operación",
-                                                tabName = "operacion"),
-                                    menuSubItem(text = "Renovación",
-                                                tabName = "renovacion")
+                                    text = "Costeo de Reservas",
+                                    tabName = "rema",
+                                    icon = icon("dollar-sign")#,
+                                    # menuSubItem(text = "Implementación",
+                                                # tabName = "implementacion"),
+                                    # menuSubItem(text = "Monitoreo",
+                                                # tabName = "monitoreo"),
+                                    # menuSubItem(text = "Operación",
+                                                # tabName = "operacion"),
+                                    # menuSubItem(text = "Renovación",
+                                                # tabName = "renovacion")
                                     ),
+                                  menuItem(
+                                    text = "Costeo de FIP",
+                                    tabName = "fip",
+                                    icon = icon("dollar-sign")
+                                  ),
+                                  
                                   menuItem(
                                     text = "Presupuesto",
                                     tabName = "presupuesto",
-                                    icon = icon("bar-chart") # cambiar por hand-holding-usd
+                                    icon = icon("chart-bar") # cambiar por hand-holding-usd
                                   ),
-                                  fluidRow(
-                                    box(title = "Precio del dolar",
-                                        status = "primary",
-                                        background = "blue",
-                                        width = 12,
-                                        collapsible = T,
-                                        collapsed = T,
-                                        numericInput(inputId = "usd2mxp",
-                                                     label = "1 USD = ? MXP",
-                                                     value = 17,
-                                                     min = 0,
-                                                     max = NA)
-                                    )
-                                  ),
-                                  fluidRow(
-                                    infoBoxOutput(
-                                      outputId = "totalUSD",
-                                      width = 12)),
                                   fluidRow(
                                     infoBoxOutput(
                                       outputId = "totalMXP",
@@ -138,10 +148,10 @@ ui <- dashboardPage(title = "Costeo de Reservas",
                                         collapsed = T,
                                         downloadButton(outputId = "download_total",
                                                        label = "Descargar presupuesto"),
-                                        bookmarkButton(title = "Compartir", label = "Compartir")
+                                        bookmarkButton(title = "Compartir",
+                                                       label = "Compartir")
                                     )
                                   )
-                                  
                       )
                     ),
                     body = dashboardBody(
@@ -164,22 +174,45 @@ ui <- dashboardPage(title = "Costeo de Reservas",
                                     p("© COBI 2018")
                                 )
                         ),
+                        tabItem("rema",
+                                tabBox(id = "rema",
+                                       width = 12,
+                                       title = "REMA",
+                                       tabPanel(
+                                         title = "Implementación",
+                                         fluidRow(
+                                           box(title = "Definir objetivos",
+                                               width = 3,
+                                               status = "primary",
+                                               collapsible = T,
+                                               boxHeaderUI(),
+                                               
+                                               filter(cost_data,
+                                                      fase == "Implementacion",
+                                                      subactividad == "Definir objetivos de la reserva") %$%
+                                                 pmap(.l = list(elemento,
+                                                                id,
+                                                                unidad,
+                                                                "dias"),
+                                                      .f = CostUnitUI)
+                                           )
+                                         )
+                                       ),
+                                       tabPanel(
+                                         title = "Diseño de Reservas",
+                                         makeUnit(data = cost_data,
+                                                  phase = "Implementacion",
+                                                  subactivity = "Definir objetivos de la reserva"
+                                                  )
+                                       ),
+                                       tabPanel("C"),
+                                       tabPanel("D"),
+                                       tabPanel("E"),
+                                       
+                                ),
+                                ),
                         tabItem(tabName = "implementacion",
                                 fluidRow(
-                                  box(title = "Test",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      filter(cost_data, fase == "Implementacion",
-                                             subactividad == "Definir objetivos de la reserva") %$% 
-                                        pmap(.l = list(elemento,
-                                                       id,
-                                                       unidad,
-                                                       "dias"),
-                                             .f = CostUnitUI)
-                                      ),
-                                  
                                   box(title = "Definición de objetivos",
                                       width = 3,
                                       status = "primary",
@@ -1148,7 +1181,7 @@ server <- function(input, output){
     infoBox(title = "Costo total",
             value = total,
             subtitle = "USD",
-            icon = icon("usd"),
+            icon = icon("dollar-sign"),
             fill = T,
             color = "light-blue")
   })
@@ -1160,7 +1193,7 @@ server <- function(input, output){
     infoBox(title = "Costo total",
             value = round(total * input$usd2mxp),
             subtitle = "MXP",
-            icon = icon("usd"),
+            icon = icon("dollar-sign"),
             fill = T,
             color = "blue")
   })
