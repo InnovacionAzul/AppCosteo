@@ -17,22 +17,44 @@ library(ggplot2)
 library(cowplot)
 library(plotly)
 library(shinyBS)
+library(purrr)
+library(readxl)
 
+rema_data <- readxl::read_xlsx("www/defaults_rema_fip.xlsx",
+                               sheet = 1,
+                               na = c("", "N/A")) %>%
+  janitor::clean_names() %>%
+  arrange(fase, subfase, concepto, actividad) %>%
+  mutate(valor_unitario = ifelse(is.na(valor_unitario), 0, valor_unitario),
+         estimacion_de_unidades_requeridas = ifelse(is.na(estimacion_de_unidades_requeridas), 0, estimacion_de_unidades_requeridas)) %>%
+  mutate(section = "REMA")
 
-cost_data <- read.csv("www/cost_data.csv",
-                      stringsAsFactors = F,
-                      strip.white = T,
-                      na.strings = "N/A") %>% 
-  janitor::clean_names() %>% 
-  arrange(fase, tipo_de_inversion, periodicidad, concepto, subactividad, elemento) %>% 
-  mutate(valor_unitario_usd = ifelse(
-    is.na(valor_unitario_usd),
-    0,
-    valor_unitario_usd),
-    estimacion_de_unidades_requeridas = ifelse(
-      is.na(estimacion_de_unidades_requeridas),
-      0,
-      estimacion_de_unidades_requeridas))
+fip_data <- readxl::read_xlsx("www/defaults_rema_fip.xlsx",
+                               sheet = 2,
+                               na = c("", "N/A")) %>%
+  janitor::clean_names() %>%
+  arrange(fase, subfase, concepto, actividad) %>%
+  mutate(valor_unitario = ifelse(is.na(valor_unitario), 0, valor_unitario),
+         estimacion_de_unidades_requeridas = ifelse(is.na(estimacion_de_unidades_requeridas), 0, estimacion_de_unidades_requeridas)) %>%
+  mutate(section = "FIP")
+
+cost_data <- rema_data %>%
+  bind_rows(fip_data)
+
+# cost_data <- read.csv("www/cost_data.csv",
+#                       stringsAsFactors = F,
+#                       strip.white = T,
+#                       na.strings = "N/A") %>% 
+#   janitor::clean_names() %>% 
+#   arrange(fase, tipo_de_inversion, periodicidad, concepto, subactividad, elemento) %>% 
+#   mutate(valor_unitario_usd = ifelse(
+#     is.na(valor_unitario_usd),
+#     0,
+#     valor_unitario_usd),
+#     estimacion_de_unidades_requeridas = ifelse(
+#       is.na(estimacion_de_unidades_requeridas),
+#       0,
+#       estimacion_de_unidades_requeridas))
 
 boxHeaderUI <- function(){
   tagList(
@@ -51,7 +73,7 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel){
   unitId <- paste0("u_", pairId)
   
   # Define cost and unit defaults for numeric inputs
-  costDefault <- cost_data$valor_unitario_usd[cost_data$id == pairId]
+  costDefault <- cost_data$valor_unitario[cost_data$id == pairId]
   unitDefault <- cost_data$estimacion_de_unidades_requeridas[cost_data$id == pairId]
   tooltipText <- cost_data$descripcion[cost_data$id == pairId]
 
@@ -77,26 +99,71 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel){
   )
 }
 
-makeUnit <- function(data, phase, subactivity){
+makeUnit <- function(activity, data_subphase){
   
-  fluidRow(
-    box(title = subactivity,
-        width = 3,
+  # fluidRow(
+    box(title = activity,
+        width = 4,
         status = "primary",
         collapsible = T,
+        collapsed = T,
         boxHeaderUI(),
         
-        filter(data,
-               fase == phase,
-               subactividad == subactivity) %$%
-          pmap(.l = list(elemento,
+        filter(data_subphase,
+               actividad == activity) %$%
+          pmap(.l = list(rubro,
                          id,
-                         unidad,
-                         stringr::str_remove_all(unidad, "[$/]")),
+                         unidades,
+                         stringr::str_remove_all(unidades, "[$/]")),
                .f = CostUnitUI)
     )
+  #)
+  
+}
+
+### Makes a row with a header and varying numbers of boxes for each subphase
+activityWrapper <- function(subphase, number, data_fase){
+  
+  data_subphase <- data_fase %>%
+    dplyr::filter(subfase == subphase)
+  
+  activities <- unique(data_subphase$actividad)
+  
+  tagList(
+    fluidRow(
+      column(3,
+             valueBox(value = number, subtitle = subphase, icon = NULL, color = "aqua", width = 12,
+                      href = NULL)
+      ),
+      column(9,
+             fluidRow(
+               map(.x = activities,
+                   .f = makeUnit,
+                   data_subphase = data_subphase)
+             )
+      )
+    ),
+    tags$hr()
   )
   
+}
+
+### Filters the data by section and phase and finds all subphases to iterate over 
+subphaseWrapper <- function(data, phase, section){
+
+  data_fase <- filter(data,
+                      fase == phase,
+                      section == section)
+  
+  subfases <- unique(data_fase$subfase)
+  numbers <- seq(1:length(subfases))
+  
+  tagList(
+    map2(.x = subfases,
+         .y = numbers,
+        .f = activityWrapper,
+        data_fase = data_fase)
+  )
 }
 
 # Define UI for application that draws a histogram
@@ -174,604 +241,46 @@ ui <- dashboardPage(title = "Costeo de Intervenciones",
                                     p("© COBI 2018")
                                 )
                         ),
-                        tabItem("rema",
-                                tabBox(id = "rema",
+                        tabItem(tabName = "rema",
+                                tabBox(id = "rema_tabs",
                                        width = 12,
                                        title = "REMA",
-                                       tabPanel(
-                                         title = "Implementación",
-                                         fluidRow(
-                                           box(title = "Definir objetivos",
-                                               width = 3,
-                                               status = "primary",
-                                               collapsible = T,
-                                               boxHeaderUI(),
-                                               
-                                               filter(cost_data,
-                                                      fase == "Implementacion",
-                                                      subactividad == "Definir objetivos de la reserva") %$%
-                                                 pmap(.l = list(elemento,
-                                                                id,
-                                                                unidad,
-                                                                "dias"),
-                                                      .f = CostUnitUI)
-                                           )
-                                         )
-                                       ),
-                                       tabPanel(
-                                         title = "Diseño de Reservas",
-                                         makeUnit(data = cost_data,
-                                                  phase = "Implementacion",
-                                                  subactivity = "Definir objetivos de la reserva"
-                                                  )
-                                       ),
-                                       tabPanel("C"),
-                                       tabPanel("D"),
-                                       tabPanel("E"),
-                                       
-                                ),
-                                ),
-                        tabItem(tabName = "implementacion",
-                                fluidRow(
-                                  box(title = "Definición de objetivos",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "imp_do_alimentos",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "imp_do_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "imp_do_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Renta automovil",
-                                                 pairId = "imp_do_auto",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Taller preeliminar (objetivos)",
-                                                 pairId = "imp_do_taller",
-                                                 costLabel = "$ / taller",
-                                                 unitLabel = "Num. Talleres"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "imp_do_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "imp_do_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Diseño de reservas",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "imp_dr_alimentos",
-                                                 costLabel = "$ día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "imp_dr_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Taller (diseño)",
-                                                 pairId = "imp_dr_taller",
-                                                 costLabel = "$ / Taller",
-                                                 unitLabel = "Num. Talleres"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "imp_dr_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "imp_dr_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Elaboración de propuesta",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "imp_ej_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "imp_ej_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Trabajo de oficina",
-                                                 pairId = "imp_ej_oficina",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Comunicación",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Estrategia de Comunicación",
-                                                 pairId = "imp_ec_estrategia",
-                                                 costLabel = "$ / programa",
-                                                 unitLabel = "Programas")
-                                      )
-                                  ),
-                                fluidRow(
-                                  box(title = "Otros costos",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro1",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro2",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro3",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro4",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro5",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades")
-                                      )
+                                       ### Design
+                                       tabPanel(title = "Diseño de Reservas",
+                                                subphaseWrapper(data = rema_data,
+                                                                phase = "Diseño",
+                                                                section = "REMA")),
+                                       ### Implementation
+                                       tabPanel(title = "Implementación",
+                                                subphaseWrapper(data = rema_data,
+                                                                phase = "Implementación",
+                                                                section = "REMA")),
+                                       ### Reporting
+                                       tabPanel(title = "Seguimiento",
+                                                subphaseWrapper(data = rema_data,
+                                                                phase = "Seguimiento",
+                                                                section = "REMA")),
                                 )
                         ),
-                        tabItem("monitoreo",
-                                fluidRow(
-                                  box(title = "Información del proyecto",
-                                      width = 3,
-                                      status = "info",
-                                      numericInput(inputId = "mon_dur",
-                                                   label = "Duración de la fase de Monitoreo (años)",
-                                                   value = 5,
-                                                   min = 1,
-                                                   max = 50)
-                                  )
-                                ),
-                                fluidRow(
-                                  box(title = "Actividades de monitoreo",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimento",
-                                                 pairId = "mon_mo_alimento",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Alquiler embarcación",
-                                                 pairId = "mon_mo_embarcacion",
-                                                 costLabel = "$ / hora",
-                                                 unitLabel = "Horas"),
-                                      CostUnitUI(titleId = "Aceite embarcación",
-                                                 pairId = "mon_mo_aceite",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Gasolina embarcación",
-                                                 pairId = "mon_mo_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "mon_mo_hospedaje",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Seguros de buceo",
-                                                 pairId = "mon_mo_seguro",
-                                                 costLabel = "$ / seguro",
-                                                 unitLabel = "Num. seguros"),
-                                      CostUnitUI(titleId = "Salarios pescadores",
-                                                 pairId = "mon_mo_salarios",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Viaje",
-                                                 pairId = "mon_mo_viaje",
-                                                 costLabel = "$ / pescador",
-                                                 unitLabel = "Num. pescadores"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "mon_mo_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "mon_mo_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Análisis de datos",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "mon_ad_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "mon_ad_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Capacitación de pescadores",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Certificación de buceo",
-                                                 pairId = "mon_certificacion",
-                                                 costLabel = "$ / pescador",
-                                                 unitLabel = "Num. Pescadores"),
-                                      CostUnitUI(titleId = "Curso de buceo para pescadores",
-                                                 pairId = "mon_curso",
-                                                 costLabel = "$ / pescador",
-                                                 unitLabel = "Num. Pescadores")
-                                      ),
-                                  box(title = "Compra de equipo",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Cintas de transecto",
-                                                 pairId = "mon_ce_cinta",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Tubos de PVC para monitoreo",
-                                                 pairId = "mon_ce_tubo",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Chalecos buceo (BCD)",
-                                                 pairId = "mon_ce_bcd",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Reguladores",
-                                                 pairId = "mon_ce_reg",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Tanques",
-                                                 pairId = "mon_ce_tanque",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Plomos",
-                                                 pairId = "mon_ce_plomos",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Computadoras",
-                                                 pairId = "mon_ce_computadora",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Equipo de snorkel",
-                                                 pairId = "mon_ce_snorkel",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Brújula",
-                                                 pairId = "mon_ce_brujula",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Tablas de monitoreo",
-                                                 pairId = "mon_ce_tabla",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Sonda de profundidad",
-                                                 pairId = "mon_ce_sonda",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Transductor de sonda",
-                                                 pairId = "mon_ce_transductor",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "GPS",
-                                                 pairId = "mon_ce_gps",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Radio marino",
-                                                 pairId = "mon_ce_radio",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Botiquín de primeros auxilios",
-                                                 pairId = "mon_ce_auxilios",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Botiquín oxígeno DAN",
-                                                 pairId = "mon_ce_oxydan",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Caja pelican",
-                                                 pairId = "mon_ce_pelican",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Reloj",
-                                                 pairId = "mon_ce_reloj",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                  )
-                                  ),
-                                fluidRow(
-                                  box(title = "Mantenimiento",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Reemplazo de equipo",
-                                                 pairId = "mon_me_equiporeemplazo",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Equipo de mantenimiento",
-                                                 pairId = "mon_me_equipomantenimiento",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Formatos de datos",
-                                                 pairId = "mon_me_polypap",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Impresión de formatos",
-                                                 pairId = "mon_me_impresion",
-                                                 costLabel = "",
-                                                 unitLabel = "")),
-                                  box(title = "Otros",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Evaluación de pescadores",
-                                                 pairId = "mon_evaluacion_pescadores",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro1",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro2",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro3",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro4",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro5",
-                                                 costLabel = "",
-                                                 unitLabel = ""))
-                                  )
-                        ),
-                        tabItem("operacion",
-                                fluidRow(
-                                  box(title = "Información del proyecto",
-                                      width = 3,
-                                      status = "info",
-                                      numericInput(inputId = "ope_dur",
-                                                   label = "Duración de la fase de Operación (años)",
-                                                   value = 5,
-                                                   min = 1,
-                                                   max = 50)
-                                  )
-                                ),
-                                fluidRow(
-                                  box(title = "Presentación de resultados",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "ope_pr_alimentos",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "ope_pr_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "ope_pr_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Renta automovil",
-                                                 pairId = "ope_pr_auto",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "ope_pr_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "ope_pr_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Vigilancia",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Boya",
-                                                 pairId = "ope_vi_boya",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Instalación de boya",
-                                                 pairId = "ope_vi_boyainst",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Cámara",
-                                                 pairId = "ope_vi_camara",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "ope_vi_gasolina",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "GPS",
-                                                 pairId = "ope_vi_gps",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Radio marino",
-                                                 pairId = "ope_vi_radio",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Salario vigilancia",
-                                                 pairId = "ope_vi_salariovig",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Embarcación",
-                                                 pairId = "ope_vi_embarcacion",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Mantenimiento embarcación",
-                                                 pairId = "ope_vi_mantenimiento",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Motor embarcación",
-                                                 pairId = "ope_vi_motor",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Registro embarcación",
-                                                 pairId = "ope_vi_registro",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Seguro embarcación",
-                                                 pairId = "ope_vi_seguro",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                      ),
-                                  box(title = "Estrategia de comunicación",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Materiales de comunicación",
-                                                 pairId = "ope_ec_comunicacion",
-                                                 costLabel = "$ / unidad",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Señalización de la reserva",
-                                                 pairId = "ope_ec_senalizacion",
-                                                 costLabel = "$ / unidad",
-                                                 unitLabel = "Unidades")
-                                      ),
-                                  box(title = "Otros costos",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro1",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro2",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro3",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro4",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro5",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                  )
-                                  )
-                                ),
-                        tabItem("renovacion",
-                                fluidRow(
-                                  box(title = "Elaboracón ETJ",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "ren_re_alimentos",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Encuestas",
-                                                 pairId = "ren_re_encuestas",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "ren_re_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "ren_re_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Renta automovil",
-                                                 pairId = "ren_re_auto",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Taller preliminar (renovación)",
-                                                 pairId = "ren_re_taller",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "ren_re_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "ren_re_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Trabajo de oficina",
-                                                 pairId = "ren_re_oficina",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Otros costos",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro1",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro2",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro3",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro4",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro5",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                  )
+                        tabItem(tabName = "fip",
+                                tabBox(id = "fip_tabs",
+                                       width = 12,
+                                       title = "FIP",
+                                       ### Design
+                                       tabPanel(title = "Diseño de FIP",
+                                                subphaseWrapper(data = fip_data,
+                                                                phase = "Diseño",
+                                                                section = "FIP")),
+                                       ### Implementation
+                                       tabPanel(title = "Implementación",
+                                                subphaseWrapper(data = fip_data,
+                                                                phase = "Implementación",
+                                                                section = "FIP")),
+                                       ### Reporting
+                                       tabPanel(title = "Seguimiento",
+                                                subphaseWrapper(data = fip_data,
+                                                                phase = "Seguimiento",
+                                                                section = "FIP")),
                                 )
                         ),
                         tabItem("presupuesto",
@@ -839,6 +348,28 @@ server <- function(input, output){
                         1)
     )
   })
+  
+  ### Reactive object for REMA inputs
+  rema_inputs <- reactiveValues(id = rema_data$id,
+                                costos = rema_data$valor_unitario,
+                                unidades = rema_data$estimacion_de_unidades_requeridas)
+  
+  ### Look for any changes to inputs in this 
+  # observe({
+  #   
+  #   rema_ids <- rema_data$id
+  #   rema_cost_inputs <- paste0("c_", rema_data$id)
+  #   rema_unit_inputs <- paste0("u_", rema_data$id)
+  #   browser()
+  #   
+  #   rema_inputs$costos <- map_dbl(rema_cost_inputs, function(x){eval(parse(text=paste0("input$", x)))})
+  #   rema_inputs$unidades <- map_dbl
+  #   sapply(function(x){eval(parse(text="input$c_dis_def_1"))})
+  #   input[[rema_unit_inputs]]
+  #   
+  #   str(reactiveValuesToList(input)) 
+  #   
+  # })
   
   inputs <- reactive({
     tibble(
