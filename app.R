@@ -241,61 +241,81 @@ ui <- dashboardPage(title = "Costeo de Intervenciones",
                                     p("© COBI 2018")
                                 )
                         ),
+                        ### Marine reserves
                         tabItem(tabName = "rema",
                                 tabBox(id = "rema_tabs",
                                        width = 12,
                                        title = "REMA",
+                                       tags$br(),
                                        ### Design
                                        tabPanel(title = "Diseño de Reservas",
+                                                makePhaseDuration(phase = "Diseño",
+                                                                  section = "REMA"),
                                                 subphaseWrapper(data = rema_data,
                                                                 phase = "Diseño",
                                                                 section = "REMA")),
                                        ### Implementation
                                        tabPanel(title = "Implementación",
+                                                makePhaseDuration(phase = "Implementación",
+                                                                  section = "REMA"),                                  
                                                 subphaseWrapper(data = rema_data,
                                                                 phase = "Implementación",
                                                                 section = "REMA")),
-                                       ### Reporting
+                                       ### Follow up
                                        tabPanel(title = "Seguimiento",
+                                                makePhaseDuration(phase = "Seguimiento",
+                                                                  section = "REMA"),
                                                 subphaseWrapper(data = rema_data,
                                                                 phase = "Seguimiento",
                                                                 section = "REMA")),
                                 )
                         ),
+                        ### FIPs
                         tabItem(tabName = "fip",
                                 tabBox(id = "fip_tabs",
                                        width = 12,
                                        title = "FIP",
+                                       tags$br(),
                                        ### Design
                                        tabPanel(title = "Diseño de FIP",
+                                                makePhaseDuration(phase = "Diseño",
+                                                                  section = "FIP"),
                                                 subphaseWrapper(data = fip_data,
                                                                 phase = "Diseño",
                                                                 section = "FIP")),
                                        ### Implementation
                                        tabPanel(title = "Implementación",
-                                                subphaseWrapper(data = fip_data,
-                                                                phase = "Implementación",
-                                                                section = "FIP")),
-                                       ### Reporting
+                                                makePhaseDuration(phase = "Implementación",
+                                                                  section = "FIP"),
+                                                uiOutput("imp_fip")
+# 
+#                                                 subphaseWrapper(data = fip_data,
+#                                                                 phase = "Implementación",
+#                                                                 section = "FIP")
+                                                ),
+                                       ### Follow up
                                        tabPanel(title = "Seguimiento",
+                                                makePhaseDuration(phase = "Seguimiento",
+                                                                  section = "FIP"),
                                                 subphaseWrapper(data = fip_data,
                                                                 phase = "Seguimiento",
                                                                 section = "FIP")),
                                 )
                         ),
+                        ### Plots
                         tabItem("presupuesto",
                                 fluidRow(
                                   box(title = "Control de gráficas",
                                       status = "primary",
                                       width = 12,
                                       collapsible = T,
-                                      box(width = 2,
-                                          status = "primary",
-                                          checkboxInput(inputId = "costs_in_mxp",
-                                                        label = "Gráficas en pesos",
-                                                        value = F)
-                                          
-                                      ),
+                                      # box(width = 2,
+                                      #     status = "primary",
+                                      #     checkboxInput(inputId = "costs_in_mxp",
+                                      #                   label = "Gráficas en pesos",
+                                      #                   value = F)
+                                      #     
+                                      # ),
                                       box(width = 2,
                                           status = "primary",
                                           numericInput(inputId = "text_size",
@@ -320,396 +340,147 @@ ui <- dashboardPage(title = "Costeo de Intervenciones",
                                 ),
                                 fluidRow(
                                   box(title = "Presupuesto por fases",
-                                      width = 6,
+                                      width = 12,
                                       status = "primary",
-                                      plotlyOutput(outputId = "plot1")
-                                  ),
+                                      plotlyOutput(outputId = "plot1"))
+                                ),
+                                fluidRow(
                                   box(title = "Presupuesto por conceptos",
-                                      width = 6,
+                                      width = 12,
                                       status = "primary",
-                                      plotlyOutput(outputId = "plot2")
-                                  )
+                                      plotlyOutput(outputId = "plot2"))
                                 )
-                        )
-                      )
-                    )
-)
+                        ) #/tabItem
+                      ) #/tabItems
+                    ) #/dashboardBody
+) #/ui
 
 
 # Define server logic
 server <- function(input, output){
   
-  periods <- reactive({
-    tibble(
-      etapa = c("imp", "mon", "ope", "ren"),
-      duracion_fase = c(1,
-                        input$mon_dur,
-                        input$ope_dur,
-                        1)
-    )
+  ### Reactive UI for FIP Implementation stage
+  output$imp_fip <- renderUI({
+    subphaseWrapper(data = fip_data,
+                    phase = "Implementación",
+                    section = "FIP",
+                    subphases_to_include = input$choices_imp_fip)
   })
   
-  ### Reactive object for REMA inputs
-  rema_inputs <- reactiveValues(id = rema_data$id,
-                                costos = rema_data$valor_unitario,
-                                unidades = rema_data$estimacion_de_unidades_requeridas)
+  outputOptions(output, "imp_fip", suspendWhenHidden = FALSE, priority = 10)
   
-  ### Look for any changes to inputs in this 
-  # observe({
-  #   
-  #   rema_ids <- rema_data$id
-  #   rema_cost_inputs <- paste0("c_", rema_data$id)
-  #   rema_unit_inputs <- paste0("u_", rema_data$id)
-  #   browser()
-  #   
-  #   rema_inputs$costos <- map_dbl(rema_cost_inputs, function(x){eval(parse(text=paste0("input$", x)))})
-  #   rema_inputs$unidades <- map_dbl
-  #   sapply(function(x){eval(parse(text="input$c_dis_def_1"))})
-  #   input[[rema_unit_inputs]]
-  #   
-  #   str(reactiveValuesToList(input)) 
-  #   
+  ### Durations of each stage
+  periods <- reactiveValues(df = tibble(etapa = rep(c("dis", "imp", "seg"), times = 2),
+                                        section = rep(c("REMA", "FIP"), each = 3),
+                                        duracion_fase = rep(1, length.out = 6)))
+  
+  observe({
+    periods$df$duracion_fase <- c(input$d_dis_rema,
+                                  input$d_imp_rema,
+                                  input$d_seg_rema,
+                                  input$d_dis_fip,
+                                  input$d_imp_fip,
+                                  input$d_seg_fip)
+  })
+  
+  # periods <- reactive({
+  #   tibble(etapa = c("dis", "imp", "seg", "mon", "ope", "ren"),
+  #          duracion_fase = c(1,
+  #                            1,
+  #                            1,
+  #                            1,#input$mon_dur,
+  #                            1,#input$ope_dur,
+  #                            1))
   # })
   
-  inputs <- reactive({
-    tibble(
-      id = c(
-        "imp_do_alimentos",
-        "imp_do_auto",
-        "imp_do_gasolina",
-        "imp_do_hospedaje",
-        "imp_do_taller",
-        "imp_do_asistente",
-        "imp_do_encargado",
-        "imp_dr_alimentos",
-        "imp_dr_asistente",
-        "imp_dr_encargado",
-        "imp_dr_hospedaje",
-        "imp_dr_taller",
-        "imp_ec_estrategia",
-        "imp_ej_asistente",
-        "imp_ej_encargado",
-        "imp_ej_oficina",
-        "imp_ot_otro1",
-        "imp_ot_otro2",
-        "imp_ot_otro3",
-        "imp_ot_otro4",
-        "imp_ot_otro5",
-        "mon_certificacion",
-        "mon_curso",
-        "mon_ce_auxilios",
-        "mon_ce_bcd",
-        "mon_ce_brujula",
-        "mon_ce_cinta",
-        "mon_ce_computadora",
-        "mon_ce_gps",
-        "mon_ce_oxydan",
-        "mon_ce_pelican",
-        "mon_ce_plomos",
-        "mon_ce_radio",
-        "mon_ce_reg",
-        "mon_ce_reloj",
-        "mon_ce_snorkel",
-        "mon_ce_sonda",
-        "mon_ce_tabla",
-        "mon_ce_tanque",
-        "mon_ce_transductor",
-        "mon_ce_tubo",
-        "mon_evaluacion_pescadores",
-        "mon_me_equipomantenimiento",
-        "mon_me_equiporeemplazo",
-        "mon_me_impresion",
-        "mon_me_polypap",
-        "mon_mo_aceite",
-        "mon_mo_alimento",
-        "mon_mo_embarcacion",
-        "mon_mo_gasolina",
-        "mon_mo_hospedaje",
-        "mon_mo_salarios",
-        "mon_mo_seguro",
-        "mon_mo_viaje",
-        "mon_ot_otro1",
-        "mon_ot_otro2",
-        "mon_ot_otro3",
-        "mon_ot_otro4",
-        "mon_ot_otro5",
-        "ope_ec_comunicacion",
-        "ope_ec_senalizacion",
-        "ope_ot_otro1",
-        "ope_ot_otro2",
-        "ope_ot_otro3",
-        "ope_ot_otro4",
-        "ope_ot_otro5",
-        "ope_pr_alimentos",
-        "ope_pr_asistente",
-        "ope_pr_auto",
-        "ope_pr_encargado",
-        "ope_pr_gasolina",
-        "ope_pr_hospedaje",
-        "ope_vi_boya",
-        "ope_vi_boyainst",
-        "ope_vi_camara",
-        "ope_vi_embarcacion",
-        "ope_vi_gasolina",
-        "ope_vi_gps",
-        "ope_vi_mantenimiento",
-        "ope_vi_motor",
-        "ope_vi_radio",
-        "ope_vi_registro",
-        "ope_vi_salariovig",
-        "ope_vi_seguro",
-        "ren_ot_otro1",
-        "ren_ot_otro2",
-        "ren_ot_otro3",
-        "ren_ot_otro4",
-        "ren_ot_otro5",
-        "ren_re_alimentos",
-        "ren_re_asistente",
-        "ren_re_auto",
-        "ren_re_encargado",
-        "ren_re_encuestas",
-        "ren_re_gasolina",
-        "ren_re_hospedaje",
-        "ren_re_taller",
-        "ren_re_oficina",
-        "mon_ad_asistente",
-        "mon_ad_encargado",
-        "mon_mo_asistente",
-        "mon_mo_encargado"
-      ),
-      costos = c(
-        input$c_imp_do_alimentos,
-        input$c_imp_do_auto,
-        input$c_imp_do_gasolina,
-        input$c_imp_do_hospedaje,
-        input$c_imp_do_taller,
-        input$c_imp_do_asistente,
-        input$c_imp_do_encargado,
-        input$c_imp_dr_alimentos,
-        input$c_imp_dr_asistente,
-        input$c_imp_dr_encargado,
-        input$c_imp_dr_hospedaje,
-        input$c_imp_dr_taller,
-        input$c_imp_ec_estrategia,
-        input$c_imp_ej_asistente,
-        input$c_imp_ej_encargado,
-        input$c_imp_ej_oficina,
-        input$c_imp_ot_otro1,
-        input$c_imp_ot_otro2,
-        input$c_imp_ot_otro3,
-        input$c_imp_ot_otro4,
-        input$c_imp_ot_otro5,
-        input$c_mon_certificacion,
-        input$c_mon_curso,
-        input$c_mon_ce_auxilios,
-        input$c_mon_ce_bcd,
-        input$c_mon_ce_brujula,
-        input$c_mon_ce_cinta,
-        input$c_mon_ce_computadora,
-        input$c_mon_ce_gps,
-        input$c_mon_ce_oxydan,
-        input$c_mon_ce_pelican,
-        input$c_mon_ce_plomos,
-        input$c_mon_ce_radio,
-        input$c_mon_ce_reg,
-        input$c_mon_ce_reloj,
-        input$c_mon_ce_snorkel,
-        input$c_mon_ce_sonda,
-        input$c_mon_ce_tabla,
-        input$c_mon_ce_tanque,
-        input$c_mon_ce_transductor,
-        input$c_mon_ce_tubo,
-        input$c_mon_evaluacion_pescadores,
-        input$c_mon_me_equipomantenimiento,
-        input$c_mon_me_equiporeemplazo,
-        input$c_mon_me_impresion,
-        input$c_mon_me_polypap,
-        input$c_mon_mo_aceite,
-        input$c_mon_mo_alimento,
-        input$c_mon_mo_embarcacion,
-        input$c_mon_mo_gasolina,
-        input$c_mon_mo_hospedaje,
-        input$c_mon_mo_salarios,
-        input$c_mon_mo_seguro,
-        input$c_mon_mo_viaje,
-        input$c_mon_ot_otro1,
-        input$c_mon_ot_otro2,
-        input$c_mon_ot_otro3,
-        input$c_mon_ot_otro4,
-        input$c_mon_ot_otro5,
-        input$c_ope_ec_comunicacion,
-        input$c_ope_ec_senalizacion,
-        input$c_ope_ot_otro1,
-        input$c_ope_ot_otro2,
-        input$c_ope_ot_otro3,
-        input$c_ope_ot_otro4,
-        input$c_ope_ot_otro5,
-        input$c_ope_pr_alimentos,
-        input$c_ope_pr_asistente,
-        input$c_ope_pr_auto,
-        input$c_ope_pr_encargado,
-        input$c_ope_pr_gasolina,
-        input$c_ope_pr_hospedaje,
-        input$c_ope_vi_boya,
-        input$c_ope_vi_boyainst,
-        input$c_ope_vi_camara,
-        input$c_ope_vi_embarcacion,
-        input$c_ope_vi_gasolina,
-        input$c_ope_vi_gps,
-        input$c_ope_vi_mantenimiento,
-        input$c_ope_vi_motor,
-        input$c_ope_vi_radio,
-        input$c_ope_vi_registro,
-        input$c_ope_vi_salariovig,
-        input$c_ope_vi_seguro,
-        input$c_ren_ot_otro1,
-        input$c_ren_ot_otro2,
-        input$c_ren_ot_otro3,
-        input$c_ren_ot_otro4,
-        input$c_ren_ot_otro5,
-        input$c_ren_re_alimentos,
-        input$c_ren_re_asistente,
-        input$c_ren_re_auto,
-        input$c_ren_re_encargado,
-        input$c_ren_re_encuestas,
-        input$c_ren_re_gasolina,
-        input$c_ren_re_hospedaje,
-        input$c_ren_re_taller,
-        input$c_ren_re_oficina,
-        input$c_mon_ad_asistente,
-        input$c_mon_ad_encargado,
-        input$c_mon_dr_asistente,
-        input$c_mon_dr_encargado,
-        input$c_mon_mo_asistente,
-        input$c_mon_mo_encargado
-      ),
-      unidades = c(
-        input$u_imp_do_alimentos,
-        input$u_imp_do_auto,
-        input$u_imp_do_gasolina,
-        input$u_imp_do_hospedaje,
-        input$u_imp_do_taller,
-        input$u_imp_do_asistente,
-        input$u_imp_do_encargado,
-        input$u_imp_dr_alimentos,
-        input$u_imp_dr_asistente,
-        input$u_imp_dr_encargado,
-        input$u_imp_dr_hospedaje,
-        input$u_imp_dr_taller,
-        input$u_imp_ec_estrategia,
-        input$u_imp_ej_asistente,
-        input$u_imp_ej_encargado,
-        input$u_imp_ej_oficina,
-        input$u_imp_ot_otro1,
-        input$u_imp_ot_otro2,
-        input$u_imp_ot_otro3,
-        input$u_imp_ot_otro4,
-        input$u_imp_ot_otro5,
-        input$u_mon_certificacion,
-        input$u_mon_curso,
-        input$u_mon_ce_auxilios,
-        input$u_mon_ce_bcd,
-        input$u_mon_ce_brujula,
-        input$u_mon_ce_cinta,
-        input$u_mon_ce_computadora,
-        input$u_mon_ce_gps,
-        input$u_mon_ce_oxydan,
-        input$u_mon_ce_pelican,
-        input$u_mon_ce_plomos,
-        input$u_mon_ce_radio,
-        input$u_mon_ce_reg,
-        input$u_mon_ce_reloj,
-        input$u_mon_ce_snorkel,
-        input$u_mon_ce_sonda,
-        input$u_mon_ce_tabla,
-        input$u_mon_ce_tanque,
-        input$u_mon_ce_transductor,
-        input$u_mon_ce_tubo,
-        input$u_mon_evaluacion_pescadores,
-        input$u_mon_me_equipomantenimiento,
-        input$u_mon_me_equiporeemplazo,
-        input$u_mon_me_impresion,
-        input$u_mon_me_polypap,
-        input$u_mon_mo_aceite,
-        input$u_mon_mo_alimento,
-        input$u_mon_mo_embarcacion,
-        input$u_mon_mo_gasolina,
-        input$u_mon_mo_hospedaje,
-        input$u_mon_mo_salarios,
-        input$u_mon_mo_seguro,
-        input$u_mon_mo_viaje,
-        input$u_mon_ot_otro1,
-        input$u_mon_ot_otro2,
-        input$u_mon_ot_otro3,
-        input$u_mon_ot_otro4,
-        input$u_mon_ot_otro5,
-        input$u_ope_ec_comunicacion,
-        input$u_ope_ec_senalizacion,
-        input$u_ope_ot_otro1,
-        input$u_ope_ot_otro2,
-        input$u_ope_ot_otro3,
-        input$u_ope_ot_otro4,
-        input$u_ope_ot_otro5,
-        input$u_ope_pr_alimentos,
-        input$u_ope_pr_asistente,
-        input$u_ope_pr_auto,
-        input$u_ope_pr_encargado,
-        input$u_ope_pr_gasolina,
-        input$u_ope_pr_hospedaje,
-        input$u_ope_vi_boya,
-        input$u_ope_vi_boyainst,
-        input$u_ope_vi_camara,
-        input$u_ope_vi_embarcacion,
-        input$u_ope_vi_gasolina,
-        input$u_ope_vi_gps,
-        input$u_ope_vi_mantenimiento,
-        input$u_ope_vi_motor,
-        input$u_ope_vi_radio,
-        input$u_ope_vi_registro,
-        input$u_ope_vi_salariovig,
-        input$u_ope_vi_seguro,
-        input$u_ren_ot_otro1,
-        input$u_ren_ot_otro2,
-        input$u_ren_ot_otro3,
-        input$u_ren_ot_otro4,
-        input$u_ren_ot_otro5,
-        input$u_ren_re_alimentos,
-        input$u_ren_re_asistente,
-        input$u_ren_re_auto,
-        input$u_ren_re_encargado,
-        input$u_ren_re_encuestas,
-        input$u_ren_re_gasolina,
-        input$u_ren_re_hospedaje,
-        input$u_ren_re_taller,
-        input$u_ren_re_oficina,
-        input$u_mon_ad_asistente,
-        input$u_mon_ad_encargado,
-        input$u_mon_dr_asistente,
-        input$u_mon_dr_encargado,
-        input$u_mon_mo_asistente,
-        input$u_mon_mo_encargado
-      )
-    )
+  ### Reactive object for REMA and FIP inputs
+  input_rv <- reactiveValues(rema = tibble(id = rema_data$id,
+                                         costos = rema_data$valor_unitario,
+                                         unidades = rema_data$estimacion_de_unidades_requeridas),
+                             fip = tibble(id = fip_data$id,
+                                          costos = fip_data$valor_unitario,
+                                          unidades = fip_data$estimacion_de_unidades_requeridas))
+  
+  ## Look for any changes to inputs in the REMA section
+  observe({
+    
+    valid_c_rema_inputs <- rema_data$id[which(paste0("c_", rema_data$id) %in% names(input))]
+    
+    rema_costos <- purrr::map2_dfr(.x = valid_c_rema_inputs,
+                                  .y = paste0("c_", valid_c_rema_inputs),
+                                  ~ {
+                                    tibble(id = .x,
+                                           costos = input[[.y]])
+                                  })
+    
+    input_rv$rema$costos[input_rv$rema$id %in% rema_costos$id] <- rema_costos$costos
+    
+    valid_u_rema_inputs <- rema_data$id[which(paste0("u_", rema_data$id) %in% names(input))]
+    
+    rema_unidades <- purrr::map2_dfr(.x = valid_u_rema_inputs,
+                                    .y = paste0("u_", valid_u_rema_inputs),
+                                    ~ {
+                                      tibble(id = .x,
+                                             unidades = input[[.y]])
+                                    })
+    
+    input_rv$rema$unidades[input_rv$rema$id %in% rema_unidades$id] <- rema_unidades$unidades
+
   })
   
-  totals <- reactive({cost_data %>% 
-      select(fase, concepto, subactividad, periodicidad, id) %>% 
-      left_join(inputs(), by = "id") %>% 
-      mutate(etapa = substr(x = id, start = 1, stop = 3)) %>% 
-      left_join(periods(), by = "etapa") %>% 
-      mutate(eventos = case_when(periodicidad == "Anual" ~ 1 * duracion_fase,
-                            periodicidad == "Bianual" ~ floor(0.5 * duracion_fase),
-                            periodicidad == "Mensual" ~ 12 * duracion_fase,
-                            TRUE ~ 1)) %>% 
+  ## Look for any changes to inputs in the REMA section
+  observe({
+    
+    valid_c_fip_inputs <- fip_data$id[which(paste0("c_", fip_data$id) %in% names(input))]
+    
+    fip_costos <- purrr::map2_dfr(.x = valid_c_fip_inputs,
+                                  .y = paste0("c_", valid_c_fip_inputs),
+                                  ~ {
+                                    tibble(id = .x,
+                                           costos = input[[.y]])
+                                  })
+    
+    input_rv$fip$costos[input_rv$fip$id %in% fip_costos$id] <- fip_costos$costos
+    
+    valid_u_fip_inputs <- fip_data$id[which(paste0("u_", fip_data$id) %in% names(input))]
+    
+    fip_unidades <- purrr::map2_dfr(.x = valid_u_fip_inputs,
+                                    .y = paste0("u_", valid_u_fip_inputs),
+                                    ~ {
+                                      tibble(id = .x,
+                                             unidades = input[[.y]])
+                                    })
+    
+    input_rv$fip$unidades[input_rv$fip$id %in% fip_unidades$id] <- fip_unidades$unidades
+    
+  })
+  
+  ### Get totals for each activity
+  totals <- reactive({
+    
+    dat <- input_rv$rema %>%
+      bind_rows(input_rv$fip)
+    
+   cost_data %>% 
+      select(fase, subfase, concepto, actividad, actividad_frecuencia, rubro, id, section) %>% 
+      left_join(dat, by = "id") %>% 
+      mutate(etapa = tolower(substr(x = fase, start = 1, stop = 3))) %>% 
+      left_join(periods$df, by = c("etapa", "section")) %>% 
+      mutate(eventos = case_when(actividad_frecuencia == "Anual" ~ 1 * duracion_fase,
+                                 actividad_frecuencia == "Bianual" ~ floor(0.5 * duracion_fase),
+                                 actividad_frecuencia == "Mensual" ~ 12 * duracion_fase,
+                                 TRUE ~ 1)) %>%
       mutate(total = costos * unidades * eventos) %>% 
-      select(id, fase, concepto, subactividad, duracion_fase, periodicidad, eventos, costos, unidades, total, -etapa)
+      select(section, id, concepto, fase, subfase, actividad, rubro, duracion_fase, actividad_frecuencia, eventos, costos, unidades, total, -etapa) 
+    
     })
   
-  output$totalUSD <- renderInfoBox({
+  ### Value box with total cost in USD for marine reserves
+  output$REMAtotalUSD <- renderInfoBox({
     
-    total <- sum(totals()$total)
+    total <- sum(totals()$total[totals()$section == "REMA"], na.rm = T)
     
-    infoBox(title = "Costo total",
+    infoBox(title = "Costo total (REMA)",
             value = total,
             subtitle = "USD",
             icon = icon("dollar-sign"),
@@ -717,84 +488,115 @@ server <- function(input, output){
             color = "light-blue")
   })
   
-  output$totalMXP <- renderInfoBox({
+  ### Value box with total cost in USD for FIP
+  output$FIPtotalUSD <- renderInfoBox({
     
-    total <- sum(totals()$total)
+    total <- sum(totals()$total[totals()$section == "FIP"], na.rm = T)
     
-    infoBox(title = "Costo total",
-            value = round(total * input$usd2mxp),
-            subtitle = "MXP",
+    infoBox(title = "Costo total (FIP)",
+            value = total,
+            subtitle = "USD",
             icon = icon("dollar-sign"),
             fill = T,
-            color = "blue")
+            color = "light-blue")
   })
   
-  correct_fases <- tibble(fase = c("Implementacion",
-                                   "Monitoreo",
-                                   "Operacion",
-                                   "Renovacion"),
-                          Fase = c("Implementación",
-                                   "Monitoreo",
-                                   "Operación",
-                                   "Renovación"))
+  # output$REMAtotalMXP <- renderInfoBox({
+  #   
+  #   browser()
+  #   total <- sum(totals()$total)
+  #   
+  #   infoBox(title = "Costo total (REMA)",
+  #           value = round(total * input$usd2mxp),
+  #           subtitle = "MXP",
+  #           icon = icon("dollar-sign"),
+  #           fill = T,
+  #           color = "blue")
+  # })
+  # 
+  # output$FIPtotalMXP <- renderInfoBox({
+  #   
+  #   browser()
+  #   total <- sum(totals()$total)
+  #   
+  #   infoBox(title = "Costo total (FIP)",
+  #           value = round(total * input$usd2mxp),
+  #           subtitle = "MXP",
+  #           icon = icon("dollar-sign"),
+  #           fill = T,
+  #           color = "blue")
+  # })
   
-    output$plot1 <- renderPlotly({
+  ### Plot 
+  output$plot1 <- renderPlotly({
       
       plot1_data <- totals()  %>% 
         filter(total > 0) %>% 
-        group_by(fase, concepto, subactividad) %>% 
+        group_by(section, fase, concepto, subfase) %>% 
         summarize(total = sum(total, na.rm = T) / 1e3) %>% 
         ungroup()
       
-      if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
+      req(nrow(plot1_data) > 0)
       
-      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
+      #if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
+      
+      #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
+      y_label <- "Costo total (K USD)"
       
       plot1 <- plot1_data %>% 
-        rename(Concepto = concepto,
-               Subactividad = subactividad,
+        rename(Intervención = section,
+               Concepto = concepto,
+               Subfase = subfase,
                Total = total,
                Fase = fase) %>% 
-        ggplot(aes(x = Fase, y = Total, fill = Concepto, label = Subactividad)) +
-        geom_col(color = "black") +
-        theme_cowplot() +
-        scale_fill_brewer(palette = input$color_scheme) +
-        labs(x = "Fase del proyecto", y = y_label) +
-        theme(text = element_text(size = input$text_size),
-              axis.text = element_text(size = input$text_size - 2))
-      
-      p <- ggplotly(plot1)
-      
-      # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
-      p$elementId <- NULL
-      p
-    })
-    
-    output$plot2 <- renderPlotly({
-      
-      plot2_data <- totals()  %>% 
-        filter(total > 0) %>% 
-        group_by(fase, concepto, subactividad) %>% 
-        summarize(total = sum(total, na.rm = T) / 1e3) %>% 
-        ungroup()
-      
-      if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
-      
-      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
-      
-      plot2 <- plot2_data %>% 
-        rename(Concepto = concepto,
-               Subactividad = subactividad,
-               Total = total,
-               Fase = fase) %>% 
-        ggplot(aes(x = Concepto, y = Total, fill = Fase, label = Subactividad)) +
+        ggplot(aes(x = Fase, y = Total, fill = Concepto, label = Subfase, group = Intervención)) +
         geom_col(color = "black") +
         theme_cowplot() +
         scale_fill_brewer(palette = input$color_scheme) +
         labs(x = "Fase del proyecto", y = y_label) +
         theme(text = element_text(size = input$text_size),
               axis.text = element_text(size = input$text_size - 2)) +
-        coord_flip()
+        facet_wrap(~Intervención, ncol = 2) +
+        theme(legend.position = "none")
+      
+      p <- ggplotly(plot1)
+      
+      # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
+      p$elementId <- NULL
+      p
+      
+    })
+    
+  output$plot2 <- renderPlotly({
+      
+      plot2_data <- totals()  %>% 
+        filter(total > 0) %>% 
+        group_by(section, fase, concepto, subfase) %>% 
+        summarize(total = sum(total, na.rm = T) / 1e3) %>% 
+        ungroup()
+      
+      req(nrow(plot2_data) > 0)
+      
+      #if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
+      
+      #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
+      y_label <- "Costo total (K USD)"
+
+      plot2 <- plot2_data %>% 
+        rename(Intervención = section,
+               Concepto = concepto,
+               Subfase = subfase,
+               Total = total,
+               Fase = fase) %>% 
+        ggplot(aes(x = Concepto, y = Total, fill = Fase, label = Subfase)) +
+        geom_col(color = "black") +
+        theme_cowplot() +
+        scale_fill_brewer(palette = input$color_scheme) +
+        labs(x = "Concepto", y = y_label) +
+        theme(text = element_text(size = input$text_size),
+              axis.text = element_text(size = input$text_size - 2)) +
+        coord_flip() +
+        facet_wrap(~Intervención, ncol = 1)
       
       p <- ggplotly(plot2)
       
