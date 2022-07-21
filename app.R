@@ -328,7 +328,7 @@ server <- function(input, output){
   })
   
   # Reactive UI for FIP Implementation phase  ----------------------------------
-  output$imp_fip <- renderUI({
+  output$fip_imp <- renderUI({
     
     if(!is.null(input$budget_upload)) {
       fip_data <- user_fip_data()
@@ -352,7 +352,7 @@ server <- function(input, output){
                     section = "FIP")
   })
   
-  outputOptions(output, "imp_fip", suspendWhenHidden = FALSE, priority = 10)
+  outputOptions(output, "fip_imp", suspendWhenHidden = FALSE, priority = 10)
   
   ### Durations of each stage
   periods <- reactiveValues(df = tibble(etapa = rep(c("dis", "imp", "seg"), times = 2),
