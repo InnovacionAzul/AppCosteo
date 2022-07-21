@@ -131,26 +131,23 @@ ui <- dashboardPage(title = "Costeo de Intervenciones",
                                        title = "REMA",
                                        tags$br(),
                                        ### Design
-                                       tabPanel(title = "Diseño de Reservas",
+                                       tabPanel(title = "Diseño",
                                                 makePhaseDuration(phase = "Diseño",
                                                                   section = "REMA"),
-                                                subphaseWrapper(data = rema_data,
-                                                                phase = "Diseño",
-                                                                section = "REMA")),
+                                                uiOutput(outputId = "rema_dis")
+                                       ),
                                        ### Implementation
                                        tabPanel(title = "Implementación",
                                                 makePhaseDuration(phase = "Implementación",
                                                                   section = "REMA"),                                  
-                                                subphaseWrapper(data = rema_data,
-                                                                phase = "Implementación",
-                                                                section = "REMA")),
+                                                uiOutput(outputId = "rema_imp")
+                                       ),
                                        ### Follow up
                                        tabPanel(title = "Seguimiento",
                                                 makePhaseDuration(phase = "Seguimiento",
                                                                   section = "REMA"),
-                                                subphaseWrapper(data = rema_data,
-                                                                phase = "Seguimiento",
-                                                                section = "REMA")),
+                                                uiOutput(outputId = "rema_seg")
+                                       ),
                                 )
                         ),
                         ### FIPs
@@ -160,29 +157,26 @@ ui <- dashboardPage(title = "Costeo de Intervenciones",
                                        title = "FIP",
                                        tags$br(),
                                        ### Design
-                                       tabPanel(title = "Diseño de FIP",
+                                       tabPanel(title = "Diseño",
                                                 makePhaseDuration(phase = "Diseño",
-                                                                  section = "FIP"),
-                                                subphaseWrapper(data = fip_data,
-                                                                phase = "Diseño",
-                                                                section = "FIP")),
+                                                                  section = "FIP",
+                                                                  fip_data = fip_data),
+                                                uiOutput("fip_dis")
+                                       ),
                                        ### Implementation
                                        tabPanel(title = "Implementación",
                                                 makePhaseDuration(phase = "Implementación",
-                                                                  section = "FIP"),
-                                                uiOutput("imp_fip")
-# 
-#                                                 subphaseWrapper(data = fip_data,
-#                                                                 phase = "Implementación",
-#                                                                 section = "FIP")
-                                                ),
+                                                                  section = "FIP",
+                                                                  fip_data = fip_data),
+                                                uiOutput(outputId = "fip_imp")
+                                       ),
                                        ### Follow up
                                        tabPanel(title = "Seguimiento",
                                                 makePhaseDuration(phase = "Seguimiento",
-                                                                  section = "FIP"),
-                                                subphaseWrapper(data = fip_data,
-                                                                phase = "Seguimiento",
-                                                                section = "FIP")),
+                                                                  section = "FIP",
+                                                                  fip_data = fip_data),
+                                                uiOutput(outputId = "fip_seg")
+                                                ),
                                 )
                         ),
                         ### Plots
@@ -242,12 +236,120 @@ ui <- dashboardPage(title = "Costeo de Intervenciones",
 # Define server logic
 server <- function(input, output){
   
-  ### Reactive UI for FIP Implementation stage
+  # user-defined cost data from the uploaded file
+  
+  user_rema_data <- reactive({
+    req(input$budget_upload)
+    file <- input$budget_upload
+    
+    user_rema <- readxl::read_xlsx(file$datapath,
+                                   sheet = 1,
+                                   na = c("", "N/A")) %>%
+      janitor::clean_names() %>%
+      arrange(fase, subfase_orden, actividad_orden) %>%
+      mutate(valor_unitario = ifelse(is.na(valor_unitario), 0, valor_unitario),
+             estimacion_de_unidades_requeridas = ifelse(is.na(estimacion_de_unidades_requeridas), 0, estimacion_de_unidades_requeridas),
+             unidades = ifelse(is.na(unidades), "$/unidad", unidades)) %>%
+      mutate(section = "REMA")
+  })
+  
+  user_fip_data <- reactive({
+    req(input$budget_upload)
+    file <- input$budget_upload
+    
+    readxl::read_xlsx(file$datapath,
+                      sheet = 2,
+                      na = c("", "N/A")) %>%
+      janitor::clean_names() %>%
+      arrange(fase, subfase_orden, actividad_orden) %>%
+      mutate(valor_unitario = ifelse(is.na(valor_unitario), 0, valor_unitario),
+             estimacion_de_unidades_requeridas = ifelse(is.na(estimacion_de_unidades_requeridas), 0, estimacion_de_unidades_requeridas),
+             unidades = ifelse(is.na(unidades), "$/unidad", unidades)) %>%
+      mutate(section = "FIP")
+  })
+  
+
+  ##############################################################################
+  ##### POPULAE UI #############################################################
+  ##############################################################################
+  
+  
+  # REMA #########################################################################
+  
+  # Reactive UI for REMA Design phase ------------------------------------------
+  output$rema_dis <- renderUI({
+    
+    if(!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    
+    subphaseWrapper(data = rema_data,
+                    phase = "Diseño",
+                    section = "REMA")
+  })
+  
+  # Reactive UI for REMA Implementation phase  ---------------------------------
+  output$rema_imp <- renderUI({
+    
+    if(!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    
+    subphaseWrapper(data = rema_data,
+                    phase = "Implementación",
+                    section = "REMA")
+  })
+  
+  # Reactive UI for REMA Follow-up phase ---------------------------------------
+  output$rema_seg <- renderUI({
+    
+    if(!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    
+    subphaseWrapper(data = rema_data,
+                    phase = "Seguimiento",
+                    section = "REMA")
+    
+  })
+  
+  # FIP ########################################################################
+  
+  # Reactive UI for FIP Design phase  ------------------------------------------
+  output$fip_dis <- renderUI({
+    
+    if(!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    
+    subphaseWrapper(data = fip_data,
+                    phase = "Diseño",
+                    section = "FIP")
+  })
+  
+  # Reactive UI for FIP Implementation phase  ----------------------------------
   output$imp_fip <- renderUI({
+    
+    if(!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    
     subphaseWrapper(data = fip_data,
                     phase = "Implementación",
                     section = "FIP",
                     subphases_to_include = input$choices_imp_fip)
+  })
+  
+  # Reactive UI for FIP Follow-up phase  ---------------------------------------
+  output$fip_seg <- renderUI({
+    
+    if(!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    
+    subphaseWrapper(data = fip_data,
+                    phase = "Seguimiento",
+                    section = "FIP")
   })
   
   outputOptions(output, "imp_fip", suspendWhenHidden = FALSE, priority = 10)
@@ -344,7 +446,7 @@ server <- function(input, output){
     dat <- input_rv$rema %>%
       bind_rows(input_rv$fip)
     
-   cost_data %>% 
+    cost_data %>% 
       select(fase, subfase, concepto, actividad, actividad_frecuencia, rubro, id, section) %>% 
       left_join(dat, by = "id") %>% 
       mutate(etapa = tolower(substr(x = fase, start = 1, stop = 3))) %>% 
@@ -373,7 +475,6 @@ server <- function(input, output){
   
   ### Value box with total cost in USD for FIP
   output$FIPtotalUSD <- renderInfoBox({
-    
     total <- sum(totals()$total[totals()$section == "FIP"], na.rm = T)
     
     infoBox(title = "Costo total (FIP)",
