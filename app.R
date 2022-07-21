@@ -89,6 +89,13 @@ ui <- dashboardPage(title = "Costeo de Intervenciones",
                                         width = 12,
                                         collapsible = T,
                                         collapsed = T,
+                                        fileInput(
+                                          inputId = "budget_upload",
+                                          label = "Cargar archivo",
+                                          multiple = F,
+                                          accept = c(".xls", ".xlsx"),
+                                          buttonLabel = "Cargar"
+                                        ),
                                         downloadButton(outputId = "download_total",
                                                        label = "Descargar presupuesto"),
                                         bookmarkButton(title = "Compartir",
