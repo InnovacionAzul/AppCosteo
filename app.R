@@ -322,6 +322,33 @@ ui <-
                   status = "primary",
                   plotlyOutput(outputId = "plot2")
                 )
+              ),
+              fluidRow(
+                box(
+                  title = "División del presupuesto",
+                  width = 12,
+                  status = "primary",
+                  collapsible = T,
+                  column(
+                    width = 4,
+                    numericInput(
+                      inputId = "n_actors",
+                      label = "Número de actores",
+                      value = 2,
+                      min = 1),
+                    uiOutput(outputId = "actors"),
+                    actionButton(
+                      inputId = "update_split_budget",
+                      label = "Actualizar"
+                    )
+                  ),
+                  column(
+                    width = 8,
+                    plotlyOutput(
+                      outputId = "split_budget_plot"
+                    )
+                  )
+                )
               )
       ) #/tabItem
     ) #/tabItems
@@ -635,32 +662,6 @@ server <- function(input, output) {
     )
   })
   
-  # output$REMAtotalMXP <- renderInfoBox({
-  #
-  #   browser()
-  #   total <- sum(totals()$total)
-  #
-  #   infoBox(title = "Costo total (REMA)",
-  #           value = round(total * input$usd2mxp),
-  #           subtitle = "MXP",
-  #           icon = icon("dollar-sign"),
-  #           fill = T,
-  #           color = "blue")
-  # })
-  #
-  # output$FIPtotalMXP <- renderInfoBox({
-  #
-  #   browser()
-  #   total <- sum(totals()$total)
-  #
-  #   infoBox(title = "Costo total (FIP)",
-  #           value = round(total * input$usd2mxp),
-  #           subtitle = "MXP",
-  #           icon = icon("dollar-sign"),
-  #           fill = T,
-  #           color = "blue")
-  # })
-  
   ### Plot
   output$plot1 <- renderPlotly({
     plot1_data <- totals()  %>%
@@ -756,6 +757,53 @@ server <- function(input, output) {
     p
   })
   
+  # BUDGET SPLITTING -----------------------------------------------------------
+  output$actors <- renderUI({
+    n <- input$n_actors
+    
+    map2(.x = 1:n,
+         .y = 100/n,
+         .f = make_funder)
+  })
+  
+  # Assamble a tibble of actors
+  actors_tibble <- reactive({
+    
+    purrr::map2_dfr(
+      paste0("funder_", 1:input$n_actors),
+      paste0("pct_funder_", 1:input$n_actors),
+      ~{
+        tibble(
+          actor = input[[.x]],
+          pct = input[[.y]]
+        )
+      }
+    )
+    
+  })
+  
+  
+  # Plot
+  output$split_budget_plot <- renderPlotly({
+    # browser()
+    p <-
+      ggplot(
+        data = actors_tibble(),
+        mapping = aes(
+          x = actor,
+          y = pct,
+          fill = actor
+        )
+      ) +
+      geom_col(
+        color = "black"
+      ) +
+      theme_bw()
+    
+    ggplotly(p)
+  })
+  
+  # EXPORTING ------------------------------------------------------------------
   output$download_total <- downloadHandler(
     filename = "Presupuesto.xlsx",
     content = function(file) {

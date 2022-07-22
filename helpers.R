@@ -10,6 +10,7 @@
 boxHeaderUI <- function(){
   
   fluidRow(
+    # Frequency selector
     selectInput(
       inputId = "test",
       label = "Frecuencia de la actividad",
@@ -199,4 +200,30 @@ makePhaseDuration <- function(phase, section, fip_data = NULL){
       )
     )
   }
+}
+
+## Visualization hepers
+make_funder <- function(funder, pct) {
+  fluidRow(
+    # Funder NAME
+    column(
+      width = 6,
+      textInput(
+        inputId = paste0("funder_", funder),
+        label = "Nombre del grupo",
+        value = paste("Grupo", funder)
+      )
+    ),
+    column(
+      #Funder CONTRIBUTION %
+      width = 6,
+      numericInput(
+        inputId = paste0("pct_funder_", funder),
+        label = "% de contribución",
+        value = pct,
+        min = 0,
+        max = 100
+      )
+    )
+  )
 }
