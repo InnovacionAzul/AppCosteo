@@ -8,7 +8,13 @@
 
 ### Cost and quantity header for every activity
 boxHeaderUI <- function(){
+  
   fluidRow(
+    selectInput(
+      inputId = "test",
+      label = "Frecuencia de la actividad",
+      choices = c("Mensual", "Trimestral", "Anual", "Bienal", "Trienal")
+    ),
     column(
       width = 6,
       h4("Costos")),
@@ -27,10 +33,10 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel, costDefault = NULL
   
   # Define cost and unit defaults for numeric inputs
   if(is.null(costDefault)) {
-    costDefault <- cost_data$valor_unitario[cost_data$id == pairId]
+    costDefault <- cost_data$precio[cost_data$id == pairId]
   }
   if(is.null(unitDefault)){
-    unitDefault <- cost_data$estimacion_de_unidades_requeridas[cost_data$id == pairId]
+    unitDefault <- cost_data$cantidades[cost_data$id == pairId]
   }
   if(is.null(tooltipText)){
     tooltipText <- cost_data$descripcion[cost_data$id == pairId] 
@@ -73,8 +79,8 @@ makeUnit <- function(activity, data_subphase){
                        id,
                        unidades,
                        stringr::str_remove_all(unidades, "[$/]"),
-                       estimacion_de_unidades_requeridas,
-                       valor_unitario),
+                       cantidades,
+                       precio),
              .f = CostUnitUI)
   )
   
@@ -161,14 +167,16 @@ makePhaseDuration <- function(phase, section, fip_data = NULL){
                                  width = 12,
                                  color = "aqua")
                  ),
-                 valueBox(value = NULL,
-                          subtitle = selectInput("choices_imp_fip",
-                                                 label = "Actividades de implementación FIP para incluir",
-                                                 choices = unique(fip_data$subfase[fip_data$fase == "Implementación"]),
-                                                 multiple = T,
-                                                 width = "100%"),
-                          width = 6,
-                          color = "aqua")
+                 valueBox(
+                   value = NULL,
+                   subtitle = selectInput(
+                     "choices_imp_fip",
+                     label = "Selecciona tus intervenciones:",
+                     choices = unique(fip_data$subfase[fip_data$fase == "Implementación"]),
+                     multiple = T,
+                     width = "100%"),
+                   width = 6,
+                   color = "aqua")
                )
       )
     )
