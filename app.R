@@ -768,6 +768,7 @@ server <- function(input, output) {
   
   # Assamble a tibble of actors
   actors_tibble <- reactive({
+    req("funder_1")
     
     purrr::map2_dfr(
       paste0("funder_", 1:input$n_actors),
@@ -791,7 +792,7 @@ server <- function(input, output) {
         data = actors_tibble(),
         mapping = aes(
           x = actor,
-          y = pct,
+          y = pct * sum(totals()$total, na.rm = T) / 100,
           fill = actor
         )
       ) +
