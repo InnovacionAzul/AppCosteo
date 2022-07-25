@@ -25,12 +25,15 @@
 library(shiny)
 library(shinydashboard)
 library(shinyBS)
-# Visualizatio
+
+# Visualization
 library(cowplot)
 library(plotly)
+
 # Excel file handling
 library(readxl)
 library(writexl)
+
 # Programming
 library(magrittr)
 library(tidyverse)
@@ -134,6 +137,7 @@ ui <-
             width = 12,
             collapsible = TRUE,
             collapsed = FALSE,
+            a("Manual de Usuario", href = "https://jcvdav.github.io/CostApp_manual/", target = "_blank"),
             # UPLOAD BUTTON
             fileInput(
               inputId = "budget_upload",
@@ -156,210 +160,187 @@ ui <-
         )
       )
     ),
-    body = dashboardBody(tabItems(
-      tabItem(
-        tabName = "inicio",
-        box(
-          title = h1("Costeo de Reservas Marinas"),
-          width = 12,
-          status = "primary",
-          p("Las reservas marinas completamente protegidas son áreas del océano restringidas a cualquier actividad extractiva, incluyendo la pesca. Las reservas marinas exitosas crean condiciones en las que las poblaciones de especies previamente capturadas se pueden recuperar y restaurar el equilibrio trófico en el ecosistema. La recuperación de la biomasa pesquera dentro de la reserva puede causar efectos colaterales en las zonas de pesca adyacentes, tanto desde el traslado de especímenes adultos, como en la exportación de larvas. Este efecto de desbordamiento puede ayudar a los usuarios a compensar algunos de los precio de oportunidad al ceder las zonas de pesca. La reserva marina funciona como una cuenta bancaria, la cual se repobla con el interés al capital con el desbordamiento."),
-          p(a("COBI", href = "www.cobi.org.mx", target = "_blank"),
-            "ha trabajado durante 19 años para establecer, evaluar y mantener las reservas marinas en colaboración con las comunidades pesqueras de México. Nuestro modelo de reservas marinas consiste de cuatro fases:"),
-          tags$ul(
-            tags$li(
-              tags$b("1) Implementación - "),
-              "procesos inclusivos en el que las partes interesadas participen en el proceso de diseño, definición de objetivos y la selección del sitio"
-            ),
-            tags$li(
-              tags$b("2) Monitoreo - "),
-              "después de que la reserva se ha creado, miembros de la comunidad están capacitados para recopilar datos para evaluar la reserva"
-            ),
-            tags$li(
-              tags$b("3) Operación – "),
-              "acciones relacionadas a la vigilancia comunitaria, señalización y comunicación de resultados"
-            ),
-            tags$li(
-              tags$b("4) Renovación – "),
-              "manejo adaptativo basado en los datos recogidos por la comunidad para garantizar el funcionamiento eficaz de la reserva."
-            )
-          ),
-          p("El número de iniciativas para establecer redes de reservas marinas está en aumento, y la gran mayoría de los esfuerzos se realizan con fondos filantrópicos. Sin embargo, al iniciar el proceso para establecer reservas marinas es común que los precio proyectados al futuro no estén claramente definidos. Esto puede afectar la sustentabilidad de la reserva marina al largo plazo, sobre todo si el costo de mantenerla y operarla es mayor al beneficio que puede proporcionar a la comunidad."),
-          p("Este calculador de precio contempla todos los pasos necesarios para establecer una reserva marina utilizado el modelo COBI, con el objetivo de ayudar a comunidades, organizaciones de la sociedad civil y tomadores de decisiones de planear sus inversiones con mayor claridad y transparencia."),
-          p("Para cualquier pregunta o comentario sobre este producto escribe al correo rema@cobi.org.mx Tus observaciones nos ayudarán a mejorar nuestras herramientas."),
-          p("© COBI 2018")
-        )
-      ),
-      ### Marine reserves
-      tabItem(
-        tabName = "rema",
-        tabBox(
-          id = "rema_tabs",
-          width = 12,
-          title = "REMA",
-          tags$br(),
-          ### Design
-          tabPanel(
-            title = "Diseño",
-            makePhaseDuration(phase = "Diseño",
-                              section = "REMA"),
-            uiOutput(outputId = "rema_dis")
-          ),
-          ### Implementation
-          tabPanel(
-            title = "Implementación",
-            makePhaseDuration(phase = "Implementación",
-                              section = "REMA"),
-            uiOutput(outputId = "rema_imp")
-          ),
-          ### Follow up
-          tabPanel(
-            title = "Seguimiento",
-            makePhaseDuration(phase = "Seguimiento",
-                              section = "REMA"),
-            uiOutput(outputId = "rema_seg")
-          ),
-        )
-      ),
-      ### FIPs
-      tabItem(
-        tabName = "fip",
-        tabBox(
-          id = "fip_tabs",
-          width = 12,
-          title = "FIP",
-          tags$br(),
-          ### Design
-          tabPanel(
-            title = "Diseño",
-            makePhaseDuration(
-              phase = "Diseño",
-              section = "FIP",
-              fip_data = fip_data
-            ),
-            uiOutput("fip_dis")
-          ),
-          ### Implementation
-          tabPanel(
-            title = "Implementación",
-            makePhaseDuration(
-              phase = "Implementación",
-              section = "FIP",
-              fip_data = fip_data
-            ),
-            uiOutput(outputId = "fip_imp")
-          ),
-          ### Follow up
-          tabPanel(
-            title = "Seguimiento",
-            makePhaseDuration(
-              phase = "Seguimiento",
-              section = "FIP",
-              fip_data = fip_data
-            ),
-            uiOutput(outputId = "fip_seg")
-          ),
-        )
-      ),
-      ### Plots
-      tabItem("presupuesto",
-              fluidRow(
-                box(
-                  title = "Control de gráficas",
-                  status = "primary",
-                  width = 12,
-                  collapsible = T,
-                  # box(width = 2,
-                  #     status = "primary",
-                  #     checkboxInput(inputId = "costs_in_mxp",
-                  #                   label = "Gráficas en pesos",
-                  #                   value = F)
-                  #
-                  # ),
-                  box(
-                    width = 2,
-                    status = "primary",
-                    numericInput(
-                      inputId = "text_size",
-                      label = "Tamaño del texto",
-                      value = 10,
-                      min = 10,
-                      max = 20
-                    )
-                    
-                  ),
-                  box(
-                    width = 2,
-                    status = "primary",
-                    selectInput(
-                      inputId = "color_scheme",
-                      label = "Esquema de colores",
-                      choices = c(
-                        "COBI" = "Blues",
-                        "Pares" = "Paired",
-                        "Set1" = "Set1",
-                        "Set2" = "Set2",
-                        "Set3" = "Set3"
-                      ),
-                      selected = "COBI"
-                    )
-                    
-                  )
-                )
+    body = dashboardBody(
+      tabItems(
+        tabItem(
+          tabName = "inicio",
+          box(
+            title = h1("Costeo de Intervenciones de Conservación (V2.0 beta)"),
+            width = 12,
+            status = "primary",
+            p("Las reservas marinas completamente protegidas son áreas del océano restringidas a cualquier actividad extractiva, incluyendo la pesca. Las reservas marinas exitosas crean condiciones en las que las poblaciones de especies previamente capturadas se pueden recuperar y restaurar el equilibrio trófico en el ecosistema. La recuperación de la biomasa pesquera dentro de la reserva puede causar efectos colaterales en las zonas de pesca adyacentes, tanto desde el traslado de especímenes adultos, como en la exportación de larvas. Este efecto de desbordamiento puede ayudar a los usuarios a compensar algunos de los precio de oportunidad al ceder las zonas de pesca. La reserva marina funciona como una cuenta bancaria, la cual se repobla con el interés al capital con el desbordamiento."),
+            p(a("COBI", href = "www.cobi.org.mx", target = "_blank"),
+              "ha trabajado durante 19 años para establecer, evaluar y mantener las reservas marinas en colaboración con las comunidades pesqueras de México. Nuestro modelo de reservas marinas consiste de cuatro fases:"),
+            tags$ul(
+              tags$li(
+                tags$b("1) Implementación - "),
+                "procesos inclusivos en el que las partes interesadas participen en el proceso de diseño, definición de objetivos y la selección del sitio"
               ),
-              fluidRow(
-                box(
-                  title = "Presupuesto por fases",
-                  width = 12,
-                  status = "primary",
-                  plotlyOutput(outputId = "plot1")
-                )
+              tags$li(
+                tags$b("2) Monitoreo - "),
+                "después de que la reserva se ha creado, miembros de la comunidad están capacitados para recopilar datos para evaluar la reserva"
               ),
-              fluidRow(
-                box(
-                  title = "Presupuesto por conceptos",
-                  width = 12,
-                  status = "primary",
-                  plotlyOutput(outputId = "plot2")
-                )
+              tags$li(
+                tags$b("3) Operación – "),
+                "acciones relacionadas a la vigilancia comunitaria, señalización y comunicación de resultados"
               ),
-              fluidRow(
-                box(
-                  title = "División del presupuesto",
-                  width = 12,
-                  status = "primary",
-                  collapsible = T,
-                  column(
-                    width = 4,
-                    numericInput(
-                      inputId = "n_actors",
-                      label = "Número de actores",
-                      value = 2,
-                      min = 1),
-                    uiOutput(outputId = "actors"),
-                    actionButton(
-                      inputId = "update_split_budget",
-                      label = "Actualizar"
-                    )
-                  ),
-                  column(
-                    width = 8,
-                    plotlyOutput(
-                      outputId = "split_budget_plot"
-                    )
-                  )
-                )
+              tags$li(
+                tags$b("4) Renovación – "),
+                "manejo adaptativo basado en los datos recogidos por la comunidad para garantizar el funcionamiento eficaz de la reserva."
               )
-      ) #/tabItem
-    ) #/tabItems
+            ),
+            p("El número de iniciativas para establecer redes de reservas marinas está en aumento, y la gran mayoría de los esfuerzos se realizan con fondos filantrópicos. Sin embargo, al iniciar el proceso para establecer reservas marinas es común que los precio proyectados al futuro no estén claramente definidos. Esto puede afectar la sustentabilidad de la reserva marina al largo plazo, sobre todo si el costo de mantenerla y operarla es mayor al beneficio que puede proporcionar a la comunidad."),
+            p("Este calculador de precio contempla todos los pasos necesarios para establecer una reserva marina utilizado el modelo COBI, con el objetivo de ayudar a comunidades, organizaciones de la sociedad civil y tomadores de decisiones de planear sus inversiones con mayor claridad y transparencia."),
+            p("Para cualquier pregunta o comentario sobre este producto escribe al correo rema@cobi.org.mx Tus observaciones nos ayudarán a mejorar nuestras herramientas."),
+            p("© COBI 2018")
+          )
+        ),
+        ### Marine reserves
+        tabItem(
+          tabName = "rema",
+          tabBox(
+            id = "rema_tabs",
+            width = 12,
+            title = "REMA",
+            tags$br(),
+            ### Design
+            tabPanel(
+              title = "Diseño",
+              uiOutput(outputId = "rema_dis")
+            ),
+            ### Implementation
+            tabPanel(
+              title = "Implementación",
+              uiOutput(outputId = "rema_imp")
+            ),
+            ### Follow up
+            tabPanel(
+              title = "Seguimiento",
+              uiOutput(outputId = "rema_seg")
+            ),
+          )
+        ),
+        ### FIPs
+        tabItem(
+          tabName = "fip",
+          tabBox(
+            id = "fip_tabs",
+            width = 12,
+            title = "FIP",
+            tags$br(),
+            ### Design
+            tabPanel(
+              title = "Diseño",
+              uiOutput("fip_dis")
+            ),
+            ### Implementation
+            tabPanel(
+              title = "Implementación",
+              uiOutput(outputId = "fip_imp")
+            ),
+            ### Follow up
+            tabPanel(
+              title = "Seguimiento",
+              uiOutput(outputId = "fip_seg")
+            ),
+          )
+        ),
+        ### Plots
+        tabItem("presupuesto",
+                fluidRow(
+                  box(
+                    title = "Control de gráficas",
+                    status = "primary",
+                    width = 12,
+                    collapsible = T,
+                    # box(width = 2,
+                    #     status = "primary",
+                    #     checkboxInput(inputId = "costs_in_mxp",
+                    #                   label = "Gráficas en pesos",
+                    #                   value = F)
+                    #
+                    # ),
+                    box(
+                      width = 2,
+                      status = "primary",
+                      numericInput(
+                        inputId = "text_size",
+                        label = "Tamaño del texto",
+                        value = 10,
+                        min = 10,
+                        max = 20
+                      )
+                      
+                    ),
+                    box(
+                      width = 2,
+                      status = "primary",
+                      selectInput(
+                        inputId = "color_scheme",
+                        label = "Esquema de colores",
+                        choices = c(
+                          "COBI" = "Blues",
+                          "Pares" = "Paired",
+                          "Set1" = "Set1",
+                          "Set2" = "Set2",
+                          "Set3" = "Set3"
+                        ),
+                        selected = "COBI"
+                      )
+                      
+                    )
+                  )
+                ),
+                fluidRow(
+                  box(
+                    title = "Presupuesto por fases",
+                    width = 12,
+                    status = "primary",
+                    plotlyOutput(outputId = "plot1")
+                  )
+                ),
+                fluidRow(
+                  box(
+                    title = "Presupuesto por conceptos",
+                    width = 12,
+                    status = "primary",
+                    plotlyOutput(outputId = "plot2")
+                  )
+                ),
+                fluidRow(
+                  box(
+                    title = "División del presupuesto",
+                    width = 12,
+                    status = "primary",
+                    collapsible = T,
+                    column(
+                      width = 4,
+                      numericInput(
+                        inputId = "n_actors",
+                        label = "Número de actores",
+                        value = 2,
+                        min = 1),
+                      uiOutput(outputId = "actors")
+                    ),
+                    column(
+                      width = 8,
+                      plotlyOutput(
+                        outputId = "split_budget_plot"
+                      )
+                    )
+                  )
+                )
+        ) #/tabItem
+      ) #/tabItems
     ) #/dashboardBody
   ) #/ui
 
 
 # Define server logic
 server <- function(input, output) {
-  # user-defined cost data from the uploaded file
   
+  # user-defined cost data from the uploaded file ##############################
+  # REMA -----------------------------------------------------------------------
   user_rema_data <- reactive({
     req(input$budget_upload)
     file <- input$budget_upload
@@ -380,6 +361,7 @@ server <- function(input, output) {
       )
   })
   
+  # FIP ------------------------------------------------------------------------
   user_fip_data <- reactive({
     req(input$budget_upload)
     file <- input$budget_upload
@@ -402,114 +384,241 @@ server <- function(input, output) {
   
   
   ##############################################################################
-  ##### POPULAE UI #############################################################
+  ##### POPULATE UI ############################################################
   ##############################################################################
   
   
   # REMA #########################################################################
-  
   # Reactive UI for REMA Design phase ------------------------------------------
+  # output$rema_dis_dur <- renderUI({
+  #   if (!is.null(input$budget_upload)) {
+  #     rema_data <- user_rema_data()
+  #   }
+  #   
+  #   duration <- rema_data %>% 
+  #     filter(fase == "Diseño") %>% 
+  #     pull(fase_duracion) %>% 
+  #     unique()
+  #   
+  #   makePhaseDuration(phase = "Diseño",
+  #                     section = "REMA",
+  #                     duration = duration)
+  # })
+  
   output$rema_dis <- renderUI({
+    section <- "REMA"
+    phase <- "Diseño"
     if (!is.null(input$budget_upload)) {
       rema_data <- user_rema_data()
     }
     
-    subphaseWrapper(data = rema_data,
-                    phase = "Diseño",
-                    section = "REMA")
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      subphaseWrapper(
+        data = rema_data,
+        phase = phase,
+        section = section)
+    )
+    
   })
   
   # Reactive UI for REMA Implementation phase  ---------------------------------
   output$rema_imp <- renderUI({
+    section <- "REMA"
+    phase <- "Implementación"
     if (!is.null(input$budget_upload)) {
       rema_data <- user_rema_data()
     }
     
-    subphaseWrapper(data = rema_data,
-                    phase = "Implementación",
-                    section = "REMA")
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      
+      subphaseWrapper(
+        data = rema_data,
+        phase = phase,
+        section = section)
+    )
+    
   })
   
   # Reactive UI for REMA Follow-up phase ---------------------------------------
   output$rema_seg <- renderUI({
+    section <- "REMA"
+    phase <- "Seguimiento"
     if (!is.null(input$budget_upload)) {
       rema_data <- user_rema_data()
     }
     
-    subphaseWrapper(data = rema_data,
-                    phase = "Seguimiento",
-                    section = "REMA")
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      
+      subphaseWrapper(
+        data = rema_data,
+        phase = phase,
+        section = section)
+    )
     
   })
   
   # FIP ########################################################################
-  
   # Reactive UI for FIP Design phase  ------------------------------------------
   output$fip_dis <- renderUI({
+    section <- "FIP"
+    phase <- "Diseño"
     if (!is.null(input$budget_upload)) {
       fip_data <- user_fip_data()
     }
     
-    subphaseWrapper(data = fip_data,
-                    phase = "Diseño",
-                    section = "FIP")
+    duration <- fip_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      subphaseWrapper(
+        data = fip_data,
+        phase = phase,
+        section = section)
+    )
   })
   
   # Reactive UI for FIP Implementation phase  ----------------------------------
   output$fip_imp <- renderUI({
+    section <- "FIP"
+    phase <- "Implementación"
     if (!is.null(input$budget_upload)) {
       fip_data <- user_fip_data()
     }
     
-    subphaseWrapper(
-      data = fip_data,
-      phase = "Implementación",
-      section = "FIP",
-      subphases_to_include = input$choices_imp_fip
+    duration <- fip_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration,
+        fip_data = fip_data,
+        selected_phases = input$choices_imp_fip
+      ),
+      subphaseWrapper(
+        data = fip_data,
+        phase = phase,
+        section = section,
+        subphases_to_include = input$choices_imp_fip
+      )
     )
   })
   
   # Reactive UI for FIP Follow-up phase  ---------------------------------------
   output$fip_seg <- renderUI({
+    section <- "FIP"
+    phase <- "Seguimiento"
     if (!is.null(input$budget_upload)) {
       fip_data <- user_fip_data()
     }
     
-    subphaseWrapper(data = fip_data,
-                    phase = "Seguimiento",
-                    section = "FIP")
-  })
-  
-  ### Durations of each stage
-  periods <-
-    reactiveValues(
-      df = tibble(
-        etapa = rep(c("dis", "imp", "seg"), times = 2),
-        section = rep(c("REMA", "FIP"), each = 3),
-        duracion_fase = rep(1, length.out = 6)
-      )
-    )
-  
-  observe({
-    periods$df$duracion_fase <- c(
-      input$d_dis_rema,
-      input$d_imp_rema,
-      input$d_seg_rema,
-      input$d_dis_fip,
-      input$d_imp_fip,
-      input$d_seg_fip
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      subphaseWrapper(
+        data = fip_data,
+        phase = phase,
+        section = section)
     )
   })
   
-  # periods <- reactive({
-  #   tibble(etapa = c("dis", "imp", "seg", "mon", "ope", "ren"),
-  #          duracion_fase = c(1,
-  #                            1,
-  #                            1,
-  #                            1,#input$mon_dur,
-  #                            1,#input$ope_dur,
-  #                            1))
-  # })
+  # Duration and frequencies of phases and activities ##########################
+  # Phase duration -------------------------------------------------------------
+  periods <- reactive({
+    expand_grid(
+      etapa = c("dis", "imp", "seg"),
+      section = c("REMA", "FIP")
+    ) %$% 
+    map2_dfr(
+      .x = etapa,
+      .y = section,
+      .f = ~{
+        tibble(etapa = .x,
+               section = .y,
+               fase_duracion = input[[paste("d", etapa, tolower(section), sep = "_")]])
+      }
+    )
+  })
+  
+  # Activity frequency ---------------------------------------------------------
+  frequencies <- reactive({
+    # Frequency of REMA part
+    req(input$freq_rema_1_1_1)
+    if (!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    
+    rema_freq <- map_dfr(
+      paste0("freq_", unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+      .f = ~{
+        tibble(
+          activity_id = .x,
+          actividad_frecuencia = input[[.x]]
+        )
+      }
+    )
+    
+    # Frequency of FIP part
+    if (!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    
+    fip_freq <- map_dfr(
+      paste0("freq_", unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+      .f = ~{
+        tibble(
+          activity_id= .x,
+          actividad_frecuencia = input[[.x]]
+        )
+      }
+    )
+    
+    bind_rows(rema_freq, fip_freq)
+  })
+  
   
   ### Reactive object for REMA and FIP inputs
   input_rv <- reactiveValues(
@@ -591,53 +700,65 @@ server <- function(input, output) {
       bind_rows(input_rv$fip)
     
     cost_data %>%
-      select(fase,
+      select(section,
+             fase,
              subfase,
              concepto,
              actividad,
-             actividad_frecuencia,
              rubro,
              id,
-             section) %>%
-      left_join(dat, by = "id") %>%
-      mutate(etapa = tolower(substr(
-        x = fase,
-        start = 1,
-        stop = 3
-      ))) %>%
-      left_join(periods$df, by = c("etapa", "section")) %>%
+             descripcion,
+             unidades,
+             contains("orden")) %>%
+      inner_join(dat, by = "id") %>%
+      mutate(etapa = tolower(substr(x = fase, start = 1, stop = 3))) %>%
+      inner_join(periods(), by = c("etapa", "section")) %>%
+      mutate(activity_id = paste0("freq_", str_extract(string = id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))) %>% 
+      inner_join(frequencies(), by = "activity_id") %>% 
+      select(-activity_id) %>% 
       mutate(
-        eventos = case_when(
-          actividad_frecuencia == "Anual" ~ 1 * duracion_fase,
-          actividad_frecuencia == "Bianual" ~ floor(0.5 * duracion_fase),
-          actividad_frecuencia == "Mensual" ~ 12 * duracion_fase,
-          TRUE ~ 1
-        )
-      ) %>%
-      mutate(total = precio * cantidades * eventos) %>%
+        eventos = pmax(
+          fase_duracion * case_when(
+            actividad_frecuencia == "Mensual" ~ 12,
+            actividad_frecuencia == "Trimestral" ~ 4,
+            actividad_frecuencia == "Semestral" ~ 2,
+            actividad_frecuencia == "Anual" ~ 1,
+            actividad_frecuencia == "Trienal" ~ 1/3,
+            TRUE ~ 0),
+          1),
+        total = precio * cantidades * eventos) %>%
       select(
         section,
-        id,
-        concepto,
         fase,
+        fase_duracion,
         subfase,
+        subfase_orden,
+        concepto,
         actividad,
-        rubro,
-        duracion_fase,
+        actividad_orden,
         actividad_frecuencia,
-        eventos,
-        precio,
+        rubro,
+        descripcion,
+        unidades,
         cantidades,
+        precio,
+        id,
         total,
-        -etapa
+        -c(eventos, etapa)
       )
     
   })
   
-  ### Value box with total cost in USD for marine reserves
+  # VALUE BOXES ################################################################
+  # Value box with total cost in USD for marine reserves -----------------------
   output$REMAtotalUSD <- renderInfoBox({
-    total <- sum(totals()$total[totals()$section == "REMA"], na.rm = T)
+    req(input$freq_rema_1_1_1)
     
+    total <- totals() %>% 
+      filter(section == "REMA") %>% 
+      pull(total) %>% 
+      sum(na.rm = T)
+
     infoBox(
       title = "Costo total (REMA)",
       value = total,
@@ -648,9 +769,14 @@ server <- function(input, output) {
     )
   })
   
-  ### Value box with total cost in USD for FIP
+  # Value box with total cost in USD for FIP -----------------------------------
   output$FIPtotalUSD <- renderInfoBox({
-    total <- sum(totals()$total[totals()$section == "FIP"], na.rm = T)
+    req(input$freq_rema_1_1_1)
+    
+    total <- totals() %>% 
+      filter(section == "FIP") %>% 
+      pull(total) %>% 
+      sum(na.rm = T)
     
     infoBox(
       title = "Costo total (FIP)",
@@ -757,7 +883,8 @@ server <- function(input, output) {
     p
   })
   
-  # BUDGET SPLITTING -----------------------------------------------------------
+  # BUDGET SPLITTING ###########################################################
+  # Define number of actors ----------------------------------------------------
   output$actors <- renderUI({
     n <- input$n_actors
     
@@ -766,9 +893,9 @@ server <- function(input, output) {
          .f = make_funder)
   })
   
-  # Assamble a tibble of actors
+  # Assamble a tibble of actors ------------------------------------------------
   actors_tibble <- reactive({
-    req("funder_1")
+    req(input$funder_1)
     
     purrr::map2_dfr(
       paste0("funder_", 1:input$n_actors),
@@ -783,10 +910,10 @@ server <- function(input, output) {
     
   })
   
-  
-  # Plot
+  # Plot -----------------------------------------------------------------------
   output$split_budget_plot <- renderPlotly({
-    # browser()
+    
+    
     p <-
       ggplot(
         data = actors_tibble(),
@@ -799,7 +926,11 @@ server <- function(input, output) {
       geom_col(
         color = "black"
       ) +
-      theme_bw()
+      theme_bw() +
+      labs(x = "Actor",
+           y = "Contribución total ($)") +
+      scale_fill_brewer(palette = input$color_scheme) +
+      guides(fill = guide_legend(title = "Actor"))
     
     ggplotly(p)
   })
@@ -810,44 +941,21 @@ server <- function(input, output) {
     content = function(file) {
       writexl::write_xlsx(
         x = list(
-          REMA = cost_data %>%
-            select(
-              section,
-              fase,
-              subfase,
-              subfase_orden,
-              concepto,
-              actividad,
-              actividad_orden,
-              actividad_frecuencia,
-              rubro,
-              descripcion,
-              unidades,
-              id
-            ) %>%
-            inner_join(input_rv$rema),
-          FIP = cost_data %>%
-            select(
-              section,
-              fase,
-              subfase,
-              subfase_orden,
-              concepto,
-              actividad,
-              actividad_orden,
-              actividad_frecuencia,
-              rubro,
-              descripcion,
-              unidades,
-              id
-            ) %>%
-            inner_join(input_rv$fip)
+          REMA = totals() %>% 
+            filter(section == "REMA"),
+          FIP = totals() %>% 
+            filter(section == "FIP")
         ),
         path = file,
         col_names = TRUE
       )
     }
   )
+  
+  output$test <- renderTable({
+    frequencies()
+  })
+  
 }
 
 # Run the application

@@ -7,15 +7,17 @@
 ######################################################
 
 ### Cost and quantity header for every activity
-boxHeaderUI <- function(){
+boxHeaderUI <- function(activity_id, default){
   
   fluidRow(
     # Frequency selector
     selectInput(
-      inputId = "test",
+      inputId = activity_id,
       label = "Frecuencia de la actividad",
-      choices = c("Mensual", "Trimestral", "Anual", "Bienal", "Trienal")
+      choices = c("Mensual", "Trimestral", "Semestral", "Anual", "Trienal", "Única"),
+      selected = default
     ),
+    # Make headers
     column(
       width = 6,
       h4("Costos")),
@@ -67,24 +69,42 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel, costDefault = NULL
 
 makeUnit <- function(activity, data_subphase){
   
-  box(title = activity,
-      width = 4,
-      status = "primary",
-      collapsible = T,
-      collapsed = T,
-      boxHeaderUI(),
-      
-      filter(data_subphase,
-             actividad == activity) %$%
-        pmap(.l = list(rubro,
-                       id,
-                       unidades,
-                       stringr::str_remove_all(unidades, "[$/]"),
-                       cantidades,
-                       precio),
-             .f = CostUnitUI)
-  )
+  act_data <- filter(data_subphase,
+                     actividad == activity) 
   
+  activity_id <- act_data %>% 
+    pull(id) %>% 
+    str_extract(pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+") %>% 
+    unique()
+  
+  activity_id <- paste0("freq_", activity_id)
+  
+  default <- act_data %>% 
+    pull(actividad_frecuencia) %>% 
+    unique()
+
+  box(
+    title = activity,
+    width = 4,
+    status = "primary",
+    collapsible = T,
+    collapsed = T,
+    
+    # Insert header
+    boxHeaderUI(activity_id = activity_id,
+                default = default),
+    
+    # Insert columns for price and quantities
+    act_data %$%
+      pmap(.l = list(rubro,
+                     id,
+                     unidades,
+                     stringr::str_remove_all(unidades, "[$/]"),
+                     cantidades,
+                     precio),
+           .f = CostUnitUI
+      )
+  )
 }
 
 ### Makes a row with a header and varying numbers of boxes for each subphase
@@ -99,20 +119,24 @@ activityWrapper <- function(subphase, number, data_fase){
   tagList(
     tags$div(style = "border: 1px solid lightgray; margin: 15px; padding: 15px 15px 0px 0px; border-radius: 5px;",
              fluidRow(
-               column(3,
-                      valueBox(value = number, 
-                               subtitle = subphase, 
-                               icon = NULL, 
-                               color = "blue", 
-                               width = 12,
-                               href = NULL)
+               column(
+                 3,
+                 valueBox(
+                   value = number, 
+                   subtitle = subphase, 
+                   icon = NULL, 
+                   color = "blue", 
+                   width = 12,
+                   href = NULL
+                 )
                ),
-               column(9,
-                      fluidRow(
-                        map(.x = activities,
-                            .f = makeUnit,
-                            data_subphase = data_subphase)
-                      )
+               column(
+                 9,
+                 fluidRow(
+                   map(.x = activities,
+                       .f = makeUnit,
+                       data_subphase = data_subphase)
+                 )
                )
              )
     )
@@ -131,13 +155,10 @@ subphaseWrapper <- function(data, phase, section, subphases_to_include = NULL){
   if(phase == "Implementación" & section == "FIP"){
     subfases <- subphases_to_include
     numbers <- seq(1:length(subfases))
-    
-  }else{
+  } else {
     subfases <- unique(data_fase$subfase)
     numbers <- seq(1:length(subfases))
   }
-  
-  #req(length(subfases) >= 1)
   
   tagList(
     map2(.x = subfases,
@@ -148,55 +169,65 @@ subphaseWrapper <- function(data, phase, section, subphases_to_include = NULL){
 }
 
 ### Duration
-makePhaseDuration <- function(phase, section, fip_data = NULL){
+makePhaseDuration <- function(phase, section, duration = 0, fip_data = NULL, selected_phases = NULL){
   
   # Define inputId labels for cost and units
   durationId <- paste0("d_", tolower(substr(x = phase, start = 1, stop = 3)), "_", tolower(section))
   
   if(phase == "Implementación" & section == "FIP"){
     tagList(
-      tags$div(style = "margin: 15px; padding: 15px 15px 15px 0px; border-radius: 5px;",
-               fluidRow(
-                 column(width = 6,
-                        valueBox(value = NULL,
-                                 subtitle = numericInput(durationId,
-                                                         label = "Duración de la fase (años)",
-                                                         value = 1,
-                                                         min = 1,
-                                                         max = 20,
-                                                         width = "100%"),
-                                 width = 12,
-                                 color = "aqua")
-                 ),
-                 valueBox(
-                   value = NULL,
-                   subtitle = selectInput(
-                     "choices_imp_fip",
-                     label = "Selecciona tus intervenciones:",
-                     choices = unique(fip_data$subfase[fip_data$fase == "Implementación"]),
-                     multiple = T,
-                     width = "100%"),
-                   width = 6,
-                   color = "aqua")
-               )
+      tags$div(
+        style = "margin: 15px; padding: 15px 15px 15px 0px; border-radius: 5px;",
+        fluidRow(
+          column(
+            width = 6,
+            valueBox(
+              value = NULL,
+              subtitle = numericInput(
+                durationId,
+                label = "Duración de la fase (años)",
+                value = duration,
+                min = 0,
+                max = 20,
+                width = "100%"),
+              width = 12,
+              color = "aqua")
+          ),
+          valueBox(
+            value = NULL,
+            subtitle = selectInput(
+              inputId = "choices_imp_fip",
+              label = "Selecciona tus intervenciones:",
+              choices = unique(fip_data$subfase[fip_data$fase == "Implementación"]),
+              multiple = T,
+              selected = selected_phases,
+              width = "100%"),
+            width = 6,
+            color = "aqua"
+          )
+        )
       )
     )
-  }else{
+  } else {
     tagList(
-      tags$div(style = "margin: 15px; padding: 15px 15px 15px 0px; border-radius: 5px;",
-               fluidRow(
-                 column(width = 6,
-                        valueBox(value = NULL,
-                                 subtitle = numericInput(durationId,
-                                                         label = "Duración de fase (años)",
-                                                         value = 1,
-                                                         min = 1,
-                                                         max = 20,
-                                                         width = "100%"),
-                                 width = 12,
-                                 color = "aqua")
-                 )
-               )
+      tags$div(
+        style = "margin: 15px; padding: 15px 15px 15px 0px; border-radius: 5px;",
+        fluidRow(
+          column(
+            width = 6,
+            valueBox(
+              value = NULL,
+              subtitle = numericInput(
+                durationId,
+                label = "Duración de fase (años)",
+                value = duration,
+                min = 0,
+                max = 20,
+                width = "100%"),
+              width = 12,
+              color = "aqua")
+          )
+        )
       )
     )
   }
