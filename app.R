@@ -53,11 +53,7 @@ rema_data <-
   arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
     precio = ifelse(is.na(precio), 0, precio),
-    cantidades = ifelse(
-      is.na(cantidades),
-      0,
-      cantidades
-    ),
+    cantidades = ifelse(is.na(cantidades), 0, cantidades),
     unidades = ifelse(is.na(unidades), "$/unidad", unidades)
   )
 
@@ -69,11 +65,7 @@ fip_data <- readxl::read_xlsx("www/defaults_rema_fip.xlsx",
   arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
     precio = ifelse(is.na(precio), 0, precio),
-    cantidades = ifelse(
-      is.na(cantidades),
-      0,
-      cantidades
-    ),
+    cantidades = ifelse(is.na(cantidades), 0, cantidades),
     unidades = ifelse(is.na(unidades), "$/unidad", unidades)
   )
 
@@ -137,24 +129,35 @@ ui <-
             width = 12,
             collapsible = TRUE,
             collapsed = FALSE,
-            a("Manual de Usuario", href = "https://jcvdav.github.io/CostApp_manual/", target = "_blank"),
-            # UPLOAD BUTTON
-            fileInput(
-              inputId = "budget_upload",
-              label = "Cargar archivo",
-              multiple = F,
-              accept = c(".xls", ".xlsx"),
-              buttonLabel = "Cargar"
-            ),
-            # DOWNLOAD BUTTON
-            downloadButton(
-              outputId = "download_total",
-              label = "Descargar presupuesto"
-            ),
-            # BOOKMARK BUTTON
-            bookmarkButton(
-              title = "Compartir el estado actual",
-              label = "Compartir"
+            
+            column(12,
+                   
+                   # UPLOAD BUTTON
+                   fileInput(inputId = "budget_upload",
+                             label = "Cargar archivo",
+                             multiple = F,
+                             accept = c(".xls", ".xlsx"),
+                             buttonLabel = "Cargar",
+                             width = "100%"),
+                   
+                   # MANUAL
+                   actionButton("manual",
+                                a("Manual de Usuario", 
+                                  href = "https://jcvdav.github.io/CostApp_manual/", 
+                                  target = "_blank",
+                                  style = "color: black;"),
+                                style = "width: 100%; color: black; margin-left: 0;"),
+                   
+                   # DOWNLOAD BUTTON
+                   downloadButton(outputId = "download_total",
+                                  label = "Descargar presupuesto",
+                                  style = "width: 100%; color: black; margin-left:0;"),
+                   
+                   # BOOKMARK BUTTON
+                   bookmarkButton(title = "Compartir el estado actual",
+                                  label = "Compartir",
+                                  style = "width: 100%; color: black; margin-left: 0;")
+                   
             )
           )
         )
@@ -352,11 +355,7 @@ server <- function(input, output) {
       arrange(fase, subfase_orden, actividad_orden) %>%
       mutate(
         precio = ifelse(is.na(precio), 0, precio),
-        cantidades = ifelse(
-          is.na(cantidades),
-          0,
-          cantidades
-        ),
+        cantidades = ifelse(is.na(cantidades), 0, cantidades),
         unidades = ifelse(is.na(unidades), "$/unidad", unidades)
       )
   })
@@ -373,11 +372,7 @@ server <- function(input, output) {
       arrange(fase, subfase_orden, actividad_orden) %>%
       mutate(
         precio = ifelse(is.na(precio), 0, precio),
-        cantidades = ifelse(
-          is.na(cantidades),
-          0,
-          cantidades
-        ),
+        cantidades = ifelse(is.na(cantidades), 0, cantidades),
         unidades = ifelse(is.na(unidades), "$/unidad", unidades)
       )
   })
@@ -634,10 +629,15 @@ server <- function(input, output) {
     )
   )
   
-  ## Look for any changes to inputs in the REMA section
+  ### Look for any changes to price inputs in the REMA section
   observe({
+    
+    # Check which REMA price inputs have been created
     valid_c_rema_inputs <-
       rema_data$id[which(paste0("c_", rema_data$id) %in% names(input))]
+    
+    # Update reactive values with REMA price inputs
+    req(length(valid_c_rema_inputs) > 0)
     
     rema_precio <- purrr::map2_dfr(.x = valid_c_rema_inputs,
                                    .y = paste0("c_", valid_c_rema_inputs),
@@ -649,8 +649,17 @@ server <- function(input, output) {
     input_rv$rema$precio[input_rv$rema$id %in% rema_precio$id] <-
       rema_precio$precio
     
+  })
+  
+  ### Look for any changes to quantity inputs in the REMA section
+  observe({
+    
+    # Check  which REMA quantity inputs have been created
     valid_u_rema_inputs <-
       rema_data$id[which(paste0("u_", rema_data$id) %in% names(input))]
+    
+    # Update reactive values with REMA quantity inputs
+    req(length(valid_u_rema_inputs) > 0)
     
     rema_unidades <- purrr::map2_dfr(.x = valid_u_rema_inputs,
                                      .y = paste0("u_", valid_u_rema_inputs),
@@ -664,10 +673,14 @@ server <- function(input, output) {
     
   })
   
-  ## Look for any changes to inputs in the REMA section
+  ### Look for any changes to price inputs in the FIP section
   observe({
-    valid_c_fip_inputs <-
-      fip_data$id[which(paste0("c_", fip_data$id) %in% names(input))]
+    
+    # Check which FIP price inputs have been created
+    valid_c_fip_inputs <- fip_data$id[which(paste0("c_", fip_data$id) %in% names(input))]
+    
+    # Update reactive values with FIP price inputs
+    req(length(valid_c_fip_inputs) > 0)
     
     fip_precio <- purrr::map2_dfr(.x = valid_c_fip_inputs,
                                   .y = paste0("c_", valid_c_fip_inputs),
@@ -679,8 +692,16 @@ server <- function(input, output) {
     input_rv$fip$precio[input_rv$fip$id %in% fip_precio$id] <-
       fip_precio$precio
     
-    valid_u_fip_inputs <-
-      fip_data$id[which(paste0("u_", fip_data$id) %in% names(input))]
+  })
+  
+  ### Look for any changes to quantity inputs in the FIP section
+  observe({
+    
+    # Check which FIP quantity inputs have been created
+    valid_u_fip_inputs <- fip_data$id[which(paste0("u_", fip_data$id) %in% names(input))]
+    
+    # Update reactive values with FIP quantity inputs
+    req(length(valid_u_fip_inputs) > 0)
     
     fip_unidades <- purrr::map2_dfr(.x = valid_u_fip_inputs,
                                     .y = paste0("u_", valid_u_fip_inputs),
@@ -691,15 +712,22 @@ server <- function(input, output) {
     
     input_rv$fip$cantidades[input_rv$fip$id %in% fip_unidades$id] <-
       fip_unidades$cantidades
-    
+
   })
+  
+  ### Reactive object for totals - fixes summary boxes not appearing on start
+  totals_rv <- reactiveValues(rema = 0,
+                              fip = 0)
   
   ### Get totals for each activity
   totals <- reactive({
+    
     dat <- input_rv$rema %>%
       bind_rows(input_rv$fip)
     
-    cost_data %>%
+    req(nrow(dat) > 0)
+    
+   cost_data %>%
       select(section,
              fase,
              subfase,
@@ -749,43 +777,46 @@ server <- function(input, output) {
     
   })
   
-  # VALUE BOXES ################################################################
-  # Value box with total cost in USD for marine reserves -----------------------
-  output$REMAtotalUSD <- renderInfoBox({
-    req(input$freq_rema_1_1_1)
+  ### Update totals rv
+  observe({
     
-    total <- totals() %>% 
-      filter(section == "REMA") %>% 
+    totals_rv$rema <- test <- totals() %>% 
+      dplyr::filter(section == "REMA") %>% 
       pull(total) %>% 
       sum(na.rm = T)
-
-    infoBox(
-      title = "Costo total (REMA)",
-      value = total,
-      subtitle = "USD",
-      icon = icon("dollar-sign"),
-      fill = T,
-      color = "light-blue"
-    )
-  })
-  
-  # Value box with total cost in USD for FIP -----------------------------------
-  output$FIPtotalUSD <- renderInfoBox({
-    req(input$freq_rema_1_1_1)
     
-    total <- totals() %>% 
+    totals_rv$fip <- totals() %>% 
       filter(section == "FIP") %>% 
       pull(total) %>% 
       sum(na.rm = T)
     
+  })
+  
+  # VALUE BOXES ################################################################
+  # Value box with total cost in USD for marine reserves -----------------------
+  output$REMAtotalUSD <- renderInfoBox({
+
     infoBox(
-      title = "Costo total (FIP)",
-      value = total,
+      title = "Costo total (REMA)",
+      value = totals_rv$rema,
       subtitle = "USD",
       icon = icon("dollar-sign"),
       fill = T,
-      color = "light-blue"
-    )
+      color = "light-blue")
+    
+  })
+  
+  # Value box with total cost in USD for FIP -----------------------------------
+  output$FIPtotalUSD <- renderInfoBox({
+    
+    infoBox(
+      title = "Costo total (FIP)",
+      value = totals_rv$fip,
+      subtitle = "USD",
+      icon = icon("dollar-sign"),
+      fill = T,
+      color = "light-blue")
+    
   })
   
   ### Plot
