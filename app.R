@@ -52,8 +52,8 @@ rema_data <-
   janitor::clean_names() %>%
   arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
-    precio = ifelse(is.na(precio), 0, precio),
-    cantidades = ifelse(is.na(cantidades), 0, cantidades),
+    precio = 0, #ifelse(is.na(precio), 0, precio),
+    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
     unidades = ifelse(is.na(unidades), "$/unidad", unidades)
   )
 
@@ -64,8 +64,8 @@ fip_data <- readxl::read_xlsx("www/defaults_rema_fip.xlsx",
   janitor::clean_names() %>%
   arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
-    precio = ifelse(is.na(precio), 0, precio),
-    cantidades = ifelse(is.na(cantidades), 0, cantidades),
+    precio = 0, #ifelse(is.na(precio), 0, precio),
+    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
     unidades = ifelse(is.na(unidades), "$/unidad", unidades)
   )
 
@@ -807,7 +807,7 @@ server <- function(input, output) {
     infoBox(
       title = "Costo total (REMA)",
       value = totals_rv$rema,
-      subtitle = "USD",
+      subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
       color = "light-blue")
@@ -820,7 +820,7 @@ server <- function(input, output) {
     infoBox(
       title = "Costo total (FIP)",
       value = totals_rv$fip,
-      subtitle = "USD",
+      subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
       color = "light-blue")
