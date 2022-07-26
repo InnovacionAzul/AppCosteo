@@ -148,6 +148,14 @@ ui <-
                                   style = "color: black;"),
                                 style = "width: 100%; color: black; margin-left: 0;"),
                    
+                   # ELEMNT INDEX
+                   actionButton("index",
+                                a("Índic de Elementos", 
+                                  href = "https://jcvdav.github.io/CostApp_manual/indice.html", 
+                                  target = "_blank",
+                                  style = "color: black;"),
+                                style = "width: 100%; color: black; margin-left: 0;"),
+                   
                    # DOWNLOAD BUTTON
                    downloadButton(outputId = "download_total",
                                   label = "Descargar presupuesto",
