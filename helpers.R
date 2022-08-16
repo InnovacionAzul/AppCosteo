@@ -29,7 +29,7 @@ boxHeaderUI <- function(activity_id, default){
 }
 
 ### Create cost and quantity input row for every activity
-CostUnitUI <- function(titleId, pairId, costLabel, unitLabel, costDefault = NULL, unitDefault = NULL, tooltipText = NULL, cost_data = NULL){
+makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NULL, unitDefault = NULL, tooltipText = NULL, cost_data = NULL){
   # Define inputId labels for cost and units
   costId <- paste0("c_", pairId)
   unitId <- paste0("u_", pairId)
@@ -67,7 +67,7 @@ CostUnitUI <- function(titleId, pairId, costLabel, unitLabel, costDefault = NULL
   )
 }
 
-makeUnit <- function(activity, data_subphase){
+makeActivity <- function(activity, data_subphase){
   
   act_data <- filter(data_subphase,
                      actividad == activity) 
@@ -85,7 +85,7 @@ makeUnit <- function(activity, data_subphase){
 
   box(
     title = activity,
-    width = 4,
+    width = 12,
     status = "primary",
     collapsible = T,
     collapsed = T,
@@ -102,13 +102,17 @@ makeUnit <- function(activity, data_subphase){
                      stringr::str_remove_all(unidades, "[$/]"),
                      cantidades,
                      precio),
-           .f = CostUnitUI
+           .f = makeElement
       )
   )
 }
 
 ### Makes a row with a header and varying numbers of boxes for each subphase
-activityWrapper <- function(subphase, number, data_fase){
+makeSubphase <- function(subphase, number, data_fase, actors = NULL){
+  
+  if(is.null(actors)){
+    actors <- c("Not", "working")
+  }
   
   data_subphase <- data_fase %>%
     dplyr::filter(subfase == subphase) %>%
@@ -117,35 +121,41 @@ activityWrapper <- function(subphase, number, data_fase){
   activities <- unique(data_subphase$actividad)
   
   tagList(
-    tags$div(style = "border: 1px solid lightgray; margin: 15px; padding: 15px 15px 0px 0px; border-radius: 5px;",
-             fluidRow(
-               column(
-                 3,
-                 valueBox(
-                   value = number, 
-                   subtitle = subphase, 
-                   icon = NULL, 
-                   color = "blue", 
-                   width = 12,
-                   href = NULL
-                 )
-               ),
-               column(
-                 9,
-                 fluidRow(
-                   map(.x = activities,
-                       .f = makeUnit,
-                       data_subphase = data_subphase)
-                 )
-               )
-             )
+    tags$div(
+      style = "border: 1px solid lightgray; margin: 15px; padding: 15px 15px 0px 0px; border-radius: 5px;",
+      fluidRow(
+        column(
+          width = 4,
+          box(
+            width = 12,
+            background = "blue",
+            valueBox(
+              value = number,
+              width = 12,
+              subtitle = subphase, 
+              icon = NULL, 
+              color = "blue"
+            ),
+            selectInput(
+              inputId = paste0(subphase, "_resp"),
+              label = "Responsable",
+              choices = actors
+            )
+          )
+        ),
+        column(
+          width = 8,
+          map(.x = activities,
+              .f = makeActivity,
+              data_subphase = data_subphase)
+        )
+      )
     )
   )
-  
 }
 
 ### Filters the data by section and phase and finds all subphases to iterate over 
-subphaseWrapper <- function(data, phase, section, subphases_to_include = NULL){
+makeSubphases <- function(data, phase, section, subphases_to_include = NULL, actors = NULL){
   
   data_fase <- filter(data,
                       fase == phase,
@@ -163,8 +173,9 @@ subphaseWrapper <- function(data, phase, section, subphases_to_include = NULL){
   tagList(
     map2(.x = subfases,
          .y = numbers,
-         .f = activityWrapper,
-         data_fase = data_fase)
+         .f = makeSubphase,
+         data_fase = data_fase,
+         actors = actors)
   )
 }
 
@@ -234,26 +245,41 @@ makePhaseDuration <- function(phase, section, duration = 0, fip_data = NULL, sel
 }
 
 ## Visualization hepers
-make_funder <- function(funder, pct) {
+make_funder <- function(funders) {
   fluidRow(
     # Funder NAME
-    column(
-      width = 6,
-      textInput(
-        inputId = paste0("funder_", funder),
-        label = "Nombre del grupo",
-        value = paste("Grupo", funder)
-      )
-    ),
+    # column(
+    #   width = 12,
+    #   textInput(
+    #     inputId = paste0("funder_", funder),
+    #     label = "Nombre del grupo",
+    #     value = paste("Grupo", funder)
+    #   )
+    # ),
     column(
       #Funder CONTRIBUTION %
       width = 6,
       numericInput(
-        inputId = paste0("pct_funder_", funder),
-        label = "% de contribución",
+        inputId = paste0("pct_funder_", funders),
+        label = paste0("% de contribución de ", funder),
         value = pct,
         min = 0,
         max = 100
+      )
+    )
+  )
+}
+# Function to ask for number and names of funders
+# in the modeal window.
+get_funder <- function(funder) {
+  fluidRow(
+    # Funder NAME
+    column(
+      width = 12,
+      textInput(
+        inputId = paste0("funder_", funder),
+        label = "Nombre del grupo",
+        value = paste("Grupo", funder)
       )
     )
   )

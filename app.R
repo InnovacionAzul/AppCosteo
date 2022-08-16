@@ -131,41 +131,33 @@ ui <-
             collapsed = FALSE,
             
             column(12,
-                   
-                   # UPLOAD BUTTON
-                   fileInput(inputId = "budget_upload",
-                             label = "Cargar archivo",
-                             multiple = F,
-                             accept = c(".xls", ".xlsx"),
-                             buttonLabel = "Cargar",
-                             width = "100%"),
-                   
+                   actionButton(inputId = "ventana",
+                                label = "Ventana de Inicio",
+                                icon = icon("home"),
+                                style = "width: 100%; color: black; margin-left:0;"),
                    # MANUAL
-                   actionButton("manual",
-                                a("Manual de Usuario", 
-                                  href = "https://jcvdav.github.io/CostApp_manual/", 
-                                  target = "_blank",
-                                  style = "color: black;"),
+                   actionButton(inputId = "manual",
+                                label = a("Manual de Usuario", 
+                                          href = "https://jcvdav.github.io/CostApp_manual/", 
+                                          target = "_blank",
+                                          style = "color: black;"),
+                                icon = icon("book"),
                                 style = "width: 100%; color: black; margin-left: 0;"),
                    
                    # ELEMNT INDEX
-                   actionButton("index",
-                                a("Índic de Elementos", 
-                                  href = "https://jcvdav.github.io/CostApp_manual/indice.html", 
-                                  target = "_blank",
-                                  style = "color: black;"),
+                   actionButton(inputId = "index",
+                                label = a("Índice de Elementos", 
+                                          href = "https://jcvdav.github.io/CostApp_manual/indice.html", 
+                                          target = "_blank",
+                                          style = "color: black;"),
+                                icon = icon("list"),
                                 style = "width: 100%; color: black; margin-left: 0;"),
                    
                    # DOWNLOAD BUTTON
                    downloadButton(outputId = "download_total",
-                                  label = "Descargar presupuesto",
-                                  style = "width: 100%; color: black; margin-left:0;"),
-                   
-                   # BOOKMARK BUTTON
-                   bookmarkButton(title = "Compartir el estado actual",
-                                  label = "Compartir",
-                                  style = "width: 100%; color: black; margin-left: 0;")
-                   
+                                  icon = icon("save"),
+                                  label = "Guardar presupuesto",
+                                  style = "width: 100%; color: black; margin-left:0;")
             )
           )
         )
@@ -320,24 +312,10 @@ ui <-
                 ),
                 fluidRow(
                   box(
-                    title = "División del presupuesto",
+                    title = "Presupuesto por usuarios",
                     width = 12,
-                    status = "primary",
-                    collapsible = T,
-                    column(
-                      width = 4,
-                      numericInput(
-                        inputId = "n_actors",
-                        label = "Número de actores",
-                        value = 2,
-                        min = 1),
-                      uiOutput(outputId = "actors")
-                    ),
-                    column(
-                      width = 8,
-                      plotlyOutput(
-                        outputId = "split_budget_plot"
-                      )
+                    plotlyOutput(
+                      outputId = "split_budget_plot"
                     )
                   )
                 )
@@ -349,6 +327,79 @@ ui <-
 
 # Define server logic
 server <- function(input, output) {
+  
+  # Welcome window to gather project metadata ##################################
+  query_modal <- modalDialog(
+    title = "Bienvenido!",
+    size = "l",
+    fluidRow(
+      box(
+        title = "Continúa un proyecto",
+        width = 4,
+        status = "primary",
+        fileInput(
+          inputId = "budget_upload",
+          label = "Cargar archivo",
+          placeholder = "Ningún archivo seleccionado",
+          multiple = F,
+          accept = c(".xls", ".xlsx"),
+          buttonLabel = "Cargar",
+          width = "100%")
+      ),
+      box(
+        title = "Inicia un nuevo proyecto",
+        width = 8,
+        status = "primary",
+        column(
+          width = 12,
+          textInput(
+            inputId = "title",
+            label = "Título del proyecto"
+          ),
+          textInput(
+            inputId = "autor",
+            label = "Autor del proyecto"
+          ),
+          textAreaInput(
+            inputId = "test",
+            label = "Notas",
+            resize = "both"
+          ),
+          numericInput(
+            inputId = "n_actors",
+            label = "Número de actores",
+            value = 1,
+            min = 1),
+          uiOutput(outputId = "actors")
+        )
+      )
+    ),
+    easyClose = F,
+    footer = tagList(
+      actionButton(
+        inputId = "go",
+        label = "Confirmar")
+    )
+  )
+  
+  # Define number of actors ----------------------------------------------------
+  output$actors <- renderUI({
+    n <- input$n_actors
+    
+    map(.x = 1:n,
+        .f = get_funder)
+  })
+  # Show the model on start up ...
+  showModal(query_modal)
+  
+  observeEvent(input$ventana,
+               {
+                 showModal(query_modal)
+               })
+  
+  observeEvent(input$go, {
+    removeModal()
+  })
   
   # user-defined cost data from the uploaded file ##############################
   # REMA -----------------------------------------------------------------------
@@ -408,6 +459,13 @@ server <- function(input, output) {
   #                     duration = duration)
   # })
   
+  actors <- reactive({
+    map_chr(
+      paste0("funder_", 1:input$n_actors),
+      ~{input[[.x]]}
+    )
+    })
+  
   output$rema_dis <- renderUI({
     section <- "REMA"
     phase <- "Diseño"
@@ -425,10 +483,11 @@ server <- function(input, output) {
         phase = phase,
         section = section,
         duration = duration),
-      subphaseWrapper(
+      makeSubphases(
         data = rema_data,
         phase = phase,
-        section = section)
+        section = section,
+        actors = actors())
     )
     
   })
@@ -452,10 +511,11 @@ server <- function(input, output) {
         section = section,
         duration = duration),
       
-      subphaseWrapper(
+      makeSubphases(
         data = rema_data,
         phase = phase,
-        section = section)
+        section = section,
+        actors = actors())
     )
     
   })
@@ -479,10 +539,11 @@ server <- function(input, output) {
         section = section,
         duration = duration),
       
-      subphaseWrapper(
+      makeSubphases(
         data = rema_data,
         phase = phase,
-        section = section)
+        section = section,
+        actors = actors())
     )
     
   })
@@ -506,10 +567,11 @@ server <- function(input, output) {
         phase = phase,
         section = section,
         duration = duration),
-      subphaseWrapper(
+      makeSubphases(
         data = fip_data,
         phase = phase,
-        section = section)
+        section = section,
+        actors = actors())
     )
   })
   
@@ -534,11 +596,12 @@ server <- function(input, output) {
         fip_data = fip_data,
         selected_phases = input$choices_imp_fip
       ),
-      subphaseWrapper(
+      makeSubphases(
         data = fip_data,
         phase = phase,
         section = section,
-        subphases_to_include = input$choices_imp_fip
+        subphases_to_include = input$choices_imp_fip,
+        actors = actors()
       )
     )
   })
@@ -561,10 +624,11 @@ server <- function(input, output) {
         phase = phase,
         section = section,
         duration = duration),
-      subphaseWrapper(
+      makeSubphases(
         data = fip_data,
         phase = phase,
-        section = section)
+        section = section,
+        actors = actors())
     )
   })
   
@@ -923,15 +987,6 @@ server <- function(input, output) {
   })
   
   # BUDGET SPLITTING ###########################################################
-  # Define number of actors ----------------------------------------------------
-  output$actors <- renderUI({
-    n <- input$n_actors
-    
-    map2(.x = 1:n,
-         .y = 100/n,
-         .f = make_funder)
-  })
-  
   # Assamble a tibble of actors ------------------------------------------------
   actors_tibble <- reactive({
     req(input$funder_1)
