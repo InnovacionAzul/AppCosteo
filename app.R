@@ -29,6 +29,10 @@ library(shinyBS)
 # Visualization
 library(cowplot)
 library(plotly)
+library(grid)
+library(gridtext)
+library(glue)
+library(gridExtra)
 
 # Excel file handling
 library(readxl)
@@ -252,7 +256,7 @@ ui <-
         tabItem("presupuesto",
                 fluidRow(
                   box(
-                    title = "Control de gráficas",
+                    title = "Control de gráficas y opciones",
                     status = "primary",
                     width = 12,
                     collapsible = T,
@@ -264,8 +268,8 @@ ui <-
                     #
                     # ),
                     box(
-                      width = 2,
-                      status = "primary",
+                      width = 4,
+                      background = "blue",
                       numericInput(
                         inputId = "text_size",
                         label = "Tamaño del texto",
@@ -273,11 +277,10 @@ ui <-
                         min = 10,
                         max = 20
                       )
-                      
                     ),
                     box(
-                      width = 2,
-                      status = "primary",
+                      width = 4,
+                      background = "blue",
                       selectInput(
                         inputId = "color_scheme",
                         label = "Esquema de colores",
@@ -290,7 +293,15 @@ ui <-
                         ),
                         selected = "COBI"
                       )
-                      
+                    ),
+                    box(
+                      width = 4,
+                      background = "blue",
+                      tags$label(class = "control-label", "Guardar resultados"),
+                      downloadButton(outputId = "download_pdf",
+                                     icon = icon("save"),
+                                     label = "Descargar resumen (PDF)",
+                                     style = "width: 100%; color: black; margin-bottom: 15px;")
                     )
                   )
                 ),
@@ -357,11 +368,11 @@ server <- function(input, output) {
             label = "Título del proyecto"
           ),
           textInput(
-            inputId = "autor",
+            inputId = "author",
             label = "Autor del proyecto"
           ),
           textAreaInput(
-            inputId = "test",
+            inputId = "notes",
             label = "Notas",
             resize = "both"
           ),
@@ -548,8 +559,8 @@ server <- function(input, output) {
     
   })
   
-  # FIP ########################################################################
-  # Reactive UI for FIP Design phase  ------------------------------------------
+  ### FIP UI -------------------------------------------------------------------
+  ### Reactive UI for FIP Design phase
   output$fip_dis <- renderUI({
     section <- "FIP"
     phase <- "Diseño"
@@ -575,7 +586,7 @@ server <- function(input, output) {
     )
   })
   
-  # Reactive UI for FIP Implementation phase  ----------------------------------
+  ### Reactive UI for FIP Implementation phase
   output$fip_imp <- renderUI({
     section <- "FIP"
     phase <- "Implementación"
@@ -606,7 +617,7 @@ server <- function(input, output) {
     )
   })
   
-  # Reactive UI for FIP Follow-up phase  ---------------------------------------
+  ### Reactive UI for FIP Follow-up phase
   output$fip_seg <- renderUI({
     section <- "FIP"
     phase <- "Seguimiento"
@@ -632,61 +643,140 @@ server <- function(input, output) {
     )
   })
   
-  # Duration and frequencies of phases and activities ##########################
-  # Phase duration -------------------------------------------------------------
-  periods <- reactive({
-    expand_grid(
-      etapa = c("dis", "imp", "seg"),
-      section = c("REMA", "FIP")
-    ) %$% 
-    map2_dfr(
-      .x = etapa,
-      .y = section,
-      .f = ~{
-        tibble(etapa = .x,
-               section = .y,
-               fase_duracion = input[[paste("d", etapa, tolower(section), sep = "_")]])
-      }
-    )
+  ### PHASE DURATION -----------------------------------------------------------
+  ### Reactive object for phase duration
+  duration_rv <- reactiveValues(
+    df = tibble(
+      etapa = rep(c("dis", "imp", "seg"), each = 2),
+      section = rep(c("REMA", "FIP"), times = 3)
+      ) %>%
+      mutate(input_id = paste("d", etapa, tolower(section), sep = "_"),
+             fase_duracion = 1)
+  )
+  
+  ### Update phase duration from inputs
+  observe({
+    # Check which duration inputs have been created
+    valid_d_inputs <- duration_rv$df$input_id[which(duration_rv$df$input_id %in% names(input))]
+    
+    # Update reactive values with duration inputs
+    req(length(valid_d_inputs) > 0)
+    
+    phase_duration <- purrr::map_dfr(.x = valid_d_inputs,
+                                   ~ {
+                                     tibble(input_id = .x,
+                                            fase_duracion = input[[.x]])
+                                   })
+    
+    duration_rv$df$fase_duracion[duration_rv$df$input_id %in% valid_d_inputs] <- phase_duration$fase_duracion
   })
   
-  # Activity frequency ---------------------------------------------------------
-  frequencies <- reactive({
-    # Frequency of REMA part
-    req(input$freq_rema_1_1_1)
+  # periods <- reactive({
+  #   
+  #   expand_grid(
+  #     etapa = c("dis", "imp", "seg"),
+  #     section = c("REMA", "FIP")
+  #   ) %$% 
+  #   map2_dfr(
+  #     .x = etapa,
+  #     .y = section,
+  #     .f = ~{
+  #       tibble(etapa = .x,
+  #              section = .y,
+  #              fase_duracion = input[[paste("d", etapa, tolower(section), sep = "_")]])
+  #     }
+  #   )
+  # })
+  
+  ### ACTIVITY FREQUENCY -------------------------------------------------------
+  ### Reactive object for activity frequency
+  frequency_rv <- reactiveValues(
+    rema = tibble(
+      activity_id = paste0("freq_", unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+      actividad_frecuencia = rep("Anual")),
+    fip = tibble(
+      activity_id = paste0("freq_", unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+      actividad_frecuencia = rep("Anual"))
+  )
+  
+  ### Update REMA activity frequencies from inputs
+  observe({
+    # Check for user input data
     if (!is.null(input$budget_upload)) {
       rema_data <- user_rema_data()
     }
+    # Check which duration inputs have been created
+    valid_freq_inputs <- frequency_rv$rema$activity_id[which(frequency_rv$rema$activity_id %in% names(input))]
     
-    rema_freq <- map_dfr(
-      paste0("freq_", unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
-      .f = ~{
-        tibble(
-          activity_id = .x,
-          actividad_frecuencia = input[[.x]]
-        )
-      }
-    )
+    # Update reactive values with duration inputs
+    req(length(valid_freq_inputs) > 0)
     
-    # Frequency of FIP part
-    if (!is.null(input$budget_upload)) {
-      fip_data <- user_fip_data()
-    }
+    activity_frequency <- purrr::map_dfr(.x = valid_freq_inputs,
+                                     ~ {
+                                       tibble(activity_id = .x,
+                                              actividad_frecuencia = input[[.x]])
+                                     })
     
-    fip_freq <- map_dfr(
-      paste0("freq_", unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
-      .f = ~{
-        tibble(
-          activity_id= .x,
-          actividad_frecuencia = input[[.x]]
-        )
-      }
-    )
+    frequency_rv$rema$actividad_frecuencia[frequency_rv$rema$activity_id %in% valid_freq_inputs] <- activity_frequency$actividad_frecuencia
+  })
+
+  ### Update FIP activity frequencies from inputs
+  observe({
+    # # Check for user input data
+    # if (!is.null(input$budget_upload)) {
+    #   fip_data <- user_fip_data()
+    # }
+    # Check which duration inputs have been created
+    valid_freq_inputs <- frequency_rv$fip$activity_id[which(frequency_rv$fip$activity_id %in% names(input))]
     
-    bind_rows(rema_freq, fip_freq)
+    # Update reactive values with duration inputs
+    req(length(valid_freq_inputs) > 0)
+    
+    activity_frequency <- purrr::map_dfr(.x = valid_freq_inputs,
+                                         ~ {
+                                           tibble(activity_id = .x,
+                                                  actividad_frecuencia = input[[.x]])
+                                         })
+    
+    frequency_rv$fip$actividad_frecuencia[frequency_rv$fip$activity_id %in% valid_freq_inputs] <- activity_frequency$actividad_frecuencia
   })
   
+  # frequencies <- reactive({
+  #   # Frequency of REMA part
+  #   req(input$freq_rema_1_1_1)
+  #   if (!is.null(input$budget_upload)) {
+  #     rema_data <- user_rema_data()
+  #   }
+  #   
+  #   rema_freq <- map_dfr(
+  #     paste0("freq_", unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+  #     .f = ~{
+  #       tibble(
+  #         activity_id = .x,
+  #         actividad_frecuencia = input[[.x]]
+  #       )
+  #     }
+  #   )
+  #   
+  #   # Frequency of FIP part
+  #   if (!is.null(input$budget_upload)) {
+  #     fip_data <- user_fip_data()
+  #   }
+  #   
+  #   fip_freq <- map_dfr(
+  #     paste0("freq_", unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+  #     .f = ~{
+  #       tibble(
+  #         activity_id= .x,
+  #         actividad_frecuencia = input[[.x]]
+  #       )
+  #     }
+  #   )
+  #   
+  #   bind_rows(rema_freq, fip_freq)
+  # })
   
+  ### COSTS AND QUANTITIES -----------------------------------------------------
   ### Reactive object for REMA and FIP inputs
   input_rv <- reactiveValues(
     rema = tibble(
@@ -787,6 +877,7 @@ server <- function(input, output) {
 
   })
   
+  ### TOTALS -------------------------------------------------------------------
   ### Reactive object for totals - fixes summary boxes not appearing on start
   totals_rv <- reactiveValues(rema = 0,
                               fip = 0)
@@ -794,10 +885,14 @@ server <- function(input, output) {
   ### Get totals for each activity
   totals <- reactive({
     
+    # Combine rema and fip cost and quantity data
     dat <- input_rv$rema %>%
       bind_rows(input_rv$fip)
     
     req(nrow(dat) > 0)
+    
+    # Combine rema and fip frequency data
+    frequency <- bind_rows(frequency_rv$rema, frequency_rv$fip)
     
    cost_data %>%
       select(section,
@@ -812,9 +907,9 @@ server <- function(input, output) {
              contains("orden")) %>%
       inner_join(dat, by = "id") %>%
       mutate(etapa = tolower(substr(x = fase, start = 1, stop = 3))) %>%
-      inner_join(periods(), by = c("etapa", "section")) %>%
+      inner_join(duration_rv$df %>% dplyr::select(-input_id), by = c("etapa", "section")) %>%
       mutate(activity_id = paste0("freq_", str_extract(string = id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))) %>% 
-      inner_join(frequencies(), by = "activity_id") %>% 
+      inner_join(frequency, by = "activity_id") %>% 
       select(-activity_id) %>% 
       mutate(
         eventos = pmax(
@@ -849,13 +944,18 @@ server <- function(input, output) {
     
   })
   
-  ### Update totals rv
+  ### Update totals (REMA)
   observe({
     
     totals_rv$rema <- test <- totals() %>% 
       dplyr::filter(section == "REMA") %>% 
       pull(total) %>% 
       sum(na.rm = T)
+    
+  })
+  
+  ### Update totals (FIP)
+  observe({
     
     totals_rv$fip <- totals() %>% 
       filter(section == "FIP") %>% 
@@ -864,8 +964,8 @@ server <- function(input, output) {
     
   })
   
-  # VALUE BOXES ################################################################
-  # Value box with total cost in USD for marine reserves -----------------------
+  ### VALUE BOXES --------------------------------------------------------------
+  ### Value box with total cost in USD for marine reserves ---------------------
   output$REMAtotalUSD <- renderInfoBox({
 
     infoBox(
@@ -878,7 +978,7 @@ server <- function(input, output) {
     
   })
   
-  # Value box with total cost in USD for FIP -----------------------------------
+  ### Value box with total cost in USD for FIP ---------------------------------
   output$FIPtotalUSD <- renderInfoBox({
     
     infoBox(
@@ -891,7 +991,85 @@ server <- function(input, output) {
     
   })
   
-  ### Plot
+  # BUDGET SPLITTING -----------------------------------------------------------
+  ### Assemble a tibble of actors
+  actors_tibble <- reactive({
+    req(input$funder_1)
+    
+    purrr::map2_dfr(
+      paste0("funder_", 1:input$n_actors),
+      paste0("pct_funder_", 1:input$n_actors),
+      ~{
+        tibble(
+          actor = input[[.x]],
+          pct = input[[.y]]
+        )
+      }
+    )
+    
+  })
+  
+  ### Plots --------------------------------------------------------------------
+  ### Reactive values for plots
+  output_rv <- reactiveValues(first_page = NULL,
+                              summary_table = NULL,
+                              plot1 = NULL,
+                              plot2 = NULL,
+                              plot3 = NULL)
+  
+  ### First page: Project info
+  observe({
+    
+    # COBI Logo
+    logo_src <- "./www/img/COBI_logo_color.jpeg"
+
+    # Text to add
+    text <- c(paste0("**Título del proyecto:** ", input$title),
+              paste0("**Autor del proyecto:** ", input$author),
+              paste0("**Actores:** ", input$author),
+              paste0("**Notas:** ", input$notes),
+              glue::glue("<img src='{logo_src}' width='100'/>"))
+    
+    
+    x <- c(0.1, 0.1, 0.1, 0.1, 0.9)
+    y <- c(0.9, 0.88, 0.86, 0.84, 0.9)
+    rot <- c(0,0,0,0,0)
+    hjust <- c(0,0,0,0,1)
+    vjust <- c(0,0,0,0,1)
+    gp = gpar(
+      col = c("black"),
+      fontfamily = c("Helvetica")
+    )
+    
+    text_print <- richtext_grob(
+      text,
+      x,
+      y,
+      hjust = hjust, vjust = vjust, rot = rot, gp = gp
+    )
+    
+    
+    # Put together first page
+    #first_page <- grid.draw(text_print)
+    
+    output_rv$first_page <- text_print
+  })
+  
+  ### Summary table: 
+  observe({
+    
+    table_dat <- totals() %>%
+      dplyr::filter(total > 0)
+    
+    req(nrow(table_dat) > 0)
+    
+    nice_summary_table <- table_dat
+    
+    output_rv$summary_table <- tableGrob(nice_summary_table, rows = NULL, theme = ttheme_default(base_size = 8))
+    
+  })
+  
+  ### Plot 1: Presupuesto por fases
   output$plot1 <- renderPlotly({
     plot1_data <- totals()  %>%
       filter(total > 0) %>%
@@ -902,7 +1080,6 @@ server <- function(input, output) {
     req(nrow(plot1_data) > 0)
     
     #if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
-    
     #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
     y_label <- "Costo total (K USD)"
     
@@ -932,6 +1109,8 @@ server <- function(input, output) {
       facet_wrap( ~ Intervención, ncol = 2) +
       theme(legend.position = "none")
     
+    output_rv$plot1 <- plot1
+    
     p <- ggplotly(plot1)
     
     # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
@@ -940,6 +1119,7 @@ server <- function(input, output) {
     
   })
   
+  ### Plot 2: Presupuesto por conceptos
   output$plot2 <- renderPlotly({
     plot2_data <- totals()  %>%
       filter(total > 0) %>%
@@ -950,7 +1130,6 @@ server <- function(input, output) {
     req(nrow(plot2_data) > 0)
     
     #if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
-    
     #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
     y_label <- "Costo total (K USD)"
     
@@ -979,6 +1158,8 @@ server <- function(input, output) {
       coord_flip() +
       facet_wrap( ~ Intervención, ncol = 1)
     
+    output_rv$plot2 <- plot2
+    
     p <- ggplotly(plot2)
     
     # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
@@ -986,28 +1167,9 @@ server <- function(input, output) {
     p
   })
   
-  # BUDGET SPLITTING ###########################################################
-  # Assamble a tibble of actors ------------------------------------------------
-  actors_tibble <- reactive({
-    req(input$funder_1)
-    
-    purrr::map2_dfr(
-      paste0("funder_", 1:input$n_actors),
-      paste0("pct_funder_", 1:input$n_actors),
-      ~{
-        tibble(
-          actor = input[[.x]],
-          pct = input[[.y]]
-        )
-      }
-    )
-    
-  })
-  
-  # Plot -----------------------------------------------------------------------
+  ### Plot 3: Presupuesto por usuarios
   output$split_budget_plot <- renderPlotly({
-    
-    
+  
     p <-
       ggplot(
         data = actors_tibble(),
@@ -1026,10 +1188,13 @@ server <- function(input, output) {
       scale_fill_brewer(palette = input$color_scheme) +
       guides(fill = guide_legend(title = "Actor"))
     
+    output_rv$plot3 <- p
+    
     ggplotly(p)
   })
   
-  # EXPORTING ------------------------------------------------------------------
+  ### EXPORTING ----------------------------------------------------------------
+  ### Download progress (XLSX)
   output$download_total <- downloadHandler(
     filename = "Presupuesto.xlsx",
     content = function(file) {
@@ -1046,9 +1211,38 @@ server <- function(input, output) {
     }
   )
   
-  output$test <- renderTable({
-    frequencies()
-  })
+  ### Download results (PDF)
+  output$download_pdf <- downloadHandler(
+    #req(!is.null(output_rv$first_page) & !is.null(output_rv$plot1) & !is.null(output_rv$plot2)),
+    
+    filename = function(){paste0("AppCosteo_resumen_de_resultados.pdf")},
+    content = function(file){
+      
+      # # Now Add Table on the next page
+      # global_df <- rv_explore_results$data_global %>%
+      #   dplyr::filter(Year == end_year) %>%
+      #   dplyr::filter(Variable != "Revenue") %>%
+      #   dplyr::select(Name, Variable, Diff) %>%
+      #   mutate(Diff = round(Diff*100, 2),
+      #          Variable = paste0(Variable, "\n", "(% Change)")) %>%
+      #   spread(Variable, Diff) %>%
+      #   rename(Policy = Name)
+      # 
+      # df <- tableGrob(global_df, rows = NULL, theme = ttheme_default(base_size = 8))
+      
+      pdf(file, width = 11, height = 8.5)
+      grid.newpage()
+      grid.draw(output_rv$first_page)
+      grid.newpage()
+      grid.draw(output_rv$summary_table)
+      print(output_rv$plot1 + labs(title = "Presupuesto por fases") + theme(plot.margin = unit(c(1,1,1,1), units = "in")))
+      print(output_rv$plot2 + labs(title = "Presupuesto por conceptos") + theme(plot.margin = unit(c(1,1,1,1), units = "in")))
+      #print(output_rv$plot3 + labs(title = "Presupuesto por usuarios") + theme(plot.margin = unit(c(1,1,1,1), units = "in")))
+      dev.off()
+      
+    }
+  )
+  
   
 }
 

@@ -136,10 +136,12 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
               icon = NULL, 
               color = "blue"
             ),
-            selectInput(
-              inputId = paste0(subphase, "_resp"),
-              label = "Responsable",
-              choices = actors
+            column(width = 12, # putting this here to make the padding line up
+                   selectInput(
+                     inputId = paste0(subphase, "_resp"),
+                     label = "Responsable",
+                     choices = actors
+                   )
             )
           )
         ),
