@@ -204,17 +204,18 @@ makePhaseDuration <- function(phase, section, duration = 0, fip_data = NULL, sel
               width = 12,
               color = "aqua")
           ),
-          valueBox(
-            value = NULL,
-            subtitle = selectInput(
+          box(
+            title = "Intervenciones",
+            collapsible = T,
+            collapsed = T,
+            width = 6,
+            status = "info",
+            checkboxGroupInput(
               inputId = "choices_imp_fip",
               label = "Selecciona tus intervenciones:",
               choices = unique(fip_data$subfase[fip_data$fase == "Implementación"]),
-              multiple = T,
               selected = selected_phases,
-              width = "100%"),
-            width = 6,
-            color = "aqua"
+              width = "100%")
           )
         )
       )
