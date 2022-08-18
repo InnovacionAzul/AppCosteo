@@ -1,0 +1,7 @@
+section,fase,fase_duracion,subfase,subfase_orden,concepto,actividad,actividad_orden,actividad_frecuencia,rubro,descripcion,unidades,cantidades,precio,id,total
+REMA,Diseño,1,Socialización,1,Reuniones,Reuniones para presentar información de ZRP,1,Anual,Moderadores de reuniones,Consultor para que modere la reunión,$/unidad,90,60,rema_1_1_1_3,5400
+REMA,Seguimiento,1,Reporte de resultados,1,Consultores,Actividades de renovacion,1,Única,Reporte tecnico de actividades y resultados,Elaboración de reporte de resultados,$/unidad,1,600,rema_3_13_1_1,600
+FIP,Diseño,1,Identificación y socialización,1,Salarios y Beneficios,Desarrollo de la pre-evaluación,1,Anual,Encargado de proyecto,Honorarios de personal involucrado en el diseno y desarrollo del FIP,$/día,40,60,fip_1_1_2_2,2400
+FIP,Implementación,1,Estrategia de captura,3,Salarios y Beneficios,"Mejora: Diseño, evaluación, seguimiento, y revisión de la estrategia de captura",1,Anual,Encargado de proyecto,Honorarios de personal involucrado en la implementación de la mejora,$/día,30,70,fip_2_4_1_2,2100
+FIP,Seguimiento,1,Auditoría Fishery Progress,1,Salarios y Beneficios,Auditoría tienal para FIPs exhaustivos,1,Anual,Asistente de proyecto,Honorarios de personal involucrado en la implementación de la mejora,$/día,40,60,fip_3_32_1_4,2400
+FIP,Seguimiento,1,Avances Fishery Progress,1,Salarios y Beneficios,Seguimiento y presentación de informes semestrales/anuales a Fishery Progress,1,Anual,Encargado de proyecto,Honorarios de personal involucrado en la implementación de la mejora,$/día,2,80,fip_3_33_1_1,160

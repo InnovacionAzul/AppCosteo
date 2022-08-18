@@ -1011,62 +1011,19 @@ server <- function(input, output) {
   
   ### Plots --------------------------------------------------------------------
   ### Reactive values for plots
-  output_rv <- reactiveValues(first_page = NULL,
-                              summary_table = NULL,
+  output_rv <- reactiveValues(summary_dat = NULL,
                               plot1 = NULL,
                               plot2 = NULL,
                               plot3 = NULL)
   
-  ### First page: Project info
+  ### Summary data for tables
   observe({
-    
-    # COBI Logo
-    logo_src <- "./www/img/COBI_logo_color.jpeg"
 
-    # Text to add
-    text <- c(paste0("**Título del proyecto:** ", input$title),
-              paste0("**Autor del proyecto:** ", input$author),
-              paste0("**Actores:** ", input$author),
-              paste0("**Notas:** ", input$notes),
-              glue::glue("<img src='{logo_src}' width='100'/>"))
-    
-    
-    x <- c(0.1, 0.1, 0.1, 0.1, 0.9)
-    y <- c(0.9, 0.88, 0.86, 0.84, 0.9)
-    rot <- c(0,0,0,0,0)
-    hjust <- c(0,0,0,0,1)
-    vjust <- c(0,0,0,0,1)
-    gp = gpar(
-      col = c("black"),
-      fontfamily = c("Helvetica")
-    )
-    
-    text_print <- richtext_grob(
-      text,
-      x,
-      y,
-      hjust = hjust, vjust = vjust, rot = rot, gp = gp
-    )
-    
-    
-    # Put together first page
-    #first_page <- grid.draw(text_print)
-    
-    output_rv$first_page <- text_print
-  })
-  
-  ### Summary table: 
-  observe({
-    
     table_dat <- totals() %>%
       dplyr::filter(total > 0)
     
-    req(nrow(table_dat) > 0)
-    
-    nice_summary_table <- table_dat
-    
-    output_rv$summary_table <- tableGrob(nice_summary_table, rows = NULL, theme = ttheme_default(base_size = 8))
-    
+    output_rv$summary_dat <- table_dat
+
   })
   
   ### Plot 1: Presupuesto por fases
@@ -1094,7 +1051,7 @@ server <- function(input, output) {
       ggplot(aes(
         x = Fase,
         y = Total,
-        fill = Concepto,
+        fill = Fase,
         label = Subfase,
         group = Intervención
       )) +
@@ -1211,37 +1168,40 @@ server <- function(input, output) {
     }
   )
   
-  ### Download results (PDF)
+  ### Download summary PDF
   output$download_pdf <- downloadHandler(
-    #req(!is.null(output_rv$first_page) & !is.null(output_rv$plot1) & !is.null(output_rv$plot2)),
-    
+
     filename = function(){paste0("AppCosteo_resumen_de_resultados.pdf")},
     content = function(file){
       
-      # # Now Add Table on the next page
-      # global_df <- rv_explore_results$data_global %>%
-      #   dplyr::filter(Year == end_year) %>%
-      #   dplyr::filter(Variable != "Revenue") %>%
-      #   dplyr::select(Name, Variable, Diff) %>%
-      #   mutate(Diff = round(Diff*100, 2),
-      #          Variable = paste0(Variable, "\n", "(% Change)")) %>%
-      #   spread(Variable, Diff) %>%
-      #   rename(Policy = Name)
-      # 
-      # df <- tableGrob(global_df, rows = NULL, theme = ttheme_default(base_size = 8))
+      # Copy the report file to a temporary directory before processing it, in
+      # case we don't have write permissions to the current working dir (which
+      # can happen when deployed).
+      tempReport <- file.path(tempdir(), "summary_report.Rmd")
+      file.copy("summary_report.Rmd", tempReport, overwrite = TRUE)
       
-      pdf(file, width = 11, height = 8.5)
-      grid.newpage()
-      grid.draw(output_rv$first_page)
-      grid.newpage()
-      grid.draw(output_rv$summary_table)
-      print(output_rv$plot1 + labs(title = "Presupuesto por fases") + theme(plot.margin = unit(c(1,1,1,1), units = "in")))
-      print(output_rv$plot2 + labs(title = "Presupuesto por conceptos") + theme(plot.margin = unit(c(1,1,1,1), units = "in")))
-      #print(output_rv$plot3 + labs(title = "Presupuesto por usuarios") + theme(plot.margin = unit(c(1,1,1,1), units = "in")))
-      dev.off()
+      # Set up parameters to pass to Rmd document
+      params <- list(title = input$title,
+                     author = input$author,
+                     actors = paste0(actors(), collapse = ", "),
+                     notes = input$notes,
+                     summary_dat = output_rv$summary_dat,
+                     plot1 = output_rv$plot1,
+                     plot2 = output_rv$plot2,
+                     plot3 = output_rv$plot3)
+      
+      # Knit the document, passing in the `params` list, and eval it in a
+      # child of the global environment (this isolates the code in the document
+      # from the code in this app).
+      rmarkdown::render(tempReport, output_file = file,
+                        params = params,
+                        envir = new.env(parent = globalenv())
+      )
       
     }
   )
+  
+  
   
   
 }
