@@ -5,9 +5,9 @@ account: jcvd
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6692853
-bundleId: 6135344
+bundleId: 6276132
 url: https://jcvd.shinyapps.io/AppCosteo_v_2_0/
-when: 1658855717.78293
-lastSyncTime: 1658855717.78294
+when: 1662519841.96808
+lastSyncTime: 1662519841.96809
 asMultiple: FALSE
 asStatic: FALSE
