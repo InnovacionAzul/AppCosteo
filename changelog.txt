@@ -1,0 +1,43 @@
+LISTA DE CAMBIOS
+
+################################################################################
+# 7 de Septiembre del 2022
+# V2.0.1
+################################################################################
+
+1) Ventana de bienvenida con dos opciones:
+  a) campo para cargar un proyecto anterior
+  b) campos para guardar datos generales del proyecto
+
+2) Panel de herramientas actualizado:
+  a) Agregar botón para abrir la ventana de inicio
+  b) Modificar botón para guardar el proyecto (descarga archivo de excel)
+  c) Agregar botón para descargar resumen de presupuesto (en formato PDF)
+  d) Quitar botón para compartir bookmark
+
+3) Índice de elementos actualizado para incluir elementos de FIP
+
+4) El usuario puede asignar un actor responsalbe para cada sub-fase
+
+5) Las actividades ahora aparecen en una sola columna, con todas las "cajas"
+colapsadas
+
+6) Modificaciones a sub-fase:
+  a) Desarrollo de Evaluación de riesgos sociales -> Desarrollo de la Política social
+  b) Se agregaron 6 elementos
+    - Código de conducta
+    - Lista de embarcaciones
+    - Mecanismo de resolución de conflictos
+    - Conocimiento sobre los derechos humanos y laborales
+    - Evaluación de riesgo (SRA)
+    - Plan de trabajo social
+
+7) El usuario ahora puede descargar un archivo PDF con un resumen del presupuesto
+
+8) Agregar hoja de metadatos al archivo del proyecto
+
+9) Cambiar formato de números (100000 --> 100,000)
+
+10) Corrección a errores de dedo en general
+
+################################################################################
