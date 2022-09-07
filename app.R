@@ -97,7 +97,7 @@ cost_data <- rema_data %>%
 ## DEFINE UI ###################################################################
 ui <- 
   dashboardPage(
-    title = "Costeo de Intervenciones",
+    title = "Sistema de Costeo",
     header = dashboardHeader(
       title = img(src = "img/COBI_logo.png", height = "52px")
     ),
@@ -208,7 +208,7 @@ ui <-
         tabItem(
           tabName = "inicio",
           box(
-            title = h1("Costeo de Intervenciones de Conservación (V2.0 beta)"),
+            title = h1("Sistema de Costeo para herramientas de Resercas Marinas y Pesca Sostentible"),
             width = 12,
             status = "primary",
             p("Las reservas marinas completamente protegidas son áreas del océano restringidas a cualquier actividad extractiva, incluyendo la pesca. Las reservas marinas exitosas crean condiciones en las que las poblaciones de especies previamente capturadas se pueden recuperar y restaurar el equilibrio trófico en el ecosistema. La recuperación de la biomasa pesquera dentro de la reserva puede causar efectos colaterales en las zonas de pesca adyacentes, tanto desde el traslado de especímenes adultos, como en la exportación de larvas. Este efecto de desbordamiento puede ayudar a los usuarios a compensar algunos de los precio de oportunidad al ceder las zonas de pesca. La reserva marina funciona como una cuenta bancaria, la cual se repobla con el interés al capital con el desbordamiento."),
@@ -524,7 +524,7 @@ server <- function(input, output) {
   ##############################################################################
 
   
-  # REMA #########################################################################
+  # REMA UI ####################################################################
   # Reactive UI for REMA Design phase ------------------------------------------
   output$rema_dis <- renderUI({
     values$actors <- ui_actors()
@@ -609,8 +609,8 @@ server <- function(input, output) {
     
   })
   
-  ### FIP UI -------------------------------------------------------------------
-  ### Reactive UI for FIP Design phase
+  # FIP UI #####################################################################
+  # Reactive UI for FIP Design phase -------------------------------------------
   output$fip_dis <- renderUI({
     section <- "FIP"
     phase <- "Diseño"
@@ -694,8 +694,8 @@ server <- function(input, output) {
     )
   })
   
-  ### PHASE DURATION -----------------------------------------------------------
-  ### Reactive object for phase duration
+  # PHASE DURATION -------------------------------------------------------------
+  # Reactive object for phase duration -----------------------------------------
   duration_rv <- reactiveValues(
     df = tibble(
       etapa = rep(c("dis", "imp", "seg"), each = 2),
@@ -722,8 +722,8 @@ server <- function(input, output) {
     duration_rv$df$fase_duracion[duration_rv$df$input_id %in% valid_d_inputs] <- phase_duration$fase_duracion
   })
   
-  ### ACTIVITY FREQUENCY -------------------------------------------------------
-  ### Reactive object for activity frequency
+  # ACTIVITY FREQUENCY ---------------------------------------------------------
+  # Reactive object for activity frequency 
   frequency_rv <- reactiveValues(
     rema = tibble(
       activity_id = paste0("freq_", unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
@@ -775,7 +775,7 @@ server <- function(input, output) {
     frequency_rv$fip$actividad_frecuencia[frequency_rv$fip$activity_id %in% valid_freq_inputs] <- activity_frequency$actividad_frecuencia
   })
   
-  ### SUBPHASE RESPONSIBLES ----------------------------------------------------
+  # SUBPHASE RESPONSIBLES ------------------------------------------------------
   # Reactive object for responsible actors
   actors_rv <- reactiveValues(
     rema = tibble(
@@ -828,8 +828,8 @@ server <- function(input, output) {
     actors_rv$fip$responsable[actors_rv$fip$subphase_id %in% valid_actors_inputs] <- responsable$responsable
   })
   
-  ### COSTS AND QUANTITIES -----------------------------------------------------
-  ### Reactive object for REMA and FIP inputs
+  # COSTS AND QUANTITIES -------------------------------------------------------
+  # Reactive object for REMA and FIP inputs
   input_rv <- reactiveValues(
     rema = tibble(
       id = rema_data$id,
@@ -921,8 +921,8 @@ server <- function(input, output) {
       fip_unidades$cantidades
   })
   
-  ### TOTALS -------------------------------------------------------------------
-  ### Reactive object for totals - fixes summary boxes not appearing on start
+  # TOTALS ---------------------------------------------------------------------
+  # Reactive object for totals - fixes summary boxes not appearing on start
   totals_rv <- reactiveValues(rema = 0,
                               fip = 0)
   
@@ -1015,13 +1015,13 @@ server <- function(input, output) {
     
   })
   
-  ### VALUE BOXES --------------------------------------------------------------
-  ### Value box with total cost in USD for marine reserves ---------------------
+  # VALUE BOXES ----------------------------------------------------------------
+  # Value box with total cost in USD for marine reserves
   output$REMAtotalUSD <- renderInfoBox({
 
     infoBox(
       title = "Costo total (REMA)",
-      value = totals_rv$rema,
+      value = prettyNum(totals_rv$rema, big.mark = ","),
       subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
@@ -1029,34 +1029,16 @@ server <- function(input, output) {
     
   })
   
-  ### Value box with total cost in USD for FIP ---------------------------------
+  ### Value box with total cost in USD for FIP
   output$FIPtotalUSD <- renderInfoBox({
     
     infoBox(
       title = "Costo total (FIP)",
-      value = totals_rv$fip,
+      value = prettyNum(totals_rv$fip, big.mark = ","),
       subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
       color = "light-blue")
-    
-  })
-  
-  # BUDGET SPLITTING -----------------------------------------------------------
-  ### Assemble a tibble of actors
-  actors_tibble <- reactive({
-    req(input$funder_1)
-    
-    purrr::map2_dfr(
-      paste0("funder_", 1:input$n_actors),
-      paste0("pct_funder_", 1:input$n_actors),
-      ~{
-        tibble(
-          actor = input[[.x]],
-          pct = input[[.y]]
-        )
-      }
-    )
     
   })
   
@@ -1178,23 +1160,31 @@ server <- function(input, output) {
   ### Plot 3: Presupuesto por usuarios
   output$split_budget_plot <- renderPlotly({
   
+    plot_data <- totals() %>% 
+      group_by(responsable, section, fase, subfase) %>% 
+      summarize(total = sum(total, na.rm = T) / 1e3) %>% 
+      mutate(step = paste(fase, subfase, sep = "-")) %>% 
+      # select(section, responsable, step, total) %>% 
+      drop_na(responsable) %>% 
+      filter(total > 0)
+      
+      
     p <-
       ggplot(
-        data = actors_tibble(),
+        data = plot_data,
         mapping = aes(
-          x = actor,
-          y = pct * sum(totals()$total, na.rm = T) / 100,
-          fill = actor
+          x = step,
+          y = responsable,
+          fill = total
         )
       ) +
-      geom_col(
-        color = "black"
-      ) +
+      geom_tile(color = "black") +
       theme_bw() +
-      labs(x = "Actor",
-           y = "Contribución total ($)") +
-      scale_fill_brewer(palette = input$color_scheme) +
-      guides(fill = guide_legend(title = "Actor"))
+      labs(x = "",
+           y = "Actor") +
+      scale_fill_gradient(low = "lightblue", high = "steelblue") +
+      facet_wrap(~section) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
     
     output_rv$plot3 <- p
     

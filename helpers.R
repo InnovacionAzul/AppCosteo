@@ -42,7 +42,7 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NUL
     unitDefault <- cost_data$cantidades[cost_data$id == pairId]
   }
   if(is.null(tooltipText)){
-    tooltipText <- cost_data$descripcion[cost_data$id == pairId] 
+    tooltipText <- cost_data$descripcion[cost_data$id == pairId]
   }
   
   tagList(
@@ -118,6 +118,8 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
   
   activities <- unique(data_subphase$actividad)
   
+  selected_actor <- unique(data_subphase$responsable)
+  
   tagList(
     tags$div(
       style = "border: 1px solid lightgray; margin: 15px; padding: 15px 15px 0px 0px; border-radius: 5px;",
@@ -134,11 +136,12 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
               icon = NULL, 
               color = "blue"
             ),
-            column(width = 12, # putting this here to make the padding line up
+            column(width = 12,
                    selectInput(
                      inputId = subphase_code,
                      label = "Responsable",
-                     choices = actors
+                     choices = actors,
+                     selected = selected_actor
                    )
             )
           )

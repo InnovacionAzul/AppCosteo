@@ -44,7 +44,7 @@ file.copy(here::here("www", "img", "COBI_logo_color.jpeg"), '.')
 
 \newpage
 
-**Presupuesto por fases**
+# Presupuesto por fases
 
 ```{r, echo=F, message=F, warning=F}
 d1 <- params$summary_dat %>%
@@ -61,16 +61,14 @@ d1
 ```
 
 ```{r, echo=F, fig.align='left'}
-if(is.null(params$plot1)){
-  "No values to report"
-}else{
+if(!is.null(params$plot1)){
   params$plot1
 }
 ```
 
 \newpage
 
-**Presupuesto por conceptos**
+# Presupuesto por conceptos
 
 ```{r, echo=F, message=F, warning=F}
 d2 <- params$summary_dat %>%
@@ -87,58 +85,48 @@ d2
 ```
 
 ```{r, echo=F, fig.align='left'}
-if(is.null(params$plot2)){
-  "No values to report"
-}else{
+if(!is.null(params$plot2)){
   params$plot2
 }
 ```
 
 \newpage
 
-**Presupuesto por usuarios**
+# Presupuesto por actores
 
 ```{r, echo=F, message=F, warning=F}
 ### Need to include a table here summarized by responsible party
 d3 <- params$summary_dat %>%
-  group_by(section, concepto, fase, responsable) %>%
+  group_by(responsable, fase) %>%
   summarize(`Actividades` = n_distinct(actividad),
             `Total ($)` = format(sum(total, na.rm = T), big.mark = ",")) %>%
   ungroup() %>%
-  rename(`Intervención` = section, Concepto = concepto, Fase = fase) %>%
+  rename(Responsable = responsable, Fase = fase) %>%
   kbl() %>%
   kable_minimal(full_width = F, position = "left", font_size = 10) %>%
-  collapse_rows(columns = 1:2, valign = "middle")
+  collapse_rows(columns = 1, valign = "middle")
 
 d3
 ```
 
-
-```{r echo=F, fig.align='left'}
-params$summary_dat %>%
-  group_by(section, fase, responsable) %>% 
-  summarize(tot = sum(total, na.rm = T)) %>% 
-  ggplot(aes(x = fase, y = responsable, fill = tot)) +
-  geom_tile() +
-  theme_bw() +
-  labs(x = "Fase",
-       y = "Responsable")
-#params$plot3 + 
-  #labs(title = "Presupuesto por usuarios")
+```{r, echo=F, fig.align='left'}
+if(!is.null(params$plot3)){
+  params$plot3
+}
 ```
 
 \newpage
 \blandscape
 
-**Presupuesto por actividades**
+# Presupuesto extendido
 
 ```{r, echo=F, message=F, warning=F}
 d4 <- params$summary_dat %>%
   #test_dat %>%
-  group_by(section, fase, subfase, actividad, actividad_frecuencia) %>%
+  group_by(section, fase, subfase, actividad, responsable) %>%
   summarize(`Total ($)` = format(sum(total, na.rm = T), big.mark = ",")) %>%
   ungroup() %>%
-  rename(`Intervención` = section, Fase = fase, Subfase = subfase, Actividad = actividad, Frecuencia = actividad_frecuencia) %>%
+  rename(Programa = section, Fase = fase, Subfase = subfase, Actividad = actividad, Responsable = responsable) %>%
   kbl() %>%
   kable_minimal(full_width = T, position = "left", font_size = 10) %>%
   collapse_rows(columns = 1:4, valign = "middle")

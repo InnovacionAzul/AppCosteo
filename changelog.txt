@@ -36,8 +36,7 @@ colapsadas
 
 8) Agregar hoja de metadatos al archivo del proyecto
 
-9) Cambiar formato de números (100000 --> 100,000)
-
-10) Corrección a errores de dedo en general
+10) Corrección de apariencia y errores de dedo en general
+    - Cambiar formato de números (100000 --> 100,000)
 
 ################################################################################
