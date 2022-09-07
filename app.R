@@ -1238,7 +1238,7 @@ server <- function(input, output) {
       # Set up parameters to pass to Rmd document
       params <- list(title = input$title,
                      author = input$author,
-                     actors = paste0(actors(), collapse = ", "),
+                     actors = paste0(ui_actors(), collapse = ", "),
                      notes = input$notes,
                      summary_dat = output_rv$summary_dat,
                      plot1 = output_rv$plot1,
