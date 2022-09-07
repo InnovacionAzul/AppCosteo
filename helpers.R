@@ -110,13 +110,11 @@ makeActivity <- function(activity, data_subphase){
 ### Makes a row with a header and varying numbers of boxes for each subphase
 makeSubphase <- function(subphase, number, data_fase, actors = NULL){
   
-  if(is.null(actors)){
-    actors <- c("Not", "working")
-  }
-  
   data_subphase <- data_fase %>%
     dplyr::filter(subfase == subphase) %>%
     arrange(actividad_orden)
+  
+  subphase_code <- paste0(unique(str_extract(string = data_subphase$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+")), "_resp")
   
   activities <- unique(data_subphase$actividad)
   
@@ -138,7 +136,7 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
             ),
             column(width = 12, # putting this here to make the padding line up
                    selectInput(
-                     inputId = paste0(subphase, "_resp"),
+                     inputId = subphase_code,
                      label = "Responsable",
                      choices = actors
                    )
@@ -247,42 +245,42 @@ makePhaseDuration <- function(phase, section, duration = 0, fip_data = NULL, sel
   }
 }
 
-## Visualization hepers
-make_funder <- function(funders) {
-  fluidRow(
-    # Funder NAME
-    # column(
-    #   width = 12,
-    #   textInput(
-    #     inputId = paste0("funder_", funder),
-    #     label = "Nombre del grupo",
-    #     value = paste("Grupo", funder)
-    #   )
-    # ),
-    column(
-      #Funder CONTRIBUTION %
-      width = 6,
-      numericInput(
-        inputId = paste0("pct_funder_", funders),
-        label = paste0("% de contribución de ", funder),
-        value = pct,
-        min = 0,
-        max = 100
-      )
-    )
-  )
-}
+# ## Visualization hepers
+# make_funder <- function(funders) {
+#   fluidRow(
+#     # Funder NAME
+#     # column(
+#     #   width = 12,
+#     #   textInput(
+#     #     inputId = paste0("funder_", funder),
+#     #     label = "Nombre del grupo",
+#     #     value = paste("Grupo", funder)
+#     #   )
+#     # ),
+#     column(
+#       #Funder CONTRIBUTION %
+#       width = 6,
+#       numericInput(
+#         inputId = paste0("pct_funder_", funders),
+#         label = paste0("% de contribución de ", funder),
+#         value = pct,
+#         min = 0,
+#         max = 100
+#       )
+#     )
+#   )
+# }
 # Function to ask for number and names of funders
 # in the modeal window.
-get_funder <- function(funder) {
+get_funder <- function(n_funder, funder_name) {
   fluidRow(
     # Funder NAME
     column(
       width = 12,
       textInput(
-        inputId = paste0("funder_", funder),
+        inputId = paste0("funder_", n_funder),
         label = "Nombre del grupo",
-        value = paste("Grupo", funder)
+        value = funder_name
       )
     )
   )

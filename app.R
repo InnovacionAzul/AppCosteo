@@ -46,11 +46,23 @@ library(tidyverse)
 source("helpers.R")
 
 # Read in data -----------------------------------------------------------------
+# DEFAULTS
+default_actors <-
+  readxl::read_xlsx(
+    "www/defaults_rema_fip.xlsx",
+    sheet = 1,
+    na = c("", "N/A")
+  ) %>%
+  janitor::clean_names() %>%
+  pull(actores)
+
+default_n <- length(default_actors)
+
 # REMA sheet
 rema_data <-
   readxl::read_xlsx(
     "www/defaults_rema_fip.xlsx",
-    sheet = 1,
+    sheet = 2,
     na = c("", "N/A")
   ) %>%
   janitor::clean_names() %>%
@@ -62,9 +74,10 @@ rema_data <-
   )
 
 # FIP sheet
-fip_data <- readxl::read_xlsx("www/defaults_rema_fip.xlsx",
-                              sheet = 2,
-                              na = c("", "N/A")) %>%
+fip_data <- readxl::read_xlsx(
+  "www/defaults_rema_fip.xlsx",
+  sheet = 3,
+  na = c("", "N/A")) %>%
   janitor::clean_names() %>%
   arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
@@ -135,33 +148,56 @@ ui <-
             collapsed = FALSE,
             
             column(12,
-                   actionButton(inputId = "ventana",
-                                label = "Ventana de Inicio",
-                                icon = icon("home"),
-                                style = "width: 100%; color: black; margin-left:0;"),
-                   # MANUAL
-                   actionButton(inputId = "manual",
-                                label = a("Manual de Usuario", 
-                                          href = "https://jcvdav.github.io/CostApp_manual/", 
-                                          target = "_blank",
-                                          style = "color: black;"),
-                                icon = icon("book"),
-                                style = "width: 100%; color: black; margin-left: 0;"),
-                   
-                   # ELEMNT INDEX
-                   actionButton(inputId = "index",
-                                label = a("Índice de Elementos", 
-                                          href = "https://jcvdav.github.io/CostApp_manual/indice.html", 
-                                          target = "_blank",
-                                          style = "color: black;"),
-                                icon = icon("list"),
-                                style = "width: 100%; color: black; margin-left: 0;"),
-                   
+                   fluidRow(
+                     actionButton(
+                       inputId = "ventana",
+                       label = "Ventana de Inicio",
+                       icon = icon("home"),
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
                    # DOWNLOAD BUTTON
-                   downloadButton(outputId = "download_total",
-                                  icon = icon("save"),
-                                  label = "Guardar presupuesto",
-                                  style = "width: 100%; color: black; margin-left:0;")
+                   fluidRow(
+                     downloadButton(
+                       outputId = "download_total",
+                       icon = icon("save"),
+                       label = "Guardar proyecto",
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
+                   tags$br(),
+                   # DOWNLOAD BUTTON
+                   fluidRow(
+                     downloadButton(
+                       outputId = "download_pdf",
+                       label = "Descargar resumen (PDF)",
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
+                   # MANUAL
+                   fluidRow(
+                     actionButton(
+                       inputId = "manual",
+                       label = a("Manual de Usuario", 
+                                 href = "https://jcvdav.github.io/CostApp_manual/", 
+                                 target = "_blank",
+                                 style = "color: black;"),
+                       icon = icon("book"),
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
+                   # ELEMNT INDEX
+                   fluidRow(
+                     actionButton(
+                       inputId = "index",
+                       label = a("Índice de Elementos", 
+                                 href = "https://jcvdav.github.io/CostApp_manual/indice.html", 
+                                 target = "_blank",
+                                 style = "color: black;"),
+                       icon = icon("list"),
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   )
             )
           )
         )
@@ -293,15 +329,6 @@ ui <-
                         ),
                         selected = "COBI"
                       )
-                    ),
-                    box(
-                      width = 4,
-                      background = "blue",
-                      tags$label(class = "control-label", "Guardar resultados"),
-                      downloadButton(outputId = "download_pdf",
-                                     icon = icon("save"),
-                                     label = "Descargar resumen (PDF)",
-                                     style = "width: 100%; color: black; margin-bottom: 15px;")
                     )
                   )
                 ),
@@ -336,9 +363,8 @@ ui <-
   ) #/ui
 
 
-# Define server logic
+## DEFINE SERVER ###############################################################
 server <- function(input, output) {
-  
   # Welcome window to gather project metadata ##################################
   query_modal <- modalDialog(
     title = "Bienvenido!",
@@ -376,12 +402,8 @@ server <- function(input, output) {
             label = "Notas",
             resize = "both"
           ),
-          numericInput(
-            inputId = "n_actors",
-            label = "Número de actores",
-            value = 1,
-            min = 1),
-          uiOutput(outputId = "actors")
+          uiOutput(outputId = "n_actors_ui"),
+          uiOutput(outputId = "actors_ui")
         )
       )
     ),
@@ -393,13 +415,6 @@ server <- function(input, output) {
     )
   )
   
-  # Define number of actors ----------------------------------------------------
-  output$actors <- renderUI({
-    n <- input$n_actors
-    
-    map(.x = 1:n,
-        .f = get_funder)
-  })
   # Show the model on start up ...
   showModal(query_modal)
   
@@ -412,14 +427,28 @@ server <- function(input, output) {
     removeModal()
   })
   
-  # user-defined cost data from the uploaded file ##############################
+  # User-defined cost data from the uploaded file ##############################
+  # Extract actors from the file uploaded by the user --------------------------
+  user_actors <- reactive({
+    req(input$budget_upload)
+    
+    file <- input$budget_upload
+    
+    readxl::read_xlsx(file$datapath,
+                      sheet = 1,
+                      na = c("", "N/A")) %>%
+      janitor::clean_names() %>%
+      pull(actores) %>% 
+      unique()
+  })
+  
   # REMA -----------------------------------------------------------------------
   user_rema_data <- reactive({
     req(input$budget_upload)
     file <- input$budget_upload
     
     user_rema <- readxl::read_xlsx(file$datapath,
-                                   sheet = 1,
+                                   sheet = 2,
                                    na = c("", "N/A")) %>%
       janitor::clean_names() %>%
       arrange(fase, subfase_orden, actividad_orden) %>%
@@ -436,7 +465,7 @@ server <- function(input, output) {
     file <- input$budget_upload
     
     readxl::read_xlsx(file$datapath,
-                      sheet = 2,
+                      sheet = 3,
                       na = c("", "N/A")) %>%
       janitor::clean_names() %>%
       arrange(fase, subfase_orden, actividad_orden) %>%
@@ -447,37 +476,58 @@ server <- function(input, output) {
       )
   })
   
+  # Define some values ---------------------------------------------------------
+  values <- reactiveValues(
+    n = default_n,
+    actors = default_actors
+  )
   
+  # Define number of actors ----------------------------------------------------
+  output$n_actors_ui <- renderUI({
+    if (!is.null(input$budget_upload)) {
+      values$n <- length(user_actors())
+    }
+
+    numericInput(
+      inputId = "n_actors",
+      label = "Número de actores",
+      value = isolate(values$n),
+      min = 1)
+  })
+  
+  # Define actors --------------------------------------------------------------
+  output$actors_ui <- renderUI({
+    req(input$n_actors)
+    values$n <- input$n_actors
+    values$actors <- paste0("Grupo ", 1:isolate(values$n))
+
+    if (!is.null(input$budget_upload)) {
+      values$n <- length(user_actors())
+      values$actors <- user_actors()
+    }
+    
+    map2(.x = 1:length(values$actors),
+         .y = values$actors,
+         .f = get_funder)
+  })
+  
+  # Get list of actors
+  ui_actors <- reactive({
+    map_chr(
+      paste0("funder_", 1:values$n),
+      ~{input[[.x]]}
+    )
+  })
+
   ##############################################################################
   ##### POPULATE UI ############################################################
   ##############################################################################
-  
+
   
   # REMA #########################################################################
   # Reactive UI for REMA Design phase ------------------------------------------
-  # output$rema_dis_dur <- renderUI({
-  #   if (!is.null(input$budget_upload)) {
-  #     rema_data <- user_rema_data()
-  #   }
-  #   
-  #   duration <- rema_data %>% 
-  #     filter(fase == "Diseño") %>% 
-  #     pull(fase_duracion) %>% 
-  #     unique()
-  #   
-  #   makePhaseDuration(phase = "Diseño",
-  #                     section = "REMA",
-  #                     duration = duration)
-  # })
-  
-  actors <- reactive({
-    map_chr(
-      paste0("funder_", 1:input$n_actors),
-      ~{input[[.x]]}
-    )
-    })
-  
   output$rema_dis <- renderUI({
+    values$actors <- ui_actors()
     section <- "REMA"
     phase <- "Diseño"
     if (!is.null(input$budget_upload)) {
@@ -498,7 +548,7 @@ server <- function(input, output) {
         data = rema_data,
         phase = phase,
         section = section,
-        actors = actors())
+        actors = values$actors)
     )
     
   })
@@ -526,7 +576,7 @@ server <- function(input, output) {
         data = rema_data,
         phase = phase,
         section = section,
-        actors = actors())
+        actors = values$actors)
     )
     
   })
@@ -554,7 +604,7 @@ server <- function(input, output) {
         data = rema_data,
         phase = phase,
         section = section,
-        actors = actors())
+        actors = values$actors)
     )
     
   })
@@ -582,7 +632,7 @@ server <- function(input, output) {
         data = fip_data,
         phase = phase,
         section = section,
-        actors = actors())
+        actors = values$actors)
     )
   })
   
@@ -612,7 +662,7 @@ server <- function(input, output) {
         phase = phase,
         section = section,
         subphases_to_include = input$choices_imp_fip,
-        actors = actors()
+        actors = values$actors
       )
     )
   })
@@ -623,6 +673,7 @@ server <- function(input, output) {
     phase <- "Seguimiento"
     if (!is.null(input$budget_upload)) {
       fip_data <- user_fip_data()
+      actors <- ui_actors()
     }
     
     duration <- rema_data %>% 
@@ -639,7 +690,7 @@ server <- function(input, output) {
         data = fip_data,
         phase = phase,
         section = section,
-        actors = actors())
+        actors = actors)
     )
   })
   
@@ -670,23 +721,6 @@ server <- function(input, output) {
     
     duration_rv$df$fase_duracion[duration_rv$df$input_id %in% valid_d_inputs] <- phase_duration$fase_duracion
   })
-  
-  # periods <- reactive({
-  #   
-  #   expand_grid(
-  #     etapa = c("dis", "imp", "seg"),
-  #     section = c("REMA", "FIP")
-  #   ) %$% 
-  #   map2_dfr(
-  #     .x = etapa,
-  #     .y = section,
-  #     .f = ~{
-  #       tibble(etapa = .x,
-  #              section = .y,
-  #              fase_duracion = input[[paste("d", etapa, tolower(section), sep = "_")]])
-  #     }
-  #   )
-  # })
   
   ### ACTIVITY FREQUENCY -------------------------------------------------------
   ### Reactive object for activity frequency
@@ -741,40 +775,58 @@ server <- function(input, output) {
     frequency_rv$fip$actividad_frecuencia[frequency_rv$fip$activity_id %in% valid_freq_inputs] <- activity_frequency$actividad_frecuencia
   })
   
-  # frequencies <- reactive({
-  #   # Frequency of REMA part
-  #   req(input$freq_rema_1_1_1)
-  #   if (!is.null(input$budget_upload)) {
-  #     rema_data <- user_rema_data()
-  #   }
-  #   
-  #   rema_freq <- map_dfr(
-  #     paste0("freq_", unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
-  #     .f = ~{
-  #       tibble(
-  #         activity_id = .x,
-  #         actividad_frecuencia = input[[.x]]
-  #       )
-  #     }
-  #   )
-  #   
-  #   # Frequency of FIP part
-  #   if (!is.null(input$budget_upload)) {
-  #     fip_data <- user_fip_data()
-  #   }
-  #   
-  #   fip_freq <- map_dfr(
-  #     paste0("freq_", unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
-  #     .f = ~{
-  #       tibble(
-  #         activity_id= .x,
-  #         actividad_frecuencia = input[[.x]]
-  #       )
-  #     }
-  #   )
-  #   
-  #   bind_rows(rema_freq, fip_freq)
-  # })
+  ### SUBPHASE RESPONSIBLES ----------------------------------------------------
+  # Reactive object for responsible actors
+  actors_rv <- reactiveValues(
+    rema = tibble(
+      subphase_id = paste0(unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+")), "_resp"),
+      responsable = NA_character_
+    ),
+    fip = tibble(
+      subphase_id = paste0(unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+")), "_resp"),
+      responsable = NA_character_
+    )
+  )
+  # Check for changes to responsible actors in REMA
+  observe({
+    # Check for user input data
+    if (!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    # Check which duration inputs have been created
+    valid_actors_inputs <- actors_rv$rema$subphase_id[which(actors_rv$rema$subphase_id %in% names(input))]
+
+    # Update reactive values with duration inputs
+    req(length(valid_actors_inputs) > 0)
+
+    responsable <- purrr::map_dfr(.x = valid_actors_inputs,
+                                         ~ {
+                                           tibble(subphase_id = .x,
+                                                  responsable = input[[.x]])
+                                         })
+
+    actors_rv$rema$responsable[actors_rv$rema$subphase_id %in% valid_actors_inputs] <- responsable$responsable
+  })
+  # Check for changes to responsible actors in FIP
+  observe({
+    # Check for user input data
+    if (!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    # Check which duration inputs have been created
+    valid_actors_inputs <- actors_rv$fip$subphase_id[which(actors_rv$fip$subphase_id %in% names(input))]
+    
+    # Update reactive values with duration inputs
+    req(length(valid_actors_inputs) > 0)
+    
+    responsable <- purrr::map_dfr(.x = valid_actors_inputs,
+                                  ~ {
+                                    tibble(subphase_id = .x,
+                                           responsable = input[[.x]])
+                                  })
+    
+    actors_rv$fip$responsable[actors_rv$fip$subphase_id %in% valid_actors_inputs] <- responsable$responsable
+  })
   
   ### COSTS AND QUANTITIES -----------------------------------------------------
   ### Reactive object for REMA and FIP inputs
@@ -793,7 +845,6 @@ server <- function(input, output) {
   
   ### Look for any changes to price inputs in the REMA section
   observe({
-    
     # Check which REMA price inputs have been created
     valid_c_rema_inputs <-
       rema_data$id[which(paste0("c_", rema_data$id) %in% names(input))]
@@ -810,12 +861,10 @@ server <- function(input, output) {
     
     input_rv$rema$precio[input_rv$rema$id %in% rema_precio$id] <-
       rema_precio$precio
-    
   })
   
   ### Look for any changes to quantity inputs in the REMA section
   observe({
-    
     # Check  which REMA quantity inputs have been created
     valid_u_rema_inputs <-
       rema_data$id[which(paste0("u_", rema_data$id) %in% names(input))]
@@ -832,12 +881,10 @@ server <- function(input, output) {
     
     input_rv$rema$cantidades[input_rv$rema$id %in% rema_unidades$id] <-
       rema_unidades$cantidades
-    
   })
   
   ### Look for any changes to price inputs in the FIP section
   observe({
-    
     # Check which FIP price inputs have been created
     valid_c_fip_inputs <- fip_data$id[which(paste0("c_", fip_data$id) %in% names(input))]
     
@@ -853,12 +900,10 @@ server <- function(input, output) {
     
     input_rv$fip$precio[input_rv$fip$id %in% fip_precio$id] <-
       fip_precio$precio
-    
   })
   
   ### Look for any changes to quantity inputs in the FIP section
   observe({
-    
     # Check which FIP quantity inputs have been created
     valid_u_fip_inputs <- fip_data$id[which(paste0("u_", fip_data$id) %in% names(input))]
     
@@ -874,7 +919,6 @@ server <- function(input, output) {
     
     input_rv$fip$cantidades[input_rv$fip$id %in% fip_unidades$id] <-
       fip_unidades$cantidades
-
   })
   
   ### TOTALS -------------------------------------------------------------------
@@ -884,6 +928,7 @@ server <- function(input, output) {
   
   ### Get totals for each activity
   totals <- reactive({
+    # browser()
     
     # Combine rema and fip cost and quantity data
     dat <- input_rv$rema %>%
@@ -893,6 +938,9 @@ server <- function(input, output) {
     
     # Combine rema and fip frequency data
     frequency <- bind_rows(frequency_rv$rema, frequency_rv$fip)
+    
+    # Combine responsible actors
+    responsible <- bind_rows(actors_rv$rema, actors_rv$fip) 
     
    cost_data %>%
       select(section,
@@ -905,49 +953,52 @@ server <- function(input, output) {
              descripcion,
              unidades,
              contains("orden")) %>%
-      inner_join(dat, by = "id") %>%
-      mutate(etapa = tolower(substr(x = fase, start = 1, stop = 3))) %>%
-      inner_join(duration_rv$df %>% dplyr::select(-input_id), by = c("etapa", "section")) %>%
-      mutate(activity_id = paste0("freq_", str_extract(string = id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))) %>% 
-      inner_join(frequency, by = "activity_id") %>% 
-      select(-activity_id) %>% 
-      mutate(
-        eventos = pmax(
-          fase_duracion * case_when(
-            actividad_frecuencia == "Mensual" ~ 12,
-            actividad_frecuencia == "Trimestral" ~ 4,
-            actividad_frecuencia == "Semestral" ~ 2,
-            actividad_frecuencia == "Anual" ~ 1,
-            actividad_frecuencia == "Trienal" ~ 1/3,
-            TRUE ~ 0),
-          1),
-        total = precio * cantidades * eventos) %>%
-      select(
-        section,
-        fase,
-        fase_duracion,
-        subfase,
-        subfase_orden,
-        concepto,
-        actividad,
-        actividad_orden,
-        actividad_frecuencia,
-        rubro,
-        descripcion,
-        unidades,
-        cantidades,
-        precio,
-        id,
-        total,
-        -c(eventos, etapa)
-      )
-    
+     inner_join(dat, by = "id") %>%
+     mutate(etapa = tolower(substr(x = fase, start = 1, stop = 3))) %>%
+     inner_join(duration_rv$df %>% dplyr::select(-input_id), by = c("etapa", "section")) %>%
+     mutate(activity_id = paste0("freq_", str_extract(string = id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+")),
+            subphase_id = paste0(str_extract(string = id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+"), "_resp")) %>% 
+     inner_join(frequency, by = "activity_id") %>% 
+     inner_join(responsible, by = "subphase_id") %>% 
+     select(-c(activity_id, subphase_id)) %>% 
+     mutate(
+       eventos = pmax(
+         fase_duracion * case_when(
+           actividad_frecuencia == "Mensual" ~ 12,
+           actividad_frecuencia == "Trimestral" ~ 4,
+           actividad_frecuencia == "Semestral" ~ 2,
+           actividad_frecuencia == "Anual" ~ 1,
+           actividad_frecuencia == "Trienal" ~ 1/3,
+           TRUE ~ 0),
+         1),
+       total = precio * cantidades * eventos) %>%
+     select(
+       section,
+       fase,
+       fase_duracion,
+       subfase,
+       subfase_orden,
+       concepto,
+       actividad,
+       actividad_orden,
+       actividad_frecuencia,
+       rubro,
+       descripcion,
+       responsable,
+       unidades,
+       cantidades,
+       precio,
+       id,
+       total,
+       -c(eventos, etapa)
+     )
+   
   })
   
   ### Update totals (REMA)
   observe({
     
-    totals_rv$rema <- test <- totals() %>% 
+    totals_rv$rema <- totals() %>% 
       dplyr::filter(section == "REMA") %>% 
       pull(total) %>% 
       sum(na.rm = T)
@@ -1157,6 +1208,10 @@ server <- function(input, output) {
     content = function(file) {
       writexl::write_xlsx(
         x = list(
+          METAADATA = tibble(Titulo = c(input$title, rep("", values$n -1)),
+                             Autor = c(input$author, rep("", values$n -1)),
+                             Notas = c(input$notes, rep("", values$n -1)),
+                             Actores = ui_actors()),
           REMA = totals() %>% 
             filter(section == "REMA"),
           FIP = totals() %>% 
