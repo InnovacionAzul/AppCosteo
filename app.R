@@ -151,8 +151,8 @@ ui <-
                    fluidRow(
                      actionButton(
                        inputId = "ventana",
-                       label = "Ventana de Inicio",
-                       icon = icon("home"),
+                       label = "Crear proyecto",
+                       icon = icon("dollar-sign"),
                        style = "width: 100%; color: black; margin-left: 0;"
                      )
                    ),
@@ -416,7 +416,7 @@ server <- function(input, output) {
   )
   
   # Show the model on start up ...
-  showModal(query_modal)
+  # showModal(query_modal)
   
   observeEvent(input$ventana,
                {
