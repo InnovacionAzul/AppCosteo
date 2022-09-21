@@ -1,6 +1,21 @@
 LISTA DE CAMBIOS
 
 ################################################################################
+# 21 de Septiembre del 2022
+# V2.0.2
+################################################################################
+
+1) Agregué descripción de app en la pantalla de inicio
+
+2) Modifiqué la ventana de "nuevo proyecto" para que no sea lo primero que sale. De esta manera el usuario primero lee la descripción y después puede "comenzar proyecto"
+
+3) Cambié cofeebreak por coffebreak
+
+4) Simplificar cómo la app adquiere la lista de actores responsables cuando el usuario cambia entre REMA y FIP
+
+5) - Cambié los títulos de las pestañas (REMA Y FIP) por Reserva Marinas y Proyecto de Mejora Pesquera
+
+################################################################################
 # 7 de Septiembre del 2022
 # V2.0.1
 ################################################################################
