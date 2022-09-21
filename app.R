@@ -278,7 +278,7 @@ ui <-
           tabBox(
             id = "fip_tabs",
             width = 12,
-            title = "FIP",
+            title = "Proyecto de Mejora Pesquera (FIP)",
             tags$br(),
             ### Design
             tabPanel(
