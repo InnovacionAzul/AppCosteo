@@ -700,7 +700,7 @@ server <- function(input, output) {
         data = fip_data,
         phase = phase,
         section = section,
-        actors = actors)
+        actors = values$actors)
     )
   })
   
