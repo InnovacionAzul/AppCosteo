@@ -208,34 +208,43 @@ ui <-
         tabItem(
           tabName = "inicio",
           box(
-            title = h1("Sistema de Costeo para herramientas de Resercas Marinas y Pesca Sostentible"),
             width = 12,
+            h2("Sistema de Costeo para Herramientas de Reservas Marinas y Proyectos de Mejora Pesquera"),
             status = "primary",
-            p("Las reservas marinas completamente protegidas son áreas del océano restringidas a cualquier actividad extractiva, incluyendo la pesca. Las reservas marinas exitosas crean condiciones en las que las poblaciones de especies previamente capturadas se pueden recuperar y restaurar el equilibrio trófico en el ecosistema. La recuperación de la biomasa pesquera dentro de la reserva puede causar efectos colaterales en las zonas de pesca adyacentes, tanto desde el traslado de especímenes adultos, como en la exportación de larvas. Este efecto de desbordamiento puede ayudar a los usuarios a compensar algunos de los precio de oportunidad al ceder las zonas de pesca. La reserva marina funciona como una cuenta bancaria, la cual se repobla con el interés al capital con el desbordamiento."),
-            p(a("COBI", href = "www.cobi.org.mx", target = "_blank"),
-              "ha trabajado durante 19 años para establecer, evaluar y mantener las reservas marinas en colaboración con las comunidades pesqueras de México. Nuestro modelo de reservas marinas consiste de cuatro fases:"),
-            tags$ul(
-              tags$li(
-                tags$b("1) Implementación - "),
-                "procesos inclusivos en el que las partes interesadas participen en el proceso de diseño, definición de objetivos y la selección del sitio"
+            h3("¿Cuánto cuesta mi reserva marina o proyecto de mejora pesquera?"),
+            p("Para lograr la conservación y uso responsable de los recursos marinos y la seguridad alimentaria de las comunidades pesqueras es esencial tomar en cuenta ambos elementos, por ejemplo la aplicación de herramientas de manejo pesquero como las reservas marinas, o para lograr una pesca sostenible a través de los proyectos de mejora pesquera."),
+            fluidRow(
+              column(
+                width = 6,
+                box(
+                  width = 12,
+                  status = "primary",
+                  h4("Reservas Marinas"),
+                  p("- Crean condiciones que permiten recuperar especies y restaurar el equilibrio del ecosistema."),
+                  p("- Pueden generar un efecto desborde de biomasa pesquera en adultos y larvas."),
+                  p("- Esto puede ayudar a tener una mejor pesca fuera de las reservas, compensando el costo de oportunidad por crear la reserva."),
+                )
               ),
-              tags$li(
-                tags$b("2) Monitoreo - "),
-                "después de que la reserva se ha creado, miembros de la comunidad están capacitados para recopilar datos para evaluar la reserva"
-              ),
-              tags$li(
-                tags$b("3) Operación – "),
-                "acciones relacionadas a la vigilancia comunitaria, señalización y comunicación de resultados"
-              ),
-              tags$li(
-                tags$b("4) Renovación – "),
-                "manejo adaptativo basado en los datos recogidos por la comunidad para garantizar el funcionamiento eficaz de la reserva."
+              column(
+                width = 6,
+                box(
+                  width = 12,
+                  status = "primary",
+                  h4("Proyectos de Mejora Pesquera"),
+                  p("- Los Proyectos de Mejora Pesquera (FIP, por sus siglas en inglés) guían hacia las buenas prácticas siguiendo el estándar del MSC."),
+                  p("- Contribuyen a mejorar la salud de los recursos, cuidar el medio ambiente, y tener una mejor gobernanza y cumplimiento de la normativa pesquera.")
+                )
               )
             ),
-            p("El número de iniciativas para establecer redes de reservas marinas está en aumento, y la gran mayoría de los esfuerzos se realizan con fondos filantrópicos. Sin embargo, al iniciar el proceso para establecer reservas marinas es común que los precio proyectados al futuro no estén claramente definidos. Esto puede afectar la sustentabilidad de la reserva marina al largo plazo, sobre todo si el costo de mantenerla y operarla es mayor al beneficio que puede proporcionar a la comunidad."),
-            p("Este calculador de precio contempla todos los pasos necesarios para establecer una reserva marina utilizado el modelo COBI, con el objetivo de ayudar a comunidades, organizaciones de la sociedad civil y tomadores de decisiones de planear sus inversiones con mayor claridad y transparencia."),
+            h3("¿Por qué es útil esta herramienta?"),
+            p("Financiar por largos periodos las reservas marinas o pesquerías sostenibles siempre ha sido un reto. Esta aplicación permitirá a los usuarios y usuarias ir documentando y monitoreando los costos de diseño, implementación y seguimiento de cada proyecto, que ayuden a planear mejor las contribuciones actuales y futuras de las personas participantes."),
+            h3("¿Qué modelo sigue?"),
+            p("El modelo para monitorear el financiamiento en estos esquemas consiste en tres etapas:"),
+            p("1) Diseño – mediante procesos inclusivos en el que las partes interesadas participen en el proceso de diseño y definición de objetivos y tiempos."),
+            p("2) Implementación - después de que se da inicio al esquema se toman en cuentan todas las acciones para poder ejecutar el proyecto contemplando a todas las personas/organizaciones que participan."),
+            p("3) Seguimiento – acciones relacionadas al seguimiento y/o mantenimiento del esquema."),
             p("Para cualquier pregunta o comentario sobre este producto escribe al correo rema@cobi.org.mx Tus observaciones nos ayudarán a mejorar nuestras herramientas."),
-            p("© COBI 2018")
+            p("© COBI 2022")
           )
         ),
         ### Marine reserves
@@ -244,7 +253,7 @@ ui <-
           tabBox(
             id = "rema_tabs",
             width = 12,
-            title = "REMA",
+            title = "Reservas Marinas",
             tags$br(),
             ### Design
             tabPanel(
