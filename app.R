@@ -621,6 +621,7 @@ server <- function(input, output) {
   # FIP UI #####################################################################
   # Reactive UI for FIP Design phase -------------------------------------------
   output$fip_dis <- renderUI({
+    values$actors <- ui_actors()
     section <- "FIP"
     phase <- "Diseño"
     if (!is.null(input$budget_upload)) {
