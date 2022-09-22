@@ -4,3 +4,4 @@
 .Ruserdata
 .Rprofile
 packrat/lib*/
+.DS_Store

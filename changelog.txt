@@ -1,0 +1,57 @@
+LISTA DE CAMBIOS
+
+################################################################################
+# 21 de Septiembre del 2022
+# V2.0.2
+################################################################################
+
+1) Agregué descripción de app en la pantalla de inicio
+
+2) Modifiqué la ventana de "nuevo proyecto" para que no sea lo primero que sale. De esta manera el usuario primero lee la descripción y después puede "comenzar proyecto"
+
+3) Cambié cofeebreak por coffebreak
+
+4) Simplificar cómo la app adquiere la lista de actores responsables cuando el usuario cambia entre REMA y FIP
+
+5) - Cambié los títulos de las pestañas (REMA Y FIP) por Reserva Marinas y Proyecto de Mejora Pesquera
+
+################################################################################
+# 7 de Septiembre del 2022
+# V2.0.1
+################################################################################
+
+1) Ventana de bienvenida con dos opciones:
+  a) campo para cargar un proyecto anterior
+  b) campos para guardar datos generales del proyecto
+
+2) Panel de herramientas actualizado:
+  a) Agregar botón para abrir la ventana de inicio
+  b) Modificar botón para guardar el proyecto (descarga archivo de excel)
+  c) Agregar botón para descargar resumen de presupuesto (en formato PDF)
+  d) Quitar botón para compartir bookmark
+
+3) Índice de elementos actualizado para incluir elementos de FIP
+
+4) El usuario puede asignar un actor responsalbe para cada sub-fase
+
+5) Las actividades ahora aparecen en una sola columna, con todas las "cajas"
+colapsadas
+
+6) Modificaciones a sub-fase:
+  a) Desarrollo de Evaluación de riesgos sociales -> Desarrollo de la Política social
+  b) Se agregaron 6 elementos
+    - Código de conducta
+    - Lista de embarcaciones
+    - Mecanismo de resolución de conflictos
+    - Conocimiento sobre los derechos humanos y laborales
+    - Evaluación de riesgo (SRA)
+    - Plan de trabajo social
+
+7) El usuario ahora puede descargar un archivo PDF con un resumen del presupuesto
+
+8) Agregar hoja de metadatos al archivo del proyecto
+
+10) Corrección de apariencia y errores de dedo en general
+    - Cambiar formato de números (100000 --> 100,000)
+
+################################################################################

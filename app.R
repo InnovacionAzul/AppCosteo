@@ -1,1249 +1,1267 @@
+######################################################
+# COST APP #
+# V2.0
+######################################################
 #
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
+# Developer info:
+# Name: Juan Carlos Villaseñor-Derbez
+# email: juancarlos@ucsb.ed; juancarlos.villader@gmail.com
+# GitHub: jcvdav
 #
-# Find out more about building applications with Shiny here:
+# Contributors:
+# - Stuart Fulton
+# - Katherine Millage
+# - Lorena Rocha
+# - Jacobo Caamal
 #
-#    http://shiny.rstudio.com/
-#
+######################################################
 
+################################################################################
+#### SET UP ####################################################################
+################################################################################
+
+# Load packages ----------------------------------------------------------------
+# App
 library(shiny)
 library(shinydashboard)
-library(xlsx)
-library(magrittr)
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-library(cowplot)
-library(plotly)
 library(shinyBS)
 
-rm(list = ls())
+# Visualization
+library(cowplot)
+library(plotly)
+library(grid)
+library(gridtext)
+library(glue)
+library(gridExtra)
 
-cost_data <- read.csv("www/cost_data.csv",
-                      stringsAsFactors = F,
-                      strip.white = T,
-                      na.strings = "N/A") %>% 
-  janitor::clean_names() %>% 
-  arrange(fase, tipo_de_inversion, periodicidad, concepto, subactividad, elemento) %>% 
-  mutate(valor_unitario_usd = ifelse(
-    is.na(valor_unitario_usd),
-    0,
-    valor_unitario_usd),
-    estimacion_de_unidades_requeridas = ifelse(
-      is.na(estimacion_de_unidades_requeridas),
-      0,
-      estimacion_de_unidades_requeridas))
+# Excel file handling
+library(readxl)
+library(writexl)
 
-boxHeaderUI <- function(){
-  tagList(
-    fluidRow(
-      column(width = 6,
-             h4("Costos")),
-      column(width = 6,
-             h4("Cantidades")))
+# Programming
+library(magrittr)
+library(tidyverse)
+
+# Source functions -------------------------------------------------------------
+source("helpers.R")
+
+# Read in data -----------------------------------------------------------------
+# DEFAULTS
+default_actors <-
+  readxl::read_xlsx(
+    "www/defaults_rema_fip.xlsx",
+    sheet = 1,
+    na = c("", "N/A")
+  ) %>%
+  janitor::clean_names() %>%
+  pull(actores)
+
+default_n <- length(default_actors)
+
+# REMA sheet
+rema_data <-
+  readxl::read_xlsx(
+    "www/defaults_rema_fip.xlsx",
+    sheet = 2,
+    na = c("", "N/A")
+  ) %>%
+  janitor::clean_names() %>%
+  arrange(fase, subfase_orden, actividad_orden) %>%
+  mutate(
+    precio = 0, #ifelse(is.na(precio), 0, precio),
+    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
+    unidades = ifelse(is.na(unidades), "$/unidad", unidades)
   )
-}
 
-CostUnitUI <- function(titleId, pairId, costLabel, unitLabel){
-  
-  # Define inputId labels for cost and units
-  costId <- paste0("c_", pairId)
-  unitId <- paste0("u_", pairId)
-  
-  # Define cost and unit defaults for numeric inputs
-  costDefault <- cost_data$valor_unitario_usd[cost_data$id == pairId]
-  unitDefault <- cost_data$estimacion_de_unidades_requeridas[cost_data$id == pairId]
-  tooltipText <- cost_data$descripcion[cost_data$id == pairId]
-
-  tagList(
-    titleId,
-    fluidRow(
-      column(width = 6,
-             numericInput(inputId = costId,
-                          label = costLabel,
-                          value = costDefault,
-                          min = 0)
-      ),
-      column(width = 6,
-             numericInput(inputId = unitId,
-                          label = unitLabel,
-                          value = unitDefault,
-                          min = 0))),
-    bsTooltip(id = costId,
-              title = tooltipText,
-              placement = "right",
-              trigger = "hover",
-              options = list(container = "body"))
+# FIP sheet
+fip_data <- readxl::read_xlsx(
+  "www/defaults_rema_fip.xlsx",
+  sheet = 3,
+  na = c("", "N/A")) %>%
+  janitor::clean_names() %>%
+  arrange(fase, subfase_orden, actividad_orden) %>%
+  mutate(
+    precio = 0, #ifelse(is.na(precio), 0, precio),
+    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
+    unidades = ifelse(is.na(unidades), "$/unidad", unidades)
   )
-}
 
-# Define UI for application that draws a histogram
-ui <- dashboardPage(title = "Costeo de Reservas",
-                    header = dashboardHeader(
-                      title = img(src = "img/COBI_logo.png", height = "52px")
-                    ),
-                    sidebar = dashboardSidebar(
-                      width = 275,
-                      sidebarMenu(id = "tabs", # Setting id makes input$tabs give the tabName of currently-selected tab
-                                  menuItem(
-                                    text = "Inicio",
-                                    tabName = "inicio",
-                                    icon = icon(name = "info")),
-                                  menuItem(
-                                    text = "Ingresar Costos",
-                                    tabName = "costos",
-                                    icon = icon(name = "usd"),
-                                    menuSubItem(text = "Implementación",
-                                                tabName = "implementacion"),
-                                    menuSubItem(text = "Monitoreo",
-                                                tabName = "monitoreo"),
-                                    menuSubItem(text = "Operación",
-                                                tabName = "operacion"),
-                                    menuSubItem(text = "Renovación",
-                                                tabName = "renovacion")
-                                    ),
-                                  menuItem(
-                                    text = "Presupuesto",
-                                    tabName = "presupuesto",
-                                    icon = icon("bar-chart") # cambiar por hand-holding-usd
-                                  ),
-                                  fluidRow(
-                                    box(title = "Precio del dolar",
-                                        status = "primary",
-                                        background = "blue",
-                                        width = 12,
-                                        collapsible = T,
-                                        collapsed = T,
-                                        numericInput(inputId = "usd2mxp",
-                                                     label = "1 USD = ? MXP",
-                                                     value = 17,
-                                                     min = 0,
-                                                     max = NA)
-                                    )
-                                  ),
-                                  fluidRow(
-                                    infoBoxOutput(
-                                      outputId = "totalUSD",
-                                      width = 12)),
-                                  fluidRow(
-                                    infoBoxOutput(
-                                      outputId = "totalMXP",
-                                      width = 12)),
-                                  fluidRow(
-                                    box(title = "Herramientas",
-                                        status = "primary",
-                                        background = "blue",
-                                        width = 12,
-                                        collapsible = T,
-                                        collapsed = T,
-                                        downloadButton(outputId = "download_total",
-                                                       label = "Descargar presupuesto"),
-                                        bookmarkButton(title = "Compartir", label = "Compartir")
-                                    )
-                                  )
-                                  
+# Combine sheets into a single tibble
+cost_data <- rema_data %>%
+  bind_rows(fip_data)
+
+################################################################################
+#### DEFINE APP ################################################################
+################################################################################
+
+## DEFINE UI ###################################################################
+ui <- 
+  dashboardPage(
+    title = "Sistema de Costeo",
+    header = dashboardHeader(
+      title = img(src = "img/COBI_logo.png", height = "52px")
+    ),
+    sidebar = dashboardSidebar(
+      width = 275,
+      sidebarMenu(
+        id = "tabs",
+        # Setting id makes input$tabs give the tabName of currently-selected tab
+        menuItem(
+          text = "Inicio",
+          tabName = "inicio",
+          icon = icon(name = "info")
+        ),
+        menuItem(
+          text = "Costeo de Reservas",
+          tabName = "rema",
+          icon = icon("dollar-sign")#,
+        ),
+        menuItem(
+          text = "Costeo de FIP",
+          tabName = "fip",
+          icon = icon("dollar-sign")
+        ),
+        menuItem(
+          text = "Gráficos",
+          tabName = "presupuesto",
+          icon = icon("chart-bar")
+        ),
+        fluidRow(
+          infoBoxOutput(
+            outputId = "REMAtotalUSD",
+            width = 12
+          )
+        ),
+        fluidRow(
+          infoBoxOutput(
+            outputId = "FIPtotalUSD",
+            width = 12
+          )
+        ),
+        fluidRow(
+          box(
+            title = "Herramientas",
+            status = "primary",
+            background = "blue",
+            width = 12,
+            collapsible = TRUE,
+            collapsed = FALSE,
+            
+            column(12,
+                   fluidRow(
+                     actionButton(
+                       inputId = "ventana",
+                       label = "Crear proyecto",
+                       icon = icon("dollar-sign"),
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
+                   # DOWNLOAD BUTTON
+                   fluidRow(
+                     downloadButton(
+                       outputId = "download_total",
+                       icon = icon("save"),
+                       label = "Guardar proyecto",
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
+                   tags$br(),
+                   # DOWNLOAD BUTTON
+                   fluidRow(
+                     downloadButton(
+                       outputId = "download_pdf",
+                       label = "Descargar resumen (PDF)",
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
+                   # MANUAL
+                   fluidRow(
+                     actionButton(
+                       inputId = "manual",
+                       label = a("Manual de Usuario", 
+                                 href = "https://jcvdav.github.io/CostApp_manual/", 
+                                 target = "_blank",
+                                 style = "color: black;"),
+                       icon = icon("book"),
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   ),
+                   # ELEMNT INDEX
+                   fluidRow(
+                     actionButton(
+                       inputId = "index",
+                       label = a("Índice de Elementos", 
+                                 href = "https://jcvdav.github.io/CostApp_manual/indice.html", 
+                                 target = "_blank",
+                                 style = "color: black;"),
+                       icon = icon("list"),
+                       style = "width: 100%; color: black; margin-left: 0;"
+                     )
+                   )
+            )
+          )
+        )
+      )
+    ),
+    body = dashboardBody(
+      tabItems(
+        tabItem(
+          tabName = "inicio",
+          box(
+            width = 12,
+            h2("Sistema de Costeo para Herramientas de Reservas Marinas y Proyectos de Mejora Pesquera"),
+            status = "primary",
+            h3("¿Cuánto cuesta mi reserva marina o proyecto de mejora pesquera?"),
+            p("Para lograr la conservación y uso responsable de los recursos marinos y la seguridad alimentaria de las comunidades pesqueras es esencial tomar en cuenta ambos elementos, por ejemplo la aplicación de herramientas de manejo pesquero como las reservas marinas, o para lograr una pesca sostenible a través de los proyectos de mejora pesquera."),
+            fluidRow(
+              column(
+                width = 6,
+                box(
+                  width = 12,
+                  status = "primary",
+                  h4("Reservas Marinas"),
+                  p("- Crean condiciones que permiten recuperar especies y restaurar el equilibrio del ecosistema."),
+                  p("- Pueden generar un efecto desborde de biomasa pesquera en adultos y larvas."),
+                  p("- Esto puede ayudar a tener una mejor pesca fuera de las reservas, compensando el costo de oportunidad por crear la reserva."),
+                )
+              ),
+              column(
+                width = 6,
+                box(
+                  width = 12,
+                  status = "primary",
+                  h4("Proyectos de Mejora Pesquera"),
+                  p("- Los Proyectos de Mejora Pesquera (FIP, por sus siglas en inglés) guían hacia las buenas prácticas siguiendo el estándar del MSC."),
+                  p("- Contribuyen a mejorar la salud de los recursos, cuidar el medio ambiente, y tener una mejor gobernanza y cumplimiento de la normativa pesquera.")
+                )
+              )
+            ),
+            h3("¿Por qué es útil esta herramienta?"),
+            p("Financiar por largos periodos las reservas marinas o pesquerías sostenibles siempre ha sido un reto. Esta aplicación permitirá a los usuarios y usuarias ir documentando y monitoreando los costos de diseño, implementación y seguimiento de cada proyecto, que ayuden a planear mejor las contribuciones actuales y futuras de las personas participantes."),
+            h3("¿Qué modelo sigue?"),
+            p("El modelo para monitorear el financiamiento en estos esquemas consiste en tres etapas:"),
+            p("1) Diseño – mediante procesos inclusivos en el que las partes interesadas participen en el proceso de diseño y definición de objetivos y tiempos."),
+            p("2) Implementación - después de que se da inicio al esquema se toman en cuentan todas las acciones para poder ejecutar el proyecto contemplando a todas las personas/organizaciones que participan."),
+            p("3) Seguimiento – acciones relacionadas al seguimiento y/o mantenimiento del esquema."),
+            p("Para cualquier pregunta o comentario sobre este producto escribe al correo cobi@cobi.org.mx. Tus observaciones nos ayudarán a mejorar esta herramienta"),
+            p("© COBI 2022")
+          )
+        ),
+        ### Marine reserves
+        tabItem(
+          tabName = "rema",
+          tabBox(
+            id = "rema_tabs",
+            width = 12,
+            title = "Reservas Marinas",
+            tags$br(),
+            ### Design
+            tabPanel(
+              title = "Diseño",
+              uiOutput(outputId = "rema_dis")
+            ),
+            ### Implementation
+            tabPanel(
+              title = "Implementación",
+              uiOutput(outputId = "rema_imp")
+            ),
+            ### Follow up
+            tabPanel(
+              title = "Seguimiento",
+              uiOutput(outputId = "rema_seg")
+            ),
+          )
+        ),
+        ### FIPs
+        tabItem(
+          tabName = "fip",
+          tabBox(
+            id = "fip_tabs",
+            width = 12,
+            title = "Proyecto de Mejora Pesquera (FIP)",
+            tags$br(),
+            ### Design
+            tabPanel(
+              title = "Diseño",
+              uiOutput("fip_dis")
+            ),
+            ### Implementation
+            tabPanel(
+              title = "Implementación",
+              uiOutput(outputId = "fip_imp")
+            ),
+            ### Follow up
+            tabPanel(
+              title = "Seguimiento",
+              uiOutput(outputId = "fip_seg")
+            ),
+          )
+        ),
+        ### Plots
+        tabItem("presupuesto",
+                fluidRow(
+                  box(
+                    title = "Control de gráficas y opciones",
+                    status = "primary",
+                    width = 12,
+                    collapsible = T,
+                    # box(width = 2,
+                    #     status = "primary",
+                    #     checkboxInput(inputId = "costs_in_mxp",
+                    #                   label = "Gráficas en pesos",
+                    #                   value = F)
+                    #
+                    # ),
+                    box(
+                      width = 4,
+                      background = "blue",
+                      numericInput(
+                        inputId = "text_size",
+                        label = "Tamaño del texto",
+                        value = 10,
+                        min = 10,
+                        max = 20
                       )
                     ),
-                    body = dashboardBody(
-                      tabItems(
-                        tabItem(tabName = "inicio",
-                                box(title = h1("Costeo de Reservas Marinas"),
-                                    width = 12,
-                                    status = "primary",
-                                    p("Las reservas marinas completamente protegidas son áreas del océano restringidas a cualquier actividad extractiva, incluyendo la pesca. Las reservas marinas exitosas crean condiciones en las que las poblaciones de especies previamente capturadas se pueden recuperar y restaurar el equilibrio trófico en el ecosistema. La recuperación de la biomasa pesquera dentro de la reserva puede causar efectos colaterales en las zonas de pesca adyacentes, tanto desde el traslado de especímenes adultos, como en la exportación de larvas. Este efecto de desbordamiento puede ayudar a los usuarios a compensar algunos de los costos de oportunidad al ceder las zonas de pesca. La reserva marina funciona como una cuenta bancaria, la cual se repobla con el interés al capital con el desbordamiento."),
-                                    p(a("COBI", href = "www.cobi.org.mx", target = "_blank"),"ha trabajado durante 19 años para establecer, evaluar y mantener las reservas marinas en colaboración con las comunidades pesqueras de México. Nuestro modelo de reservas marinas consiste de cuatro fases:"),
-                                    tags$ul(
-                                      tags$li(tags$b("1) Implementación - "),"procesos inclusivos en el que las partes interesadas participen en el proceso de diseño, definición de objetivos y la selección del sitio"),
-                                      tags$li(tags$b("2) Monitoreo - "),"después de que la reserva se ha creado, miembros de la comunidad están capacitados para recopilar datos para evaluar la reserva"),
-                                      tags$li(tags$b("3) Operación – "),"acciones relacionadas a la vigilancia comunitaria, señalización y comunicación de resultados"),
-                                      tags$li(tags$b("4) Renovación – "),"manejo adaptativo basado en los datos recogidos por la comunidad para garantizar el funcionamiento eficaz de la reserva.")
-                                    ),
-                                    p("El número de iniciativas para establecer redes de reservas marinas está en aumento, y la gran mayoría de los esfuerzos se realizan con fondos filantrópicos. Sin embargo, al iniciar el proceso para establecer reservas marinas es común que los costos proyectados al futuro no estén claramente definidos. Esto puede afectar la sustentabilidad de la reserva marina al largo plazo, sobre todo si el costo de mantenerla y operarla es mayor al beneficio que puede proporcionar a la comunidad."),
-                                    p("Este calculador de costos contempla todos los pasos necesarios para establecer una reserva marina utilizado el modelo COBI, con el objetivo de ayudar a comunidades, organizaciones de la sociedad civil y tomadores de decisiones de planear sus inversiones con mayor claridad y transparencia."),
-                                    p("Para cualquier pregunta o comentario sobre este producto escribe al correo rema@cobi.org.mx Tus observaciones nos ayudarán a mejorar nuestras herramientas."),
-                                    p("© COBI 2018")
-                                )
+                    box(
+                      width = 4,
+                      background = "blue",
+                      selectInput(
+                        inputId = "color_scheme",
+                        label = "Esquema de colores",
+                        choices = c(
+                          "COBI" = "Blues",
+                          "Pares" = "Paired",
+                          "Set1" = "Set1",
+                          "Set2" = "Set2",
+                          "Set3" = "Set3"
                         ),
-                        tabItem(tabName = "implementacion",
-                                fluidRow(
-                                  box(title = "Definición de objetivos",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "imp_do_alimentos",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "imp_do_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "imp_do_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Renta automovil",
-                                                 pairId = "imp_do_auto",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Taller preeliminar (objetivos)",
-                                                 pairId = "imp_do_taller",
-                                                 costLabel = "$ / taller",
-                                                 unitLabel = "Num. Talleres"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "imp_do_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "imp_do_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Diseño de reservas",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "imp_dr_alimentos",
-                                                 costLabel = "$ día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "imp_dr_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Taller (diseño)",
-                                                 pairId = "imp_dr_taller",
-                                                 costLabel = "$ / Taller",
-                                                 unitLabel = "Num. Talleres"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "imp_dr_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "imp_dr_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Elaboración de propuesta",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "imp_ej_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "imp_ej_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Trabajo de oficina",
-                                                 pairId = "imp_ej_oficina",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Comunicación",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Estrategia de Comunicación",
-                                                 pairId = "imp_ec_estrategia",
-                                                 costLabel = "$ / programa",
-                                                 unitLabel = "Programas")
-                                      )
-                                  ),
-                                fluidRow(
-                                  box(title = "Otros costos",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro1",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro2",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro3",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro4",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "imp_ot_otro5",
-                                                 costLabel = "$",
-                                                 unitLabel = "Unidades")
-                                      )
-                                )
-                        ),
-                        tabItem("monitoreo",
-                                fluidRow(
-                                  box(title = "Información del proyecto",
-                                      width = 3,
-                                      status = "info",
-                                      numericInput(inputId = "mon_dur",
-                                                   label = "Duración de la fase de Monitoreo (años)",
-                                                   value = 5,
-                                                   min = 1,
-                                                   max = 50)
-                                  )
-                                ),
-                                fluidRow(
-                                  box(title = "Actividades de monitoreo",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimento",
-                                                 pairId = "mon_mo_alimento",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Alquiler embarcación",
-                                                 pairId = "mon_mo_embarcacion",
-                                                 costLabel = "$ / hora",
-                                                 unitLabel = "Horas"),
-                                      CostUnitUI(titleId = "Aceite embarcación",
-                                                 pairId = "mon_mo_aceite",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Gasolina embarcación",
-                                                 pairId = "mon_mo_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "mon_mo_hospedaje",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Seguros de buceo",
-                                                 pairId = "mon_mo_seguro",
-                                                 costLabel = "$ / seguro",
-                                                 unitLabel = "Num. seguros"),
-                                      CostUnitUI(titleId = "Salarios pescadores",
-                                                 pairId = "mon_mo_salarios",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Viaje",
-                                                 pairId = "mon_mo_viaje",
-                                                 costLabel = "$ / pescador",
-                                                 unitLabel = "Num. pescadores"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "mon_mo_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "mon_mo_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Análisis de datos",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "mon_ad_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "mon_ad_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Capacitación de pescadores",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Certificación de buceo",
-                                                 pairId = "mon_certificacion",
-                                                 costLabel = "$ / pescador",
-                                                 unitLabel = "Num. Pescadores"),
-                                      CostUnitUI(titleId = "Curso de buceo para pescadores",
-                                                 pairId = "mon_curso",
-                                                 costLabel = "$ / pescador",
-                                                 unitLabel = "Num. Pescadores")
-                                      ),
-                                  box(title = "Compra de equipo",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Cintas de transecto",
-                                                 pairId = "mon_ce_cinta",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Tubos de PVC para monitoreo",
-                                                 pairId = "mon_ce_tubo",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Chalecos buceo (BCD)",
-                                                 pairId = "mon_ce_bcd",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Reguladores",
-                                                 pairId = "mon_ce_reg",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Tanques",
-                                                 pairId = "mon_ce_tanque",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Plomos",
-                                                 pairId = "mon_ce_plomos",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Computadoras",
-                                                 pairId = "mon_ce_computadora",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Equipo de snorkel",
-                                                 pairId = "mon_ce_snorkel",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Brújula",
-                                                 pairId = "mon_ce_brujula",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Tablas de monitoreo",
-                                                 pairId = "mon_ce_tabla",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Sonda de profundidad",
-                                                 pairId = "mon_ce_sonda",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Transductor de sonda",
-                                                 pairId = "mon_ce_transductor",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "GPS",
-                                                 pairId = "mon_ce_gps",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Radio marino",
-                                                 pairId = "mon_ce_radio",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Botiquín de primeros auxilios",
-                                                 pairId = "mon_ce_auxilios",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Botiquín oxígeno DAN",
-                                                 pairId = "mon_ce_oxydan",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Caja pelican",
-                                                 pairId = "mon_ce_pelican",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Reloj",
-                                                 pairId = "mon_ce_reloj",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                  )
-                                  ),
-                                fluidRow(
-                                  box(title = "Mantenimiento",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Reemplazo de equipo",
-                                                 pairId = "mon_me_equiporeemplazo",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Equipo de mantenimiento",
-                                                 pairId = "mon_me_equipomantenimiento",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Formatos de datos",
-                                                 pairId = "mon_me_polypap",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Impresión de formatos",
-                                                 pairId = "mon_me_impresion",
-                                                 costLabel = "",
-                                                 unitLabel = "")),
-                                  box(title = "Otros",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Evaluación de pescadores",
-                                                 pairId = "mon_evaluacion_pescadores",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro1",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro2",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro3",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro4",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "mon_ot_otro5",
-                                                 costLabel = "",
-                                                 unitLabel = ""))
-                                  )
-                        ),
-                        tabItem("operacion",
-                                fluidRow(
-                                  box(title = "Información del proyecto",
-                                      width = 3,
-                                      status = "info",
-                                      numericInput(inputId = "ope_dur",
-                                                   label = "Duración de la fase de Operación (años)",
-                                                   value = 5,
-                                                   min = 1,
-                                                   max = 50)
-                                  )
-                                ),
-                                fluidRow(
-                                  box(title = "Presentación de resultados",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "ope_pr_alimentos",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "ope_pr_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "ope_pr_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Renta automovil",
-                                                 pairId = "ope_pr_auto",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "ope_pr_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "ope_pr_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Vigilancia",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Boya",
-                                                 pairId = "ope_vi_boya",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Instalación de boya",
-                                                 pairId = "ope_vi_boyainst",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Cámara",
-                                                 pairId = "ope_vi_camara",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "ope_vi_gasolina",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "GPS",
-                                                 pairId = "ope_vi_gps",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Radio marino",
-                                                 pairId = "ope_vi_radio",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Salario vigilancia",
-                                                 pairId = "ope_vi_salariovig",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Embarcación",
-                                                 pairId = "ope_vi_embarcacion",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Mantenimiento embarcación",
-                                                 pairId = "ope_vi_mantenimiento",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Motor embarcación",
-                                                 pairId = "ope_vi_motor",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Registro embarcación",
-                                                 pairId = "ope_vi_registro",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Seguro embarcación",
-                                                 pairId = "ope_vi_seguro",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                      ),
-                                  box(title = "Estrategia de comunicación",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Materiales de comunicación",
-                                                 pairId = "ope_ec_comunicacion",
-                                                 costLabel = "$ / unidad",
-                                                 unitLabel = "Unidades"),
-                                      CostUnitUI(titleId = "Señalización de la reserva",
-                                                 pairId = "ope_ec_senalizacion",
-                                                 costLabel = "$ / unidad",
-                                                 unitLabel = "Unidades")
-                                      ),
-                                  box(title = "Otros costos",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro1",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro2",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro3",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro4",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ope_ot_otro5",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                  )
-                                  )
-                                ),
-                        tabItem("renovacion",
-                                fluidRow(
-                                  box(title = "Elaboracón ETJ",
-                                      width = 3,
-                                      status = "primary",
-                                      collapsible = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Alimentos",
-                                                 pairId = "ren_re_alimentos",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Encuestas",
-                                                 pairId = "ren_re_encuestas",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Gasolina",
-                                                 pairId = "ren_re_gasolina",
-                                                 costLabel = "$ / litro",
-                                                 unitLabel = "Litros"),
-                                      CostUnitUI(titleId = "Hospedaje",
-                                                 pairId = "ren_re_hospedaje",
-                                                 costLabel = "$ / noche",
-                                                 unitLabel = "Noches"),
-                                      CostUnitUI(titleId = "Renta automovil",
-                                                 pairId = "ren_re_auto",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Taller preliminar (renovación)",
-                                                 pairId = "ren_re_taller",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Encargado del proyecto",
-                                                 pairId = "ren_re_encargado",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Asistente del proyecto",
-                                                 pairId = "ren_re_asistente",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días"),
-                                      CostUnitUI(titleId = "Trabajo de oficina",
-                                                 pairId = "ren_re_oficina",
-                                                 costLabel = "$ / día",
-                                                 unitLabel = "Días")
-                                      ),
-                                  box(title = "Otros costos",
-                                      width = 3,
-                                      status = "info",
-                                      collapsible = T,
-                                      collapsed = T,
-                                      boxHeaderUI(),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro1",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro2",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro3",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro4",
-                                                 costLabel = "",
-                                                 unitLabel = ""),
-                                      CostUnitUI(titleId = "Otros costos",
-                                                 pairId = "ren_ot_otro5",
-                                                 costLabel = "",
-                                                 unitLabel = "")
-                                  )
-                                )
-                        ),
-                        tabItem("presupuesto",
-                                fluidRow(
-                                  box(title = "Control de gráficas",
-                                      status = "primary",
-                                      width = 12,
-                                      collapsible = T,
-                                      box(width = 2,
-                                          status = "primary",
-                                          checkboxInput(inputId = "costs_in_mxp",
-                                                        label = "Gráficas en pesos",
-                                                        value = F)
-                                          
-                                      ),
-                                      box(width = 2,
-                                          status = "primary",
-                                          numericInput(inputId = "text_size",
-                                                       label = "Tamaño del texto",
-                                                       value = 10,
-                                                       min = 10,
-                                                       max = 20)
-                                          
-                                      ),
-                                      box(width = 2,
-                                          status = "primary",
-                                          selectInput(inputId = "color_scheme",
-                                                      label = "Esquema de colores",
-                                                      choices = c("COBI" = "Blues",
-                                                                  "Pares" = "Paired",
-                                                                  "Set1" = "Set1",
-                                                                  "Set2" = "Set2",
-                                                                  "Set3" = "Set3"),
-                                                      selected = "COBI")
-                                          
-                                      ))
-                                ),
-                                fluidRow(
-                                  box(title = "Presupuesto por fases",
-                                      width = 6,
-                                      status = "primary",
-                                      plotlyOutput(outputId = "plot1")
-                                  ),
-                                  box(title = "Presupuesto por conceptos",
-                                      width = 6,
-                                      status = "primary",
-                                      plotlyOutput(outputId = "plot2")
-                                  )
-                                )
-                        )
+                        selected = "COBI"
                       )
                     )
-)
+                  )
+                ),
+                fluidRow(
+                  box(
+                    title = "Presupuesto por fases",
+                    width = 12,
+                    status = "primary",
+                    plotlyOutput(outputId = "plot1")
+                  )
+                ),
+                fluidRow(
+                  box(
+                    title = "Presupuesto por conceptos",
+                    width = 12,
+                    status = "primary",
+                    plotlyOutput(outputId = "plot2")
+                  )
+                ),
+                fluidRow(
+                  box(
+                    title = "Presupuesto por usuarios",
+                    width = 12,
+                    plotlyOutput(
+                      outputId = "split_budget_plot"
+                    )
+                  )
+                )
+        ) #/tabItem
+      ) #/tabItems
+    ) #/dashboardBody
+  ) #/ui
 
 
-# Define server logic
-server <- function(input, output){
+## DEFINE SERVER ###############################################################
+server <- function(input, output) {
+  # Welcome window to gather project metadata ##################################
+  query_modal <- modalDialog(
+    title = "Bienvenido!",
+    size = "l",
+    fluidRow(
+      box(
+        title = "Continúa un proyecto",
+        width = 4,
+        status = "primary",
+        fileInput(
+          inputId = "budget_upload",
+          label = "Cargar archivo",
+          placeholder = "Ningún archivo seleccionado",
+          multiple = F,
+          accept = c(".xls", ".xlsx"),
+          buttonLabel = "Cargar",
+          width = "100%")
+      ),
+      box(
+        title = "Inicia un nuevo proyecto",
+        width = 8,
+        status = "primary",
+        column(
+          width = 12,
+          textInput(
+            inputId = "title",
+            label = "Título del proyecto"
+          ),
+          textInput(
+            inputId = "author",
+            label = "Autor del proyecto"
+          ),
+          textAreaInput(
+            inputId = "notes",
+            label = "Notas",
+            resize = "both"
+          ),
+          uiOutput(outputId = "n_actors_ui"),
+          uiOutput(outputId = "actors_ui")
+        )
+      )
+    ),
+    easyClose = F,
+    footer = tagList(
+      actionButton(
+        inputId = "go",
+        label = "Confirmar")
+    )
+  )
   
-  periods <- reactive({
-    tibble(
-      etapa = c("imp", "mon", "ope", "ren"),
-      duracion_fase = c(1,
-                        input$mon_dur,
-                        input$ope_dur,
-                        1)
+  # Show the model on start up ...
+  # showModal(query_modal)
+  
+  observeEvent(input$ventana,
+               {
+                 showModal(query_modal)
+               })
+  
+  observeEvent(input$go, {
+    removeModal()
+  })
+  
+  # User-defined cost data from the uploaded file ##############################
+  # Extract actors from the file uploaded by the user --------------------------
+  user_actors <- reactive({
+    req(input$budget_upload)
+    
+    file <- input$budget_upload
+    
+    readxl::read_xlsx(file$datapath,
+                      sheet = 1,
+                      na = c("", "N/A")) %>%
+      janitor::clean_names() %>%
+      pull(actores) %>% 
+      unique()
+  })
+  
+  # REMA -----------------------------------------------------------------------
+  user_rema_data <- reactive({
+    req(input$budget_upload)
+    file <- input$budget_upload
+    
+    user_rema <- readxl::read_xlsx(file$datapath,
+                                   sheet = 2,
+                                   na = c("", "N/A")) %>%
+      janitor::clean_names() %>%
+      arrange(fase, subfase_orden, actividad_orden) %>%
+      mutate(
+        precio = ifelse(is.na(precio), 0, precio),
+        cantidades = ifelse(is.na(cantidades), 0, cantidades),
+        unidades = ifelse(is.na(unidades), "$/unidad", unidades)
+      )
+  })
+  
+  # FIP ------------------------------------------------------------------------
+  user_fip_data <- reactive({
+    req(input$budget_upload)
+    file <- input$budget_upload
+    
+    readxl::read_xlsx(file$datapath,
+                      sheet = 3,
+                      na = c("", "N/A")) %>%
+      janitor::clean_names() %>%
+      arrange(fase, subfase_orden, actividad_orden) %>%
+      mutate(
+        precio = ifelse(is.na(precio), 0, precio),
+        cantidades = ifelse(is.na(cantidades), 0, cantidades),
+        unidades = ifelse(is.na(unidades), "$/unidad", unidades)
+      )
+  })
+  
+  # Define some values ---------------------------------------------------------
+  values <- reactiveValues(
+    n = default_n,
+    actors = default_actors
+  )
+  
+  # Define number of actors ----------------------------------------------------
+  output$n_actors_ui <- renderUI({
+    if (!is.null(input$budget_upload)) {
+      values$n <- length(user_actors())
+    }
+
+    numericInput(
+      inputId = "n_actors",
+      label = "Número de actores",
+      value = isolate(values$n),
+      min = 1)
+  })
+  
+  # Define actors --------------------------------------------------------------
+  output$actors_ui <- renderUI({
+    req(input$n_actors)
+    values$n <- input$n_actors
+    values$actors <- paste0("Grupo ", 1:isolate(values$n))
+
+    if (!is.null(input$budget_upload)) {
+      values$n <- length(user_actors())
+      values$actors <- user_actors()
+    }
+    
+    map2(.x = 1:length(values$actors),
+         .y = values$actors,
+         .f = get_funder)
+  })
+  
+  # Get list of actors
+  ui_actors <- reactive({
+    map_chr(
+      paste0("funder_", 1:values$n),
+      ~{input[[.x]]}
+    )
+  })
+
+  ##############################################################################
+  ##### POPULATE UI ############################################################
+  ##############################################################################
+
+  
+  # REMA UI ####################################################################
+  # Reactive UI for REMA Design phase ------------------------------------------
+  output$rema_dis <- renderUI({
+    values$actors <- ui_actors()
+    section <- "REMA"
+    phase <- "Diseño"
+    if (!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      makeSubphases(
+        data = rema_data,
+        phase = phase,
+        section = section,
+        actors = values$actors)
+    )
+    
+  })
+  
+  # Reactive UI for REMA Implementation phase  ---------------------------------
+  output$rema_imp <- renderUI({
+    section <- "REMA"
+    phase <- "Implementación"
+    if (!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      
+      makeSubphases(
+        data = rema_data,
+        phase = phase,
+        section = section,
+        actors = values$actors)
+    )
+    
+  })
+  
+  # Reactive UI for REMA Follow-up phase ---------------------------------------
+  output$rema_seg <- renderUI({
+    section <- "REMA"
+    phase <- "Seguimiento"
+    if (!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      
+      makeSubphases(
+        data = rema_data,
+        phase = phase,
+        section = section,
+        actors = values$actors)
+    )
+    
+  })
+  
+  # FIP UI #####################################################################
+  # Reactive UI for FIP Design phase -------------------------------------------
+  output$fip_dis <- renderUI({
+    values$actors <- ui_actors()
+    section <- "FIP"
+    phase <- "Diseño"
+    if (!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    
+    duration <- fip_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      makeSubphases(
+        data = fip_data,
+        phase = phase,
+        section = section,
+        actors = values$actors)
     )
   })
   
-  inputs <- reactive({
-    tibble(
-      id = c(
-        "imp_do_alimentos",
-        "imp_do_auto",
-        "imp_do_gasolina",
-        "imp_do_hospedaje",
-        "imp_do_taller",
-        "imp_do_asistente",
-        "imp_do_encargado",
-        "imp_dr_alimentos",
-        "imp_dr_asistente",
-        "imp_dr_encargado",
-        "imp_dr_hospedaje",
-        "imp_dr_taller",
-        "imp_ec_estrategia",
-        "imp_ej_asistente",
-        "imp_ej_encargado",
-        "imp_ej_oficina",
-        "imp_ot_otro1",
-        "imp_ot_otro2",
-        "imp_ot_otro3",
-        "imp_ot_otro4",
-        "imp_ot_otro5",
-        "mon_certificacion",
-        "mon_curso",
-        "mon_ce_auxilios",
-        "mon_ce_bcd",
-        "mon_ce_brujula",
-        "mon_ce_cinta",
-        "mon_ce_computadora",
-        "mon_ce_gps",
-        "mon_ce_oxydan",
-        "mon_ce_pelican",
-        "mon_ce_plomos",
-        "mon_ce_radio",
-        "mon_ce_reg",
-        "mon_ce_reloj",
-        "mon_ce_snorkel",
-        "mon_ce_sonda",
-        "mon_ce_tabla",
-        "mon_ce_tanque",
-        "mon_ce_transductor",
-        "mon_ce_tubo",
-        "mon_evaluacion_pescadores",
-        "mon_me_equipomantenimiento",
-        "mon_me_equiporeemplazo",
-        "mon_me_impresion",
-        "mon_me_polypap",
-        "mon_mo_aceite",
-        "mon_mo_alimento",
-        "mon_mo_embarcacion",
-        "mon_mo_gasolina",
-        "mon_mo_hospedaje",
-        "mon_mo_salarios",
-        "mon_mo_seguro",
-        "mon_mo_viaje",
-        "mon_ot_otro1",
-        "mon_ot_otro2",
-        "mon_ot_otro3",
-        "mon_ot_otro4",
-        "mon_ot_otro5",
-        "ope_ec_comunicacion",
-        "ope_ec_senalizacion",
-        "ope_ot_otro1",
-        "ope_ot_otro2",
-        "ope_ot_otro3",
-        "ope_ot_otro4",
-        "ope_ot_otro5",
-        "ope_pr_alimentos",
-        "ope_pr_asistente",
-        "ope_pr_auto",
-        "ope_pr_encargado",
-        "ope_pr_gasolina",
-        "ope_pr_hospedaje",
-        "ope_vi_boya",
-        "ope_vi_boyainst",
-        "ope_vi_camara",
-        "ope_vi_embarcacion",
-        "ope_vi_gasolina",
-        "ope_vi_gps",
-        "ope_vi_mantenimiento",
-        "ope_vi_motor",
-        "ope_vi_radio",
-        "ope_vi_registro",
-        "ope_vi_salariovig",
-        "ope_vi_seguro",
-        "ren_ot_otro1",
-        "ren_ot_otro2",
-        "ren_ot_otro3",
-        "ren_ot_otro4",
-        "ren_ot_otro5",
-        "ren_re_alimentos",
-        "ren_re_asistente",
-        "ren_re_auto",
-        "ren_re_encargado",
-        "ren_re_encuestas",
-        "ren_re_gasolina",
-        "ren_re_hospedaje",
-        "ren_re_taller",
-        "ren_re_oficina",
-        "mon_ad_asistente",
-        "mon_ad_encargado",
-        "mon_mo_asistente",
-        "mon_mo_encargado"
+  ### Reactive UI for FIP Implementation phase
+  output$fip_imp <- renderUI({
+    section <- "FIP"
+    phase <- "Implementación"
+    if (!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    
+    duration <- fip_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
+    
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration,
+        fip_data = fip_data,
+        selected_phases = input$choices_imp_fip
       ),
-      costos = c(
-        input$c_imp_do_alimentos,
-        input$c_imp_do_auto,
-        input$c_imp_do_gasolina,
-        input$c_imp_do_hospedaje,
-        input$c_imp_do_taller,
-        input$c_imp_do_asistente,
-        input$c_imp_do_encargado,
-        input$c_imp_dr_alimentos,
-        input$c_imp_dr_asistente,
-        input$c_imp_dr_encargado,
-        input$c_imp_dr_hospedaje,
-        input$c_imp_dr_taller,
-        input$c_imp_ec_estrategia,
-        input$c_imp_ej_asistente,
-        input$c_imp_ej_encargado,
-        input$c_imp_ej_oficina,
-        input$c_imp_ot_otro1,
-        input$c_imp_ot_otro2,
-        input$c_imp_ot_otro3,
-        input$c_imp_ot_otro4,
-        input$c_imp_ot_otro5,
-        input$c_mon_certificacion,
-        input$c_mon_curso,
-        input$c_mon_ce_auxilios,
-        input$c_mon_ce_bcd,
-        input$c_mon_ce_brujula,
-        input$c_mon_ce_cinta,
-        input$c_mon_ce_computadora,
-        input$c_mon_ce_gps,
-        input$c_mon_ce_oxydan,
-        input$c_mon_ce_pelican,
-        input$c_mon_ce_plomos,
-        input$c_mon_ce_radio,
-        input$c_mon_ce_reg,
-        input$c_mon_ce_reloj,
-        input$c_mon_ce_snorkel,
-        input$c_mon_ce_sonda,
-        input$c_mon_ce_tabla,
-        input$c_mon_ce_tanque,
-        input$c_mon_ce_transductor,
-        input$c_mon_ce_tubo,
-        input$c_mon_evaluacion_pescadores,
-        input$c_mon_me_equipomantenimiento,
-        input$c_mon_me_equiporeemplazo,
-        input$c_mon_me_impresion,
-        input$c_mon_me_polypap,
-        input$c_mon_mo_aceite,
-        input$c_mon_mo_alimento,
-        input$c_mon_mo_embarcacion,
-        input$c_mon_mo_gasolina,
-        input$c_mon_mo_hospedaje,
-        input$c_mon_mo_salarios,
-        input$c_mon_mo_seguro,
-        input$c_mon_mo_viaje,
-        input$c_mon_ot_otro1,
-        input$c_mon_ot_otro2,
-        input$c_mon_ot_otro3,
-        input$c_mon_ot_otro4,
-        input$c_mon_ot_otro5,
-        input$c_ope_ec_comunicacion,
-        input$c_ope_ec_senalizacion,
-        input$c_ope_ot_otro1,
-        input$c_ope_ot_otro2,
-        input$c_ope_ot_otro3,
-        input$c_ope_ot_otro4,
-        input$c_ope_ot_otro5,
-        input$c_ope_pr_alimentos,
-        input$c_ope_pr_asistente,
-        input$c_ope_pr_auto,
-        input$c_ope_pr_encargado,
-        input$c_ope_pr_gasolina,
-        input$c_ope_pr_hospedaje,
-        input$c_ope_vi_boya,
-        input$c_ope_vi_boyainst,
-        input$c_ope_vi_camara,
-        input$c_ope_vi_embarcacion,
-        input$c_ope_vi_gasolina,
-        input$c_ope_vi_gps,
-        input$c_ope_vi_mantenimiento,
-        input$c_ope_vi_motor,
-        input$c_ope_vi_radio,
-        input$c_ope_vi_registro,
-        input$c_ope_vi_salariovig,
-        input$c_ope_vi_seguro,
-        input$c_ren_ot_otro1,
-        input$c_ren_ot_otro2,
-        input$c_ren_ot_otro3,
-        input$c_ren_ot_otro4,
-        input$c_ren_ot_otro5,
-        input$c_ren_re_alimentos,
-        input$c_ren_re_asistente,
-        input$c_ren_re_auto,
-        input$c_ren_re_encargado,
-        input$c_ren_re_encuestas,
-        input$c_ren_re_gasolina,
-        input$c_ren_re_hospedaje,
-        input$c_ren_re_taller,
-        input$c_ren_re_oficina,
-        input$c_mon_ad_asistente,
-        input$c_mon_ad_encargado,
-        input$c_mon_dr_asistente,
-        input$c_mon_dr_encargado,
-        input$c_mon_mo_asistente,
-        input$c_mon_mo_encargado
-      ),
-      unidades = c(
-        input$u_imp_do_alimentos,
-        input$u_imp_do_auto,
-        input$u_imp_do_gasolina,
-        input$u_imp_do_hospedaje,
-        input$u_imp_do_taller,
-        input$u_imp_do_asistente,
-        input$u_imp_do_encargado,
-        input$u_imp_dr_alimentos,
-        input$u_imp_dr_asistente,
-        input$u_imp_dr_encargado,
-        input$u_imp_dr_hospedaje,
-        input$u_imp_dr_taller,
-        input$u_imp_ec_estrategia,
-        input$u_imp_ej_asistente,
-        input$u_imp_ej_encargado,
-        input$u_imp_ej_oficina,
-        input$u_imp_ot_otro1,
-        input$u_imp_ot_otro2,
-        input$u_imp_ot_otro3,
-        input$u_imp_ot_otro4,
-        input$u_imp_ot_otro5,
-        input$u_mon_certificacion,
-        input$u_mon_curso,
-        input$u_mon_ce_auxilios,
-        input$u_mon_ce_bcd,
-        input$u_mon_ce_brujula,
-        input$u_mon_ce_cinta,
-        input$u_mon_ce_computadora,
-        input$u_mon_ce_gps,
-        input$u_mon_ce_oxydan,
-        input$u_mon_ce_pelican,
-        input$u_mon_ce_plomos,
-        input$u_mon_ce_radio,
-        input$u_mon_ce_reg,
-        input$u_mon_ce_reloj,
-        input$u_mon_ce_snorkel,
-        input$u_mon_ce_sonda,
-        input$u_mon_ce_tabla,
-        input$u_mon_ce_tanque,
-        input$u_mon_ce_transductor,
-        input$u_mon_ce_tubo,
-        input$u_mon_evaluacion_pescadores,
-        input$u_mon_me_equipomantenimiento,
-        input$u_mon_me_equiporeemplazo,
-        input$u_mon_me_impresion,
-        input$u_mon_me_polypap,
-        input$u_mon_mo_aceite,
-        input$u_mon_mo_alimento,
-        input$u_mon_mo_embarcacion,
-        input$u_mon_mo_gasolina,
-        input$u_mon_mo_hospedaje,
-        input$u_mon_mo_salarios,
-        input$u_mon_mo_seguro,
-        input$u_mon_mo_viaje,
-        input$u_mon_ot_otro1,
-        input$u_mon_ot_otro2,
-        input$u_mon_ot_otro3,
-        input$u_mon_ot_otro4,
-        input$u_mon_ot_otro5,
-        input$u_ope_ec_comunicacion,
-        input$u_ope_ec_senalizacion,
-        input$u_ope_ot_otro1,
-        input$u_ope_ot_otro2,
-        input$u_ope_ot_otro3,
-        input$u_ope_ot_otro4,
-        input$u_ope_ot_otro5,
-        input$u_ope_pr_alimentos,
-        input$u_ope_pr_asistente,
-        input$u_ope_pr_auto,
-        input$u_ope_pr_encargado,
-        input$u_ope_pr_gasolina,
-        input$u_ope_pr_hospedaje,
-        input$u_ope_vi_boya,
-        input$u_ope_vi_boyainst,
-        input$u_ope_vi_camara,
-        input$u_ope_vi_embarcacion,
-        input$u_ope_vi_gasolina,
-        input$u_ope_vi_gps,
-        input$u_ope_vi_mantenimiento,
-        input$u_ope_vi_motor,
-        input$u_ope_vi_radio,
-        input$u_ope_vi_registro,
-        input$u_ope_vi_salariovig,
-        input$u_ope_vi_seguro,
-        input$u_ren_ot_otro1,
-        input$u_ren_ot_otro2,
-        input$u_ren_ot_otro3,
-        input$u_ren_ot_otro4,
-        input$u_ren_ot_otro5,
-        input$u_ren_re_alimentos,
-        input$u_ren_re_asistente,
-        input$u_ren_re_auto,
-        input$u_ren_re_encargado,
-        input$u_ren_re_encuestas,
-        input$u_ren_re_gasolina,
-        input$u_ren_re_hospedaje,
-        input$u_ren_re_taller,
-        input$u_ren_re_oficina,
-        input$u_mon_ad_asistente,
-        input$u_mon_ad_encargado,
-        input$u_mon_dr_asistente,
-        input$u_mon_dr_encargado,
-        input$u_mon_mo_asistente,
-        input$u_mon_mo_encargado
+      makeSubphases(
+        data = fip_data,
+        phase = phase,
+        section = section,
+        subphases_to_include = input$choices_imp_fip,
+        actors = values$actors
       )
     )
   })
   
-  totals <- reactive({cost_data %>% 
-      select(fase, concepto, subactividad, periodicidad, id) %>% 
-      left_join(inputs(), by = "id") %>% 
-      mutate(etapa = substr(x = id, start = 1, stop = 3)) %>% 
-      left_join(periods(), by = "etapa") %>% 
-      mutate(eventos = case_when(periodicidad == "Anual" ~ 1 * duracion_fase,
-                            periodicidad == "Bianual" ~ floor(0.5 * duracion_fase),
-                            periodicidad == "Mensual" ~ 12 * duracion_fase,
-                            TRUE ~ 1)) %>% 
-      mutate(total = costos * unidades * eventos) %>% 
-      select(id, fase, concepto, subactividad, duracion_fase, periodicidad, eventos, costos, unidades, total, -etapa)
-    })
-  
-  output$totalUSD <- renderInfoBox({
+  ### Reactive UI for FIP Follow-up phase
+  output$fip_seg <- renderUI({
+    section <- "FIP"
+    phase <- "Seguimiento"
+    if (!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+      actors <- ui_actors()
+    }
     
-    total <- sum(totals()$total)
+    duration <- rema_data %>% 
+      filter(fase == phase) %>% 
+      pull(fase_duracion) %>% 
+      unique()
     
-    infoBox(title = "Costo total",
-            value = total,
-            subtitle = "USD",
-            icon = icon("usd"),
-            fill = T,
-            color = "light-blue")
-  })
-  
-  output$totalMXP <- renderInfoBox({
-    
-    total <- sum(totals()$total)
-    
-    infoBox(title = "Costo total",
-            value = round(total * input$usd2mxp),
-            subtitle = "MXP",
-            icon = icon("usd"),
-            fill = T,
-            color = "blue")
-  })
-  
-  correct_fases <- tibble(fase = c("Implementacion",
-                                   "Monitoreo",
-                                   "Operacion",
-                                   "Renovacion"),
-                          Fase = c("Implementación",
-                                   "Monitoreo",
-                                   "Operación",
-                                   "Renovación"))
-  
-    output$plot1 <- renderPlotly({
-      
-      plot1_data <- totals()  %>% 
-        filter(total > 0) %>% 
-        group_by(fase, concepto, subactividad) %>% 
-        summarize(total = sum(total, na.rm = T) / 1e3) %>% 
-        ungroup()
-      
-      if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
-      
-      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
-      
-      plot1 <- plot1_data %>% 
-        rename(Concepto = concepto,
-               Subactividad = subactividad,
-               Total = total,
-               Fase = fase) %>% 
-        ggplot(aes(x = Fase, y = Total, fill = Concepto, label = Subactividad)) +
-        geom_col(color = "black") +
-        theme_cowplot() +
-        scale_fill_brewer(palette = input$color_scheme) +
-        labs(x = "Fase del proyecto", y = y_label) +
-        theme(text = element_text(size = input$text_size),
-              axis.text = element_text(size = input$text_size - 2))
-      
-      p <- ggplotly(plot1)
-      
-      # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
-      p$elementId <- NULL
-      p
-    })
-    
-    output$plot2 <- renderPlotly({
-      
-      plot2_data <- totals()  %>% 
-        filter(total > 0) %>% 
-        group_by(fase, concepto, subactividad) %>% 
-        summarize(total = sum(total, na.rm = T) / 1e3) %>% 
-        ungroup()
-      
-      if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
-      
-      y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
-      
-      plot2 <- plot2_data %>% 
-        rename(Concepto = concepto,
-               Subactividad = subactividad,
-               Total = total,
-               Fase = fase) %>% 
-        ggplot(aes(x = Concepto, y = Total, fill = Fase, label = Subactividad)) +
-        geom_col(color = "black") +
-        theme_cowplot() +
-        scale_fill_brewer(palette = input$color_scheme) +
-        labs(x = "Fase del proyecto", y = y_label) +
-        theme(text = element_text(size = input$text_size),
-              axis.text = element_text(size = input$text_size - 2)) +
-        coord_flip()
-      
-      p <- ggplotly(plot2)
-      
-      # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
-      p$elementId <- NULL
-      p
-    })
-    
-    output$download_total <- downloadHandler(filename = "Presupuesto.xlsx",
-                                             content = function(file){
-                                               write.xlsx(x = totals(),
-                                                          file = file,
-                                                          sheetName = "Presupuesto",
-                                                          row.names = F,
-                                                          showNA = T)
-                                             }
-      # This function should write data to a file given to it by
-      # the argument 'file'.
-      # content = function(file) {
-      #   # Write to a file specified by the 'file' argument
-      #   write.table(datasetInput(), file, sep = sep,
-      #               row.names = FALSE)
-      # }
+    tagList(
+      makePhaseDuration(
+        phase = phase,
+        section = section,
+        duration = duration),
+      makeSubphases(
+        data = fip_data,
+        phase = phase,
+        section = section,
+        actors = values$actors)
     )
+  })
+  
+  # PHASE DURATION -------------------------------------------------------------
+  # Reactive object for phase duration -----------------------------------------
+  duration_rv <- reactiveValues(
+    df = tibble(
+      etapa = rep(c("dis", "imp", "seg"), each = 2),
+      section = rep(c("REMA", "FIP"), times = 3)
+      ) %>%
+      mutate(input_id = paste("d", etapa, tolower(section), sep = "_"),
+             fase_duracion = 1)
+  )
+  
+  ### Update phase duration from inputs
+  observe({
+    # Check which duration inputs have been created
+    valid_d_inputs <- duration_rv$df$input_id[which(duration_rv$df$input_id %in% names(input))]
+    
+    # Update reactive values with duration inputs
+    req(length(valid_d_inputs) > 0)
+    
+    phase_duration <- purrr::map_dfr(.x = valid_d_inputs,
+                                   ~ {
+                                     tibble(input_id = .x,
+                                            fase_duracion = input[[.x]])
+                                   })
+    
+    duration_rv$df$fase_duracion[duration_rv$df$input_id %in% valid_d_inputs] <- phase_duration$fase_duracion
+  })
+  
+  # ACTIVITY FREQUENCY ---------------------------------------------------------
+  # Reactive object for activity frequency 
+  frequency_rv <- reactiveValues(
+    rema = tibble(
+      activity_id = paste0("freq_", unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+      actividad_frecuencia = rep("Anual")),
+    fip = tibble(
+      activity_id = paste0("freq_", unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+"))),
+      actividad_frecuencia = rep("Anual"))
+  )
+  
+  ### Update REMA activity frequencies from inputs
+  observe({
+    # Check for user input data
+    if (!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    # Check which duration inputs have been created
+    valid_freq_inputs <- frequency_rv$rema$activity_id[which(frequency_rv$rema$activity_id %in% names(input))]
+    
+    # Update reactive values with duration inputs
+    req(length(valid_freq_inputs) > 0)
+    
+    activity_frequency <- purrr::map_dfr(.x = valid_freq_inputs,
+                                     ~ {
+                                       tibble(activity_id = .x,
+                                              actividad_frecuencia = input[[.x]])
+                                     })
+    
+    frequency_rv$rema$actividad_frecuencia[frequency_rv$rema$activity_id %in% valid_freq_inputs] <- activity_frequency$actividad_frecuencia
+  })
+
+  ### Update FIP activity frequencies from inputs
+  observe({
+    # # Check for user input data
+    # if (!is.null(input$budget_upload)) {
+    #   fip_data <- user_fip_data()
+    # }
+    # Check which duration inputs have been created
+    valid_freq_inputs <- frequency_rv$fip$activity_id[which(frequency_rv$fip$activity_id %in% names(input))]
+    
+    # Update reactive values with duration inputs
+    req(length(valid_freq_inputs) > 0)
+    
+    activity_frequency <- purrr::map_dfr(.x = valid_freq_inputs,
+                                         ~ {
+                                           tibble(activity_id = .x,
+                                                  actividad_frecuencia = input[[.x]])
+                                         })
+    
+    frequency_rv$fip$actividad_frecuencia[frequency_rv$fip$activity_id %in% valid_freq_inputs] <- activity_frequency$actividad_frecuencia
+  })
+  
+  # SUBPHASE RESPONSIBLES ------------------------------------------------------
+  # Reactive object for responsible actors
+  actors_rv <- reactiveValues(
+    rema = tibble(
+      subphase_id = paste0(unique(str_extract(string = rema_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+")), "_resp"),
+      responsable = NA_character_
+    ),
+    fip = tibble(
+      subphase_id = paste0(unique(str_extract(string = fip_data$id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+")), "_resp"),
+      responsable = NA_character_
+    )
+  )
+  # Check for changes to responsible actors in REMA
+  observe({
+    # Check for user input data
+    if (!is.null(input$budget_upload)) {
+      rema_data <- user_rema_data()
+    }
+    # Check which duration inputs have been created
+    valid_actors_inputs <- actors_rv$rema$subphase_id[which(actors_rv$rema$subphase_id %in% names(input))]
+
+    # Update reactive values with duration inputs
+    req(length(valid_actors_inputs) > 0)
+
+    responsable <- purrr::map_dfr(.x = valid_actors_inputs,
+                                         ~ {
+                                           tibble(subphase_id = .x,
+                                                  responsable = input[[.x]])
+                                         })
+
+    actors_rv$rema$responsable[actors_rv$rema$subphase_id %in% valid_actors_inputs] <- responsable$responsable
+  })
+  # Check for changes to responsible actors in FIP
+  observe({
+    # Check for user input data
+    if (!is.null(input$budget_upload)) {
+      fip_data <- user_fip_data()
+    }
+    # Check which duration inputs have been created
+    valid_actors_inputs <- actors_rv$fip$subphase_id[which(actors_rv$fip$subphase_id %in% names(input))]
+    
+    # Update reactive values with duration inputs
+    req(length(valid_actors_inputs) > 0)
+    
+    responsable <- purrr::map_dfr(.x = valid_actors_inputs,
+                                  ~ {
+                                    tibble(subphase_id = .x,
+                                           responsable = input[[.x]])
+                                  })
+    
+    actors_rv$fip$responsable[actors_rv$fip$subphase_id %in% valid_actors_inputs] <- responsable$responsable
+  })
+  
+  # COSTS AND QUANTITIES -------------------------------------------------------
+  # Reactive object for REMA and FIP inputs
+  input_rv <- reactiveValues(
+    rema = tibble(
+      id = rema_data$id,
+      precio = rema_data$precio,
+      cantidades = rema_data$cantidades
+    ),
+    fip = tibble(
+      id = fip_data$id,
+      precio = fip_data$precio,
+      cantidades = fip_data$cantidades
+    )
+  )
+  
+  ### Look for any changes to price inputs in the REMA section
+  observe({
+    # Check which REMA price inputs have been created
+    valid_c_rema_inputs <-
+      rema_data$id[which(paste0("c_", rema_data$id) %in% names(input))]
+    
+    # Update reactive values with REMA price inputs
+    req(length(valid_c_rema_inputs) > 0)
+    
+    rema_precio <- purrr::map2_dfr(.x = valid_c_rema_inputs,
+                                   .y = paste0("c_", valid_c_rema_inputs),
+                                   ~ {
+                                     tibble(id = .x,
+                                            precio = input[[.y]])
+                                   })
+    
+    input_rv$rema$precio[input_rv$rema$id %in% rema_precio$id] <-
+      rema_precio$precio
+  })
+  
+  ### Look for any changes to quantity inputs in the REMA section
+  observe({
+    # Check  which REMA quantity inputs have been created
+    valid_u_rema_inputs <-
+      rema_data$id[which(paste0("u_", rema_data$id) %in% names(input))]
+    
+    # Update reactive values with REMA quantity inputs
+    req(length(valid_u_rema_inputs) > 0)
+    
+    rema_unidades <- purrr::map2_dfr(.x = valid_u_rema_inputs,
+                                     .y = paste0("u_", valid_u_rema_inputs),
+                                     ~ {
+                                       tibble(id = .x,
+                                              cantidades = input[[.y]])
+                                     })
+    
+    input_rv$rema$cantidades[input_rv$rema$id %in% rema_unidades$id] <-
+      rema_unidades$cantidades
+  })
+  
+  ### Look for any changes to price inputs in the FIP section
+  observe({
+    # Check which FIP price inputs have been created
+    valid_c_fip_inputs <- fip_data$id[which(paste0("c_", fip_data$id) %in% names(input))]
+    
+    # Update reactive values with FIP price inputs
+    req(length(valid_c_fip_inputs) > 0)
+    
+    fip_precio <- purrr::map2_dfr(.x = valid_c_fip_inputs,
+                                  .y = paste0("c_", valid_c_fip_inputs),
+                                  ~ {
+                                    tibble(id = .x,
+                                           precio = input[[.y]])
+                                  })
+    
+    input_rv$fip$precio[input_rv$fip$id %in% fip_precio$id] <-
+      fip_precio$precio
+  })
+  
+  ### Look for any changes to quantity inputs in the FIP section
+  observe({
+    # Check which FIP quantity inputs have been created
+    valid_u_fip_inputs <- fip_data$id[which(paste0("u_", fip_data$id) %in% names(input))]
+    
+    # Update reactive values with FIP quantity inputs
+    req(length(valid_u_fip_inputs) > 0)
+    
+    fip_unidades <- purrr::map2_dfr(.x = valid_u_fip_inputs,
+                                    .y = paste0("u_", valid_u_fip_inputs),
+                                    ~ {
+                                      tibble(id = .x,
+                                             cantidades = input[[.y]])
+                                    })
+    
+    input_rv$fip$cantidades[input_rv$fip$id %in% fip_unidades$id] <-
+      fip_unidades$cantidades
+  })
+  
+  # TOTALS ---------------------------------------------------------------------
+  # Reactive object for totals - fixes summary boxes not appearing on start
+  totals_rv <- reactiveValues(rema = 0,
+                              fip = 0)
+  
+  ### Get totals for each activity
+  totals <- reactive({
+    # browser()
+    
+    # Combine rema and fip cost and quantity data
+    dat <- input_rv$rema %>%
+      bind_rows(input_rv$fip)
+    
+    req(nrow(dat) > 0)
+    
+    # Combine rema and fip frequency data
+    frequency <- bind_rows(frequency_rv$rema, frequency_rv$fip)
+    
+    # Combine responsible actors
+    responsible <- bind_rows(actors_rv$rema, actors_rv$fip) 
+    
+   cost_data %>%
+      select(section,
+             fase,
+             subfase,
+             concepto,
+             actividad,
+             rubro,
+             id,
+             descripcion,
+             unidades,
+             contains("orden")) %>%
+     inner_join(dat, by = "id") %>%
+     mutate(etapa = tolower(substr(x = fase, start = 1, stop = 3))) %>%
+     inner_join(duration_rv$df %>% dplyr::select(-input_id), by = c("etapa", "section")) %>%
+     mutate(activity_id = paste0("freq_", str_extract(string = id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+")),
+            subphase_id = paste0(str_extract(string = id, pattern = "[:alpha:]+_[:digit:]+_[:digit:]+"), "_resp")) %>% 
+     inner_join(frequency, by = "activity_id") %>% 
+     inner_join(responsible, by = "subphase_id") %>% 
+     select(-c(activity_id, subphase_id)) %>% 
+     mutate(
+       eventos = pmax(
+         fase_duracion * case_when(
+           actividad_frecuencia == "Mensual" ~ 12,
+           actividad_frecuencia == "Trimestral" ~ 4,
+           actividad_frecuencia == "Semestral" ~ 2,
+           actividad_frecuencia == "Anual" ~ 1,
+           actividad_frecuencia == "Trienal" ~ 1/3,
+           TRUE ~ 0),
+         1),
+       total = precio * cantidades * eventos) %>%
+     select(
+       section,
+       fase,
+       fase_duracion,
+       subfase,
+       subfase_orden,
+       concepto,
+       actividad,
+       actividad_orden,
+       actividad_frecuencia,
+       rubro,
+       descripcion,
+       responsable,
+       unidades,
+       cantidades,
+       precio,
+       id,
+       total,
+       -c(eventos, etapa)
+     )
+   
+  })
+  
+  ### Update totals (REMA)
+  observe({
+    
+    totals_rv$rema <- totals() %>% 
+      dplyr::filter(section == "REMA") %>% 
+      pull(total) %>% 
+      sum(na.rm = T)
+    
+  })
+  
+  ### Update totals (FIP)
+  observe({
+    
+    totals_rv$fip <- totals() %>% 
+      filter(section == "FIP") %>% 
+      pull(total) %>% 
+      sum(na.rm = T)
+    
+  })
+  
+  # VALUE BOXES ----------------------------------------------------------------
+  # Value box with total cost in USD for marine reserves
+  output$REMAtotalUSD <- renderInfoBox({
+
+    infoBox(
+      title = "Costo total (Reserva)",
+      value = prettyNum(totals_rv$rema, big.mark = ","),
+      subtitle = "MXN",
+      icon = icon("dollar-sign"),
+      fill = T,
+      color = "light-blue")
+    
+  })
+  
+  ### Value box with total cost in USD for FIP
+  output$FIPtotalUSD <- renderInfoBox({
+    
+    infoBox(
+      title = "Costo total (FIP)",
+      value = prettyNum(totals_rv$fip, big.mark = ","),
+      subtitle = "MXN",
+      icon = icon("dollar-sign"),
+      fill = T,
+      color = "light-blue")
+    
+  })
+  
+  ### Plots --------------------------------------------------------------------
+  ### Reactive values for plots
+  output_rv <- reactiveValues(summary_dat = NULL,
+                              plot1 = NULL,
+                              plot2 = NULL,
+                              plot3 = NULL)
+  
+  ### Summary data for tables
+  observe({
+
+    table_dat <- totals() %>%
+      dplyr::filter(total > 0)
+    
+    output_rv$summary_dat <- table_dat
+
+  })
+  
+  ### Plot 1: Presupuesto por fases
+  output$plot1 <- renderPlotly({
+    plot1_data <- totals()  %>%
+      filter(total > 0) %>%
+      group_by(section, fase, concepto, subfase) %>%
+      summarize(total = sum(total, na.rm = T) / 1e3) %>%
+      ungroup()
+    
+    req(nrow(plot1_data) > 0)
+    
+    #if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
+    #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
+    y_label <- "Costo total (K USD)"
+    
+    plot1 <- plot1_data %>%
+      rename(
+        Intervención = section,
+        Concepto = concepto,
+        Subfase = subfase,
+        Total = total,
+        Fase = fase
+      ) %>%
+      ggplot(aes(
+        x = Fase,
+        y = Total,
+        fill = Fase,
+        label = Subfase,
+        group = Intervención
+      )) +
+      geom_col(color = "black") +
+      theme_cowplot() +
+      scale_fill_brewer(palette = input$color_scheme) +
+      labs(x = "Fase del proyecto", y = y_label) +
+      theme(
+        text = element_text(size = input$text_size),
+        axis.text = element_text(size = input$text_size - 2)
+      ) +
+      facet_wrap( ~ Intervención, ncol = 2) +
+      theme(legend.position = "none")
+    
+    output_rv$plot1 <- plot1
+    
+    p <- ggplotly(plot1)
+    
+    # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
+    p$elementId <- NULL
+    p
+    
+  })
+  
+  ### Plot 2: Presupuesto por conceptos
+  output$plot2 <- renderPlotly({
+    plot2_data <- totals()  %>%
+      filter(total > 0) %>%
+      group_by(section, fase, concepto, subfase) %>%
+      summarize(total = sum(total, na.rm = T) / 1e3) %>%
+      ungroup()
+    
+    req(nrow(plot2_data) > 0)
+    
+    #if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
+    #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
+    y_label <- "Costo total (K USD)"
+    
+    plot2 <- plot2_data %>%
+      rename(
+        Intervención = section,
+        Concepto = concepto,
+        Subfase = subfase,
+        Total = total,
+        Fase = fase
+      ) %>%
+      ggplot(aes(
+        x = Concepto,
+        y = Total,
+        fill = Fase,
+        label = Subfase
+      )) +
+      geom_col(color = "black") +
+      theme_cowplot() +
+      scale_fill_brewer(palette = input$color_scheme) +
+      labs(x = "Concepto", y = y_label) +
+      theme(
+        text = element_text(size = input$text_size),
+        axis.text = element_text(size = input$text_size - 2)
+      ) +
+      coord_flip() +
+      facet_wrap( ~ Intervención, ncol = 1)
+    
+    output_rv$plot2 <- plot2
+    
+    p <- ggplotly(plot2)
+    
+    # Fix from https://github.com/ropensci/plotly/issues/985#issuecomment-328575761
+    p$elementId <- NULL
+    p
+  })
+  
+  ### Plot 3: Presupuesto por usuarios
+  output$split_budget_plot <- renderPlotly({
+  
+    plot_data <- totals() %>% 
+      group_by(responsable, section, fase, subfase) %>% 
+      summarize(total = sum(total, na.rm = T) / 1e3) %>% 
+      mutate(step = paste(fase, subfase, sep = "-")) %>% 
+      # select(section, responsable, step, total) %>% 
+      drop_na(responsable) %>% 
+      filter(total > 0)
+      
+      
+    p <-
+      ggplot(
+        data = plot_data,
+        mapping = aes(
+          x = step,
+          y = responsable,
+          fill = total
+        )
+      ) +
+      geom_tile(color = "black") +
+      theme_bw() +
+      labs(x = "",
+           y = "Actor") +
+      scale_fill_gradient(low = "lightblue", high = "steelblue") +
+      facet_wrap(~section) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    
+    output_rv$plot3 <- p
+    
+    ggplotly(p)
+  })
+  
+  ### EXPORTING ----------------------------------------------------------------
+  ### Download progress (XLSX)
+  output$download_total <- downloadHandler(
+    filename = "Presupuesto.xlsx",
+    content = function(file) {
+      writexl::write_xlsx(
+        x = list(
+          METAADATA = tibble(Titulo = c(input$title, rep("", values$n -1)),
+                             Autor = c(input$author, rep("", values$n -1)),
+                             Notas = c(input$notes, rep("", values$n -1)),
+                             Actores = ui_actors()),
+          REMA = totals() %>% 
+            filter(section == "REMA"),
+          FIP = totals() %>% 
+            filter(section == "FIP")
+        ),
+        path = file,
+        col_names = TRUE
+      )
+    }
+  )
+  
+  ### Download summary PDF
+  output$download_pdf <- downloadHandler(
+
+    filename = function(){paste0("AppCosteo_resumen_de_resultados.pdf")},
+    content = function(file){
+      
+      # Copy the report file to a temporary directory before processing it, in
+      # case we don't have write permissions to the current working dir (which
+      # can happen when deployed).
+      tempReport <- file.path(tempdir(), "summary_report.Rmd")
+      file.copy("summary_report.Rmd", tempReport, overwrite = TRUE)
+      
+      # Set up parameters to pass to Rmd document
+      params <- list(title = input$title,
+                     author = input$author,
+                     actors = paste0(ui_actors(), collapse = ", "),
+                     notes = input$notes,
+                     summary_dat = output_rv$summary_dat,
+                     plot1 = output_rv$plot1,
+                     plot2 = output_rv$plot2,
+                     plot3 = output_rv$plot3)
+      
+      # Knit the document, passing in the `params` list, and eval it in a
+      # child of the global environment (this isolates the code in the document
+      # from the code in this app).
+      rmarkdown::render(tempReport, output_file = file,
+                        params = params,
+                        envir = new.env(parent = globalenv())
+      )
+      
+    }
+  )
+  
+  
+  
+  
 }
 
-# Run the application 
-shinyApp(ui = ui, server = server, enableBookmarking = "url")
-
+# Run the application
+shinyApp(ui = ui,
+         server = server,
+         enableBookmarking = "url")
