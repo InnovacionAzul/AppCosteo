@@ -1,0 +1,13 @@
+name: AppCosteo
+title: AppCosteo
+username:
+account: innovacionazul
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 320366
+bundleId: 6328085
+url: https://innovacionazul.shinyapps.io/AppCosteo/
+when: 1663861598.35083
+lastSyncTime: 1663861598.35085
+asMultiple: FALSE
+asStatic: FALSE
