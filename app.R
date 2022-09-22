@@ -243,7 +243,7 @@ ui <-
             p("1) Diseño – mediante procesos inclusivos en el que las partes interesadas participen en el proceso de diseño y definición de objetivos y tiempos."),
             p("2) Implementación - después de que se da inicio al esquema se toman en cuentan todas las acciones para poder ejecutar el proyecto contemplando a todas las personas/organizaciones que participan."),
             p("3) Seguimiento – acciones relacionadas al seguimiento y/o mantenimiento del esquema."),
-            p("Para cualquier pregunta o comentario sobre este producto escribe al correo rema@cobi.org.mx Tus observaciones nos ayudarán a mejorar nuestras herramientas."),
+            p("Para cualquier pregunta o comentario sobre este producto escribe al correo cobi@cobi.org.mx. Tus observaciones nos ayudarán a mejorar esta herramienta"),
             p("© COBI 2022")
           )
         ),
@@ -1030,7 +1030,7 @@ server <- function(input, output) {
   output$REMAtotalUSD <- renderInfoBox({
 
     infoBox(
-      title = "Costo total (REMA)",
+      title = "Costo total (Reserva)",
       value = prettyNum(totals_rv$rema, big.mark = ","),
       subtitle = "MXN",
       icon = icon("dollar-sign"),
