@@ -5,9 +5,9 @@ account: innovacionazul
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 320366
-bundleId: 6328085
+bundleId: 6340379
 url: https://innovacionazul.shinyapps.io/AppCosteo/
-when: 1663861598.35083
-lastSyncTime: 1663861598.35085
+when: 1664223682.56834
+lastSyncTime: 1664223682.56836
 asMultiple: FALSE
 asStatic: FALSE

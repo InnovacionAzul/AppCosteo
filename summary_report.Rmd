@@ -4,9 +4,9 @@ output: pdf_document
 date: "`r Sys.Date()`"
 header-includes:
   - \usepackage{titling}
-  - \pretitle{\begin{center}
-    \includegraphics[width=1.5in,height=1.5in]{COBI_logo_color.jpeg}\LARGE\\}
-  - \posttitle{\end{center}}
+  # - \pretitle{\begin{center}
+  #   \includegraphics[width=1.5in,height=1.5in]{COBI_logo_color.png}\LARGE\\}
+  # - \posttitle{\end{center}}
   - \usepackage{pdflscape}
   - \newcommand{\blandscape}{\begin{landscape}}
   - \newcommand{\elandscape}{\end{landscape}}
@@ -31,7 +31,7 @@ library(kableExtra)
 
 ```{r, include=FALSE}
 # Copy the logo to the current directory
-file.copy(here::here("www", "img", "COBI_logo_color.jpeg"), '.')
+#file.copy(here::here("www", "img", "COBI_logo_color.jpeg"), '.')
 ```
 
 **Título del proyecto:** `r params$title`

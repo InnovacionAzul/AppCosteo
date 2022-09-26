@@ -536,7 +536,9 @@ server <- function(input, output) {
   # REMA UI ####################################################################
   # Reactive UI for REMA Design phase ------------------------------------------
   output$rema_dis <- renderUI({
-    values$actors <- ui_actors()
+    if(!is.null(input$funder_1)){
+      values$actors <- ui_actors()
+    }
     section <- "REMA"
     phase <- "Diseño"
     if (!is.null(input$budget_upload)) {
@@ -621,7 +623,9 @@ server <- function(input, output) {
   # FIP UI #####################################################################
   # Reactive UI for FIP Design phase -------------------------------------------
   output$fip_dis <- renderUI({
-    values$actors <- ui_actors()
+    if(!is.null(input$funder_1)){
+      values$actors <- ui_actors()
+    }
     section <- "FIP"
     phase <- "Diseño"
     if (!is.null(input$budget_upload)) {
@@ -1081,7 +1085,7 @@ server <- function(input, output) {
     
     #if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
     #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
-    y_label <- "Costo total (K USD)"
+    y_label <- "Costo total (miles de pesos)"
     
     plot1 <- plot1_data %>%
       rename(
@@ -1131,7 +1135,7 @@ server <- function(input, output) {
     
     #if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
     #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
-    y_label <- "Costo total (K USD)"
+    y_label <- "Costo total (miles de pesos)"
     
     plot2 <- plot2_data %>%
       rename(
@@ -1191,10 +1195,16 @@ server <- function(input, output) {
       geom_tile(color = "black") +
       theme_bw() +
       labs(x = "",
-           y = "Actor") +
+           y = "Actor",
+           fill = "Total") +
       scale_fill_gradient(low = "lightblue", high = "steelblue") +
       facet_wrap(~section) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      theme_cowplot() +
+      theme(
+        text = element_text(size = input$text_size),
+        axis.text = element_text(size = input$text_size - 2),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
+      )
     
     output_rv$plot3 <- p
     
