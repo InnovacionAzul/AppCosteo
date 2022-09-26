@@ -1085,7 +1085,7 @@ server <- function(input, output) {
     
     #if(input$costs_in_mxp){plot1_data$total <- plot1_data$total * input$usd2mxp}
     #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
-    y_label <- "Costo total (K USD)"
+    y_label <- "Costo total (miles de pesos)"
     
     plot1 <- plot1_data %>%
       rename(
@@ -1135,7 +1135,7 @@ server <- function(input, output) {
     
     #if(input$costs_in_mxp){plot2_data$total <- plot2_data$total * input$usd2mxp}
     #y_label <- ifelse(input$costs_in_mxp, "Costo total (K MXP)", "Costo total (K USD)")
-    y_label <- "Costo total (K USD)"
+    y_label <- "Costo total (miles de pesos)"
     
     plot2 <- plot2_data %>%
       rename(
@@ -1198,7 +1198,14 @@ server <- function(input, output) {
            y = "Actor") +
       scale_fill_gradient(low = "lightblue", high = "steelblue") +
       facet_wrap(~section) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      theme_cowplot() +
+      labs(x = "Fase del proyecto", y = y_label,
+           fill = "Total") +
+      theme(
+        text = element_text(size = input$text_size),
+        axis.text = element_text(size = input$text_size - 2),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
+      )
     
     output_rv$plot3 <- p
     
