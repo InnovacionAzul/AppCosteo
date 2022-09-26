@@ -1195,12 +1195,11 @@ server <- function(input, output) {
       geom_tile(color = "black") +
       theme_bw() +
       labs(x = "",
-           y = "Actor") +
+           y = "Actor",
+           fill = "Total") +
       scale_fill_gradient(low = "lightblue", high = "steelblue") +
       facet_wrap(~section) +
       theme_cowplot() +
-      labs(x = "Fase del proyecto", y = y_label,
-           fill = "Total") +
       theme(
         text = element_text(size = input$text_size),
         axis.text = element_text(size = input$text_size - 2),
