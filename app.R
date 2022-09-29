@@ -416,7 +416,7 @@ server <- function(input, output) {
         )
       )
     ),
-    easyClose = F,
+    easyClose = T,
     footer = tagList(
       actionButton(
         inputId = "go",
@@ -861,13 +861,13 @@ server <- function(input, output) {
   observe({
     # Check which REMA price inputs have been created
     valid_c_rema_inputs <-
-      rema_data$id[which(paste0("c_", rema_data$id) %in% names(input))]
+      rema_data$id[which(paste0("p_", rema_data$id) %in% names(input))]
     
     # Update reactive values with REMA price inputs
     req(length(valid_c_rema_inputs) > 0)
     
     rema_precio <- purrr::map2_dfr(.x = valid_c_rema_inputs,
-                                   .y = paste0("c_", valid_c_rema_inputs),
+                                   .y = paste0("p_", valid_c_rema_inputs),
                                    ~ {
                                      tibble(id = .x,
                                             precio = input[[.y]])
@@ -881,13 +881,13 @@ server <- function(input, output) {
   observe({
     # Check  which REMA quantity inputs have been created
     valid_u_rema_inputs <-
-      rema_data$id[which(paste0("u_", rema_data$id) %in% names(input))]
+      rema_data$id[which(paste0("c_", rema_data$id) %in% names(input))]
     
     # Update reactive values with REMA quantity inputs
     req(length(valid_u_rema_inputs) > 0)
     
     rema_unidades <- purrr::map2_dfr(.x = valid_u_rema_inputs,
-                                     .y = paste0("u_", valid_u_rema_inputs),
+                                     .y = paste0("c_", valid_u_rema_inputs),
                                      ~ {
                                        tibble(id = .x,
                                               cantidades = input[[.y]])
@@ -900,13 +900,13 @@ server <- function(input, output) {
   ### Look for any changes to price inputs in the FIP section
   observe({
     # Check which FIP price inputs have been created
-    valid_c_fip_inputs <- fip_data$id[which(paste0("c_", fip_data$id) %in% names(input))]
+    valid_c_fip_inputs <- fip_data$id[which(paste0("p_", fip_data$id) %in% names(input))]
     
     # Update reactive values with FIP price inputs
     req(length(valid_c_fip_inputs) > 0)
     
     fip_precio <- purrr::map2_dfr(.x = valid_c_fip_inputs,
-                                  .y = paste0("c_", valid_c_fip_inputs),
+                                  .y = paste0("p_", valid_c_fip_inputs),
                                   ~ {
                                     tibble(id = .x,
                                            precio = input[[.y]])
@@ -919,13 +919,13 @@ server <- function(input, output) {
   ### Look for any changes to quantity inputs in the FIP section
   observe({
     # Check which FIP quantity inputs have been created
-    valid_u_fip_inputs <- fip_data$id[which(paste0("u_", fip_data$id) %in% names(input))]
+    valid_u_fip_inputs <- fip_data$id[which(paste0("c_", fip_data$id) %in% names(input))]
     
     # Update reactive values with FIP quantity inputs
     req(length(valid_u_fip_inputs) > 0)
     
     fip_unidades <- purrr::map2_dfr(.x = valid_u_fip_inputs,
-                                    .y = paste0("u_", valid_u_fip_inputs),
+                                    .y = paste0("c_", valid_u_fip_inputs),
                                     ~ {
                                       tibble(id = .x,
                                              cantidades = input[[.y]])

@@ -20,10 +20,10 @@ boxHeaderUI <- function(activity_id, default){
     # Make headers
     column(
       width = 6,
-      h4("Costos")),
+      h4("Precio")),
     column(
       width = 6,
-      h4("Cantidades")
+      h4("Cantidad")
     )
   )
 }
@@ -31,8 +31,8 @@ boxHeaderUI <- function(activity_id, default){
 ### Create cost and quantity input row for every activity
 makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NULL, unitDefault = NULL, tooltipText = NULL, cost_data = NULL){
   # Define inputId labels for cost and units
-  costId <- paste0("c_", pairId)
-  unitId <- paste0("u_", pairId)
+  costId <- paste0("p_", pairId)
+  unitId <- paste0("c_", pairId)
   
   # Define cost and unit defaults for numeric inputs
   if(is.null(costDefault)) {
