@@ -17,6 +17,15 @@ boxHeaderUI <- function(activity_id, default){
       choices = c("Mensual", "Trimestral", "Semestral", "Anual", "Trienal", "Única"),
       selected = default
     ),
+    
+    # Financial responsible selector
+    selectInput(
+      inputId = paste0("resp_", activity_id),
+      label = "Responsable financiero",
+      choices = "",                                                             # This needs to be hooked up to all the actors
+      selected = ""                                                             # This needs to be hooked up to the responsible actor for the subphase
+    ),
+    
     # Make headers
     column(
       width = 6,
@@ -139,7 +148,7 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
             column(width = 12,
                    selectInput(
                      inputId = subphase_code,
-                     label = "Responsable",
+                     label = "Responsable financiero",
                      choices = actors,
                      selected = selected_actor
                    )
@@ -199,10 +208,10 @@ makePhaseDuration <- function(phase, section, duration = 0, fip_data = NULL, sel
               value = NULL,
               subtitle = numericInput(
                 durationId,
-                label = "Duración de la fase (años)",
+                label = "Duración de la fase (Meses)",
                 value = duration,
                 min = 0,
-                max = 20,
+                max = 72,
                 width = "100%"),
               width = 12,
               color = "aqua")
@@ -234,10 +243,10 @@ makePhaseDuration <- function(phase, section, duration = 0, fip_data = NULL, sel
               value = NULL,
               subtitle = numericInput(
                 durationId,
-                label = "Duración de fase (años)",
+                label = "Duración de fase (meses)",
                 value = duration,
                 min = 0,
-                max = 20,
+                max = 60,
                 width = "100%"),
               width = 12,
               color = "aqua")

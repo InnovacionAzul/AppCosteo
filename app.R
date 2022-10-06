@@ -70,7 +70,8 @@ rema_data <-
   mutate(
     precio = 0, #ifelse(is.na(precio), 0, precio),
     cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
-    unidades = ifelse(is.na(unidades), "$/unidad", unidades)
+    unidades = ifelse(is.na(unidades), "$/unidad", unidades),
+    fase_duracion = 12 * fase_duracion
   )
 
 # FIP sheet
@@ -83,7 +84,8 @@ fip_data <- readxl::read_xlsx(
   mutate(
     precio = 0, #ifelse(is.na(precio), 0, precio),
     cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
-    unidades = ifelse(is.na(unidades), "$/unidad", unidades)
+    unidades = ifelse(is.na(unidades), "$/unidad", unidades),
+    fase_duracion = 12 * fase_duracion
   )
 
 # Combine sheets into a single tibble
@@ -976,15 +978,14 @@ server <- function(input, output) {
      inner_join(responsible, by = "subphase_id") %>% 
      select(-c(activity_id, subphase_id)) %>% 
      mutate(
-       eventos = pmax(
-         fase_duracion * case_when(
+       eventos = ceiling(
+         (fase_duracion / 12) * case_when(
            actividad_frecuencia == "Mensual" ~ 12,
            actividad_frecuencia == "Trimestral" ~ 4,
            actividad_frecuencia == "Semestral" ~ 2,
            actividad_frecuencia == "Anual" ~ 1,
            actividad_frecuencia == "Trienal" ~ 1/3,
-           TRUE ~ 0),
-         1),
+           TRUE ~ 0)),
        total = precio * cantidades * eventos) %>%
      select(
        section,
