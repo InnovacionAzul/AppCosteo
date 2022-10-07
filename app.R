@@ -49,7 +49,7 @@ source("helpers.R")
 # DEFAULTS
 default_actors <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip.xlsx",
+    "www/defaults_rema_fip2.xlsx",
     sheet = 1,
     na = c("", "N/A")
   ) %>%
@@ -61,7 +61,7 @@ default_n <- length(default_actors)
 # REMA sheet
 rema_data <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip.xlsx",
+    "www/defaults_rema_fip2.xlsx",
     sheet = 2,
     na = c("", "N/A")
   ) %>%
