@@ -1,12 +1,11 @@
 ---
 title: "AppCosteo Resumen de Resultados"
-output: pdf_document
+output: 
+  word_document: default
+  pdf_document: default
 date: "`r Sys.Date()`"
 header-includes:
   - \usepackage{titling}
-  # - \pretitle{\begin{center}
-  #   \includegraphics[width=1.5in,height=1.5in]{COBI_logo_color.png}\LARGE\\}
-  # - \posttitle{\end{center}}
   - \usepackage{pdflscape}
   - \newcommand{\blandscape}{\begin{landscape}}
   - \newcommand{\elandscape}{\end{landscape}}
@@ -15,23 +14,28 @@ header-includes:
 params:
   title: ""
   author: ""
-  actors: "COBI"
+  actors: ""
   notes: ""
   summary_dat: NA
   plot1: NA
   plot2: NA
   plot3: NA
+always_allow_html: true
 ---
 
 ```{r include=F}
 # The `dat` object is a reactiveValues() object (list) with the following items: summary_table, plot1, plot2, plot3 
 library(tidyverse)
 library(kableExtra)
-```
+library(flextable)
 
-```{r, include=FALSE}
-# Copy the logo to the current directory
-#file.copy(here::here("www", "img", "COBI_logo_color.jpeg"), '.')
+set_flextable_defaults(
+  font.size = 8, font.family = "Helvetica",
+  table.layout = "autofit",
+  border.color = "black",
+  padding.top = 2, padding.bottom = 2,
+  padding.left = 2, padding.right = 2)
+
 ```
 
 **Título del proyecto:** `r params$title`
@@ -46,21 +50,26 @@ library(kableExtra)
 
 # Presupuesto por fases
 
-```{r, echo=F, message=F, warning=F}
+```{r, echo = F, message = F, warning=FALSE}
+if(nrow(params$summary_dat) > 0){
 d1 <- params$summary_dat %>%
   group_by(section, fase) %>%
-  summarize(`Fase Duracion (años)` = unique(fase_duracion),
+  summarize(`Fase Duracion (meses)` = unique(fase_duracion),
             `Total ($)` = format(sum(total, na.rm = T), big.mark = ",")) %>%
   ungroup() %>%
-  rename(`Intervención` = section, Fase = fase) %>%
-  kbl() %>%
-  kable_minimal(full_width = F, position = "left", font_size = 10) %>%
-  collapse_rows(columns = 1, valign = "middle")
+  rename(`Intervención` = section, Fase = fase)
+
+d1 <- flextable(d1) %>%
+  merge_v(j = ~ `Intervención` + Fase) %>%
+  theme_booktabs(bold_header = T) %>%
+  align(align = "center", part = "all") %>%
+  autofit(add_w = 0.2)
 
 d1
+}
 ```
 
-```{r, echo=F, fig.align='left'}
+```{r plot_1, echo=F, fig.align='left'}
 if(!is.null(params$plot1)){
   params$plot1
 }
@@ -71,17 +80,22 @@ if(!is.null(params$plot1)){
 # Presupuesto por conceptos
 
 ```{r, echo=F, message=F, warning=F}
+if(nrow(params$summary_dat) > 0){
 d2 <- params$summary_dat %>%
   group_by(section, concepto, fase) %>%
   summarize(`Actividades` = n_distinct(actividad),
             `Total ($)` = format(sum(total, na.rm = T), big.mark = ",")) %>%
   ungroup() %>%
-  rename(`Intervención` = section, Concepto = concepto, Fase = fase) %>%
-  kbl() %>%
-  kable_minimal(full_width = F, position = "left", font_size = 10) %>%
-  collapse_rows(columns = 1:2, valign = "middle")
+  rename(`Intervención` = section, Concepto = concepto, Fase = fase)
+
+d2 <- flextable(d2) %>%
+  merge_v(j = ~ `Intervención` + Concepto + Fase) %>%
+  theme_booktabs(bold_header = T) %>%
+  align(align = "center", part = "all") %>%
+  autofit(add_w = 0.2)
 
 d2
+}
 ```
 
 ```{r, echo=F, fig.align='left'}
@@ -95,18 +109,22 @@ if(!is.null(params$plot2)){
 # Presupuesto por actores
 
 ```{r, echo=F, message=F, warning=F}
-### Need to include a table here summarized by responsible party
+if(nrow(params$summary_dat) > 0){
 d3 <- params$summary_dat %>%
   group_by(responsable, fase) %>%
   summarize(`Actividades` = n_distinct(actividad),
             `Total ($)` = format(sum(total, na.rm = T), big.mark = ",")) %>%
   ungroup() %>%
-  rename(Responsable = responsable, Fase = fase) %>%
-  kbl() %>%
-  kable_minimal(full_width = F, position = "left", font_size = 10) %>%
-  collapse_rows(columns = 1, valign = "middle")
+  rename(Responsable = responsable, Fase = fase)
+
+d3 <- flextable(d3) %>%
+  merge_v(j = ~ Responsable + Fase) %>%
+  theme_booktabs(bold_header = T) %>%
+  align(align = "center", part = "all") %>%
+  autofit(add_w = 0.2)
 
 d3
+}
 ```
 
 ```{r, echo=F, fig.align='left'}
@@ -116,21 +134,28 @@ if(!is.null(params$plot3)){
 ```
 
 \newpage
+
 \blandscape
 
 # Presupuesto extendido
 
 ```{r, echo=F, message=F, warning=F}
+if(nrow(params$summary_dat)){
+  
 d4 <- params$summary_dat %>%
-  #test_dat %>%
   group_by(section, fase, subfase, actividad, responsable) %>%
   summarize(`Total ($)` = format(sum(total, na.rm = T), big.mark = ",")) %>%
   ungroup() %>%
-  rename(Programa = section, Fase = fase, Subfase = subfase, Actividad = actividad, Responsable = responsable) %>%
-  kbl() %>%
-  kable_minimal(full_width = T, position = "left", font_size = 10) %>%
-  collapse_rows(columns = 1:4, valign = "middle")
+  rename(Programa = section, Fase = fase, Subfase = subfase, Actividad = actividad, Responsable = responsable)
+
+d4 <- flextable(d4) %>%
+  merge_v(j = ~ Programa + Fase + Subfase) %>%
+  theme_booktabs(bold_header = T) %>%
+  align(align = "center", part = "all") %>%
+  autofit(add_w = 0.2)
 
 d4
+}
 ```
+
 \elandscape

@@ -7,12 +7,12 @@
 ######################################################
 
 ### Cost and quantity header for every activity
-boxHeaderUI <- function(activity_id, default){
+boxHeaderUI <- function(activity_id, default, actors, selected_actor){
   
   fluidRow(
     # Frequency selector
     selectInput(
-      inputId = activity_id,
+      inputId = paste0("freq_", activity_id),
       label = "Frecuencia de la actividad",
       choices = c("Mensual", "Trimestral", "Semestral", "Anual", "Trienal", "Única"),
       selected = default
@@ -22,8 +22,8 @@ boxHeaderUI <- function(activity_id, default){
     selectInput(
       inputId = paste0("resp_", activity_id),
       label = "Responsable financiero",
-      choices = "",                                                             # This needs to be hooked up to all the actors
-      selected = ""                                                             # This needs to be hooked up to the responsible actor for the subphase
+      choices = actors,
+      selected = selected_actor
     ),
     
     # Make headers
@@ -76,7 +76,7 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NUL
   )
 }
 
-makeActivity <- function(activity, data_subphase){
+makeActivity <- function(activity, data_subphase, actors){
   
   act_data <- filter(data_subphase,
                      actividad == activity) 
@@ -86,12 +86,20 @@ makeActivity <- function(activity, data_subphase){
     str_extract(pattern = "[:alpha:]+_[:digit:]+_[:digit:]+_[:digit:]+") %>% 
     unique()
   
-  activity_id <- paste0("freq_", activity_id)
-  
   default <- act_data %>% 
     pull(actividad_frecuencia) %>% 
     unique()
-
+  
+  selected_actor <- act_data %>%
+    pull(responsable) %>%
+    unique()
+  
+  if(selected_actor %in% actors){
+    out <- selected_actor
+  }else{
+    out <- actors[1]
+  }
+  
   box(
     title = activity,
     width = 12,
@@ -101,7 +109,9 @@ makeActivity <- function(activity, data_subphase){
     
     # Insert header
     boxHeaderUI(activity_id = activity_id,
-                default = default),
+                default = default,
+                actors = actors,
+                selected_actor = out),
     
     # Insert columns for price and quantities
     act_data %$%
@@ -127,7 +137,7 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
   
   activities <- unique(data_subphase$actividad)
   
-  selected_actor <- unique(data_subphase$responsable)
+  # selected_actor <- unique(data_subphase$responsable)
   
   tagList(
     tags$div(
@@ -144,22 +154,23 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
               subtitle = subphase, 
               icon = NULL, 
               color = "blue"
-            ),
-            column(width = 12,
-                   selectInput(
-                     inputId = subphase_code,
-                     label = "Responsable financiero",
-                     choices = actors,
-                     selected = selected_actor
-                   )
             )
+            # column(width = 12,
+            #        selectInput(
+            #          inputId = subphase_code,
+            #          label = "Responsable financiero",
+            #          choices = actors,
+            #          selected = selected_actor
+            #        )
+            # )
           )
         ),
         column(
           width = 8,
           map(.x = activities,
               .f = makeActivity,
-              data_subphase = data_subphase)
+              data_subphase = data_subphase,
+              actors = actors)
         )
       )
     )
