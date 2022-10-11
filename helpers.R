@@ -54,6 +54,37 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NUL
     tooltipText <- cost_data$descripcion[cost_data$id == pairId]
   }
   
+  if(titleId == "[Costo definido por el usuario]"){
+    
+    tagList(
+      titleId,
+      fluidRow(
+        column(width = 6,
+               textInput(inputId = paste0("des_", costId),
+                         label = NULL,
+                         value = "Definido por el usuario"),
+               numericInput(inputId = costId,
+                            label = NULL,
+                            value = costDefault,
+                            min = 0)
+        ),
+        column(width = 6,
+               textInput(inputId = paste0("des_", unitId),
+                         label = NULL,
+                         value = "unidades"),
+               numericInput(inputId = unitId,
+                            label = NULL,
+                            value = unitDefault,
+                            min = 0))),
+      bsTooltip(id = costId,
+                title = tooltipText,
+                placement = "right",
+                trigger = "hover",
+                options = list(container = "body"))
+    )
+    
+  }else{
+  
   tagList(
     titleId,
     fluidRow(
@@ -74,6 +105,7 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NUL
               trigger = "hover",
               options = list(container = "body"))
   )
+  }
 }
 
 makeActivity <- function(activity, data_subphase, actors){
