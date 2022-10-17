@@ -999,7 +999,7 @@ server <- function(input, output) {
     duration <- duration_rv$df
     
     # Extract original items from input sheet
-    cost_data %>%
+    c <- cost_data %>%
       select(section,
              fase,
              subfase,
@@ -1055,6 +1055,13 @@ server <- function(input, output) {
        total,
        -c(eventos, etapa)
      )
+    
+    # Add any user input descriptions and units for "otra" expenses
+    c$descripcion[c$id %in% otra_rv$df$id] <- otra_rv$df$des
+    c$unidades[c$id %in% otra_rv$df$id] <- otra_rv$df$uni
+    
+    # Return
+    c
    
   })
   
@@ -1264,12 +1271,13 @@ server <- function(input, output) {
   output$download_total <- downloadHandler(
     filename = "Presupuesto.xlsx",
     content = function(file) {
+      
       writexl::write_xlsx(
         x = list(
           METAADATA = tibble(Titulo = c(input$title, rep("", values$n -1)),
                              Autor = c(input$author, rep("", values$n -1)),
                              Notas = c(input$notes, rep("", values$n -1)),
-                             Actores = values$ui_actors),
+                             Actores = values$ui_actors[values$ui_actors != "No Asignado"]),
           REMA = totals() %>% 
             filter(section == "REMA"),
           FIP = totals() %>% 
@@ -1349,6 +1357,52 @@ server <- function(input, output) {
       
     }
   )
+  
+  # Container for "otra" inputs
+  otra_rv <- reactiveValues(df = tibble(cost_data %>%
+                              dplyr::filter(rubro == "[Costo definido por el usuario]") %>%
+                              distinct(id) %>%
+                              mutate(des = "Definido por el usuario",
+                                     uni = "Definido por el usuario"))
+                            )
+  
+  # Keep track of manual changes to the names of "other inputs" ----------
+  observe({
+    
+    valid_otra_cost_inputs <- otra_rv$df$id[which(paste0("des_p_", otra_rv$df$id) %in% names(input))]
+
+    req(length(valid_otra_cost_inputs) > 0)
+
+    otra_cost_names <- purrr::map2_dfr(.x = valid_otra_cost_inputs,
+                                      .y = paste0("des_p_", valid_otra_cost_inputs),
+                                       ~ {
+                                         tibble(activity_id = .x,
+                                                input_id = .y,
+                                                des = input[[.y]])
+                                       })
+    
+    otra_rv$df$des[otra_rv$df$id %in% otra_cost_names$activity_id] <- otra_cost_names
+    
+  })
+  
+  # Keep track of manual changes to the units of "other inputs" ----------
+  observe({
+    
+    valid_otra_unit_inputs <- otra_rv$df$id[which(paste0("des_c_", otra_rv$df$id) %in% names(input))]
+    
+    req(length(valid_otra_unit_inputs) > 0)
+    
+    otra_unit_names <- purrr::map2_dfr(.x = valid_otra_unit_inputs,
+                                       .y = paste0("des_c_", valid_otra_unit_inputs),
+                                       ~ {
+                                         tibble(activity_id = .x,
+                                                input_id = .y,
+                                                des = input[[.y]])
+                                       })
+    
+    otra_rv$df$uni[otra_rv$df$id %in% otra_unit_names$activity_id] <- otra_unit_names
+    
+  })
 
 }
 
