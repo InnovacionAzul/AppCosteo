@@ -180,7 +180,7 @@ ui <-
                    fluidRow(
                      downloadButton(
                        outputId = "download_word",
-                       label = "Descargar resumen (DOCX)",
+                       label = "Descargar resumen (Word)",
                        style = "width: 100%; color: black; margin-left: 0; margin-top: 7px;"
                      )
                    ),
