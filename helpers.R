@@ -38,17 +38,17 @@ boxHeaderUI <- function(activity_id, default, actors, selected_actor){
 }
 
 ### Create cost and quantity input row for every activity
-makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NULL, unitDefault = NULL, tooltipText = NULL, cost_data = NULL){
+makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NULL, quantityDefault = NULL, tooltipText = NULL, cost_data = NULL){
   # Define inputId labels for cost and units
-  costId <- paste0("p_", pairId)
-  unitId <- paste0("c_", pairId)
+  priceId <- paste0("p_", pairId)
+  quantityId <- paste0("c_", pairId)
   
   # Define cost and unit defaults for numeric inputs
-  if(is.null(costDefault)) {
-    costDefault <- cost_data$precio[cost_data$id == pairId]
+  if(is.null(priceDefault)) {
+    priceDefault <- cost_data$precio[cost_data$id == pairId]
   }
-  if(is.null(unitDefault)){
-    unitDefault <- cost_data$cantidades[cost_data$id == pairId]
+  if(is.null(quantityDefault)){
+    quantityDefault <- cost_data$cantidades[cost_data$id == pairId]
   }
   if(is.null(tooltipText)){
     tooltipText <- cost_data$descripcion[cost_data$id == pairId]
@@ -60,23 +60,23 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NUL
       titleId,
       fluidRow(
         column(width = 6,
-               textInput(inputId = paste0("des_", costId),
+               textInput(inputId = paste0("des_", priceId),
                          label = NULL,
                          value = "Definido por el usuario"),
-               numericInput(inputId = costId,
+               numericInput(inputId = priceId,
                             label = NULL,
-                            value = costDefault,
+                            value = priceDefault,
                             min = 0)
         ),
         column(width = 6,
-               textInput(inputId = paste0("des_", unitId),
+               textInput(inputId = paste0("des_", quantityId),
                          label = NULL,
                          value = "unidades"),
-               numericInput(inputId = unitId,
+               numericInput(inputId = quantityId,
                             label = NULL,
-                            value = unitDefault,
+                            value = quantityDefault,
                             min = 0))),
-      bsTooltip(id = costId,
+      bsTooltip(id = priceId,
                 title = tooltipText,
                 placement = "right",
                 trigger = "hover",
@@ -89,17 +89,17 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, costDefault = NUL
     titleId,
     fluidRow(
       column(width = 6,
-             numericInput(inputId = costId,
+             numericInput(inputId = priceId,
                           label = costLabel,
-                          value = costDefault,
+                          value = priceDefault,
                           min = 0)
       ),
       column(width = 6,
-             numericInput(inputId = unitId,
+             numericInput(inputId = quantityId,
                           label = unitLabel,
-                          value = unitDefault,
+                          value = quantityDefault,
                           min = 0))),
-    bsTooltip(id = costId,
+    bsTooltip(id = priceId,
               title = tooltipText,
               placement = "right",
               trigger = "hover",
@@ -151,8 +151,8 @@ makeActivity <- function(activity, data_subphase, actors){
                      id,
                      unidades,
                      stringr::str_remove_all(unidades, "[$/]"),
-                     cantidades,
-                     precio),
+                     precio,
+                     cantidades),
            .f = makeElement
       )
   )
