@@ -1025,16 +1025,14 @@ server <- function(input, output) {
      inner_join(responsible, by = "resp_id") %>% 
      select(-c(freq_id, resp_id)) %>% # delete temp codes
      # calculate number of times each activity will occur and total cost
-     mutate(
-       eventos = ceiling(
-         (fase_duracion / 12) * case_when(
-           actividad_frecuencia == "Mensual" ~ 12,
-           actividad_frecuencia == "Trimestral" ~ 4,
-           actividad_frecuencia == "Semestral" ~ 2,
-           actividad_frecuencia == "Anual" ~ 1,
-           actividad_frecuencia == "Trienal" ~ 1/3,
-           TRUE ~ 0)),
-       total = precio * cantidades * eventos) %>%
+     mutate(eventos = case_when(actividad_frecuencia == "Única" ~ 1,
+                                actividad_frecuencia == "Mensual" ~ fase_duracion,
+                                actividad_frecuencia == "Trimestral" ~ ceiling(fase_duracion/3),
+                                actividad_frecuencia == "Semestral" ~ ceiling(fase_duracion/6),
+                                actividad_frecuencia == "Anual" ~ ceiling(fase_duracion/12),
+                                actividad_frecuencia == "Trienal" ~ ceiling((fase_duracion/12)/3),
+                                T ~ 0),
+            total =  precio * cantidades * eventos) %>%
      select(
        section,
        fase,
