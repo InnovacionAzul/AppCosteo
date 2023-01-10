@@ -1059,36 +1059,34 @@ server <- function(input, output) {
      inner_join(responsible, by = "resp_id") %>% 
      select(-c(freq_id, resp_id)) %>% # delete temp codes
      # calculate number of times each activity will occur and total cost
-     mutate(
-       eventos = ceiling(
-         case_when(actividad_frecuencia == "Mensual" ~ fase_duracion,
-                   actividad_frecuencia == "Trimestral" ~ 4 * (fase_duracion / 12),
-                   actividad_frecuencia == "Semestral" ~ 2 * (fase_duracion / 12),
-                   actividad_frecuencia == "Anual" ~ 1 * (fase_duracion / 12),
-                   actividad_frecuencia == "Trienal" ~ 1/3 * (fase_duracion / 12),
-                   TRUE ~ 1)),
-       total = precio * cantidades * eventos) %>%
-      select(
-        section,
-        fase,
-        fase_duracion,
-        subfase,
-        subfase_orden,
-        concepto,
-        actividad,
-        actividad_orden,
-        actividad_frecuencia,
-        rubro,
-        descripcion,
-        responsable,
-        unidades,
-        cantidades,
-        precio,
-        id,
-        total,
-        -c(eventos, etapa)
-      )
-    
+mutate(eventos = case_when(actividad_frecuencia == "Única" ~ 1,
+                                actividad_frecuencia == "Mensual" ~ fase_duracion,
+                                actividad_frecuencia == "Trimestral" ~ ceiling(fase_duracion/3),
+                                actividad_frecuencia == "Semestral" ~ ceiling(fase_duracion/6),
+                                actividad_frecuencia == "Anual" ~ ceiling(fase_duracion/12),
+                                actividad_frecuencia == "Trienal" ~ ceiling((fase_duracion/12)/3),
+                                T ~ 0),
+            total =  precio * cantidades * eventos) %>%
+     select(
+       section,
+       fase,
+       fase_duracion,
+       subfase,
+       subfase_orden,
+       concepto,
+       actividad,
+       actividad_orden,
+       actividad_frecuencia,
+       rubro,
+       descripcion,
+       responsable,
+       unidades,
+       cantidades,
+       precio,
+       id,
+       total,
+       -c(eventos, etapa)
+     )
     # Add any user input descriptions and units for "otra" expenses
     c$descripcion[c$id %in% otra_rv$df$id] <- otra_rv$df$des
     c$unidades[c$id %in% otra_rv$df$id] <- otra_rv$df$uni
