@@ -617,6 +617,7 @@
         "Rcpp",
         "jpeg",
         "markdown",
+        "png",
         "rlang",
         "stringr",
         "xml2"
@@ -981,7 +982,8 @@
       "Requirements": [
         "R6",
         "uuid",
-        "xml2"
+        "xml2",
+        "zip"
       ]
     },
     "openssl": {
@@ -1055,6 +1057,14 @@
         "vctrs",
         "viridisLite"
       ]
+    },
+    "png": {
+      "Package": "png",
+      "Version": "0.1-8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "bd54ba8a0a5faded999a7aab6e46b374",
+      "Requirements": []
     },
     "prettyunits": {
       "Package": "prettyunits",
@@ -1684,6 +1694,14 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "9b570515751dcbae610f29885e025b41",
+      "Requirements": []
+    },
+    "zip": {
+      "Package": "zip",
+      "Version": "2.2.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c42bfcec3fa6a0cce17ce1f8bc684f88",
       "Requirements": []
     }
   }

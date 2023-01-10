@@ -38,23 +38,24 @@ boxHeaderUI <- function(activity_id, default, actors, selected_actor){
 }
 
 ### Create cost and quantity input row for every activity
-makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NULL, quantityDefault = NULL, tooltipText = NULL, cost_data = NULL){
+makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NULL, quantityDefault = NULL, descText = NULL){
   # Define inputId labels for cost and units
   priceId <- paste0("p_", pairId)
   quantityId <- paste0("c_", pairId)
   
-  # Define cost and unit defaults for numeric inputs
-  if(is.null(priceDefault)) {
-    priceDefault <- cost_data$precio[cost_data$id == pairId]
-  }
-  if(is.null(quantityDefault)){
-    quantityDefault <- cost_data$cantidades[cost_data$id == pairId]
-  }
-  if(is.null(tooltipText)){
-    tooltipText <- cost_data$descripcion[cost_data$id == pairId]
-  }
+  # # Define cost and unit defaults for numeric inputs
+  # if(is.null(priceDefault)) {
+  #   priceDefault <- cost_data$precio[cost_data$id == pairId]
+  # }
+  # if(is.null(quantityDefault)){
+  #   quantityDefault <- cost_data$cantidades[cost_data$id == pairId]
+  # }
+  # if(is.null(descText)){
+  #   descText <- cost_data$descripcion[cost_data$id == pairId]
+  # }
   
   if(titleId == "[Costo definido por el usuario]"){
+    # browser()
     
     tagList(
       titleId,
@@ -62,7 +63,7 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
         column(width = 6,
                textInput(inputId = paste0("des_", priceId),
                          label = NULL,
-                         value = "Definido por el usuario"),
+                         value = descText),
                numericInput(inputId = priceId,
                             label = NULL,
                             value = priceDefault,
@@ -71,16 +72,11 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
         column(width = 6,
                textInput(inputId = paste0("des_", quantityId),
                          label = NULL,
-                         value = "unidades"),
+                         value = unitLabel),
                numericInput(inputId = quantityId,
                             label = NULL,
                             value = quantityDefault,
-                            min = 0))),
-      bsTooltip(id = priceId,
-                title = tooltipText,
-                placement = "right",
-                trigger = "hover",
-                options = list(container = "body"))
+                            min = 0)))
     )
     
   }else{
@@ -98,12 +94,7 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
              numericInput(inputId = quantityId,
                           label = unitLabel,
                           value = quantityDefault,
-                          min = 0))),
-    bsTooltip(id = priceId,
-              title = tooltipText,
-              placement = "right",
-              trigger = "hover",
-              options = list(container = "body"))
+                          min = 0)))
   )
   }
 }
@@ -152,7 +143,8 @@ makeActivity <- function(activity, data_subphase, actors){
                      unidades,
                      stringr::str_remove_all(unidades, "[$/]"),
                      precio,
-                     cantidades),
+                     cantidades,
+                     descripcion),
            .f = makeElement
       )
   )

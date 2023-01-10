@@ -1013,6 +1013,7 @@ server <- function(input, output) {
   
   ### Get totals for each activity
   totals <- reactive({
+    # browser()
     
     # Combine rema and fip cost and quantity data
     dat <- input_rv$rema %>%
@@ -1060,34 +1061,33 @@ server <- function(input, output) {
      # calculate number of times each activity will occur and total cost
      mutate(
        eventos = ceiling(
-         (fase_duracion / 12) * case_when(
-           actividad_frecuencia == "Mensual" ~ 12,
-           actividad_frecuencia == "Trimestral" ~ 4,
-           actividad_frecuencia == "Semestral" ~ 2,
-           actividad_frecuencia == "Anual" ~ 1,
-           actividad_frecuencia == "Trienal" ~ 1/3,
-           TRUE ~ 0)),
+         case_when(actividad_frecuencia == "Mensual" ~ fase_duracion,
+                   actividad_frecuencia == "Trimestral" ~ 4 * (fase_duracion / 12),
+                   actividad_frecuencia == "Semestral" ~ 2 * (fase_duracion / 12),
+                   actividad_frecuencia == "Anual" ~ 1 * (fase_duracion / 12),
+                   actividad_frecuencia == "Trienal" ~ 1/3 * (fase_duracion / 12),
+                   TRUE ~ 1)),
        total = precio * cantidades * eventos) %>%
-     select(
-       section,
-       fase,
-       fase_duracion,
-       subfase,
-       subfase_orden,
-       concepto,
-       actividad,
-       actividad_orden,
-       actividad_frecuencia,
-       rubro,
-       descripcion,
-       responsable,
-       unidades,
-       cantidades,
-       precio,
-       id,
-       total,
-       -c(eventos, etapa)
-     )
+      select(
+        section,
+        fase,
+        fase_duracion,
+        subfase,
+        subfase_orden,
+        concepto,
+        actividad,
+        actividad_orden,
+        actividad_frecuencia,
+        rubro,
+        descripcion,
+        responsable,
+        unidades,
+        cantidades,
+        precio,
+        id,
+        total,
+        -c(eventos, etapa)
+      )
     
     # Add any user input descriptions and units for "otra" expenses
     c$descripcion[c$id %in% otra_rv$df$id] <- otra_rv$df$des
@@ -1095,7 +1095,7 @@ server <- function(input, output) {
     
     # Return
     c
-   
+    
   })
   
   ### Update totals (REMA)
@@ -1414,7 +1414,7 @@ server <- function(input, output) {
                                                 des = input[[.y]])
                                        })
     
-    otra_rv$df$des[otra_rv$df$id %in% otra_cost_names$activity_id] <- otra_cost_names
+    otra_rv$df$des[otra_rv$df$id %in% otra_cost_names$activity_id] <- otra_cost_names$des
     
   })
   
@@ -1433,7 +1433,7 @@ server <- function(input, output) {
                                                 des = input[[.y]])
                                        })
     
-    otra_rv$df$uni[otra_rv$df$id %in% otra_unit_names$activity_id] <- otra_unit_names
+    otra_rv$df$uni[otra_rv$df$id %in% otra_unit_names$activity_id] <- otra_unit_names$des
     
   })
 
