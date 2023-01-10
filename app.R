@@ -49,7 +49,7 @@ source("helpers.R")
 # DEFAULTS
 default_actors <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip2.xlsx",
+    "www/defaults_rema_fip.xlsx",
     sheet = 1,
     na = c("", "N/A")
   ) %>%
@@ -61,7 +61,7 @@ default_n <- length(default_actors)
 # REMA sheet
 rema_data <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip2.xlsx",
+    "www/defaults_rema_fip.xlsx",
     sheet = 2,
     na = c("", "N/A")
   ) %>%
@@ -416,7 +416,6 @@ server <- function(input, output) {
             label = "Notas",
             resize = "both"
           ),
-          #uiOutput(outputId = "n_actors_ui"),
           numericInput(
             inputId = "n_actors",
             label = "Número de actores",
@@ -483,6 +482,9 @@ server <- function(input, output) {
   
   # Define values pertaining to actors -----------------------------------------
   values <- reactiveValues(
+    title = "",
+    author = "",
+    notes = "",
     n = default_n,
     actors = default_actors,
     user_actors = NULL,
@@ -495,19 +497,50 @@ server <- function(input, output) {
     
     file <- input$budget_upload
     
+    values$title <- (readxl::read_xlsx(file$datapath,
+                                       sheet = 1,
+                                       na = c("", "N/A")) %>%
+                       janitor::clean_names() %>%
+                       drop_na() %>% 
+                       pull(titulo) %>% 
+                       unique())
+    
+    values$author <- (readxl::read_xlsx(file$datapath,
+                                        sheet = 1,
+                                        na = c("", "N/A")) %>%
+                        janitor::clean_names() %>%
+                        drop_na() %>% 
+                        pull(autor) %>% 
+                        unique())
+    
+    values$notes <- (readxl::read_xlsx(file$datapath,
+                                       sheet = 1,
+                                       na = c("", "N/A")) %>%
+                       janitor::clean_names() %>%
+                       drop_na() %>% 
+                       pull(notas) %>% 
+                       unique())
+    
     values$user_actors <- (readxl::read_xlsx(file$datapath,
-                      sheet = 1,
-                      na = c("", "N/A")) %>%
-      janitor::clean_names() %>%
-      pull(actores) %>% 
-      unique())
+                                             sheet = 1,
+                                             na = c("", "N/A")) %>%
+                             janitor::clean_names() %>%
+                             pull(actores) %>% 
+                             unique())
     
     values$n <- length(values$user_actors)
     
+    # browser()
+    
+    updateTextInput(inputId = "title",
+                    value = values$title)
+    updateTextInput(inputId = "author",
+                    value = values$author)
+    updateTextAreaInput(inputId = "notes",
+                        value = values$notes)
     updateNumericInput(inputId = "n_actors",
                        value = values$n,
                        min = 1)
-    
   })
   
   # Define actors --------------------------------------------------------------
@@ -1274,7 +1307,7 @@ server <- function(input, output) {
       
       writexl::write_xlsx(
         x = list(
-          METAADATA = tibble(Titulo = c(input$title, rep("", values$n -1)),
+          METADATA = tibble(Titulo = c(input$title, rep("", values$n -1)),
                              Autor = c(input$author, rep("", values$n -1)),
                              Notas = c(input$notes, rep("", values$n -1)),
                              Actores = values$ui_actors[values$ui_actors != "No Asignado"]),
@@ -1368,7 +1401,7 @@ server <- function(input, output) {
   
   # Keep track of manual changes to the names of "other inputs" ----------
   observe({
-    
+
     valid_otra_cost_inputs <- otra_rv$df$id[which(paste0("des_p_", otra_rv$df$id) %in% names(input))]
 
     req(length(valid_otra_cost_inputs) > 0)
