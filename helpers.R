@@ -57,6 +57,7 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
   if(titleId == "[Costo definido por el usuario]"){
     # browser()
     
+    
     tagList(
       titleId,
       fluidRow(
@@ -80,22 +81,22 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
     )
     
   }else{
-  
-  tagList(
-    titleId,
-    fluidRow(
-      column(width = 6,
-             numericInput(inputId = priceId,
-                          label = costLabel,
-                          value = priceDefault,
-                          min = 0)
-      ),
-      column(width = 6,
-             numericInput(inputId = quantityId,
-                          label = unitLabel,
-                          value = quantityDefault,
-                          min = 0)))
-  )
+    
+    tagList(
+      titleId,
+      fluidRow(
+        column(width = 6,
+               numericInput(inputId = priceId,
+                            label = costLabel,
+                            value = priceDefault,
+                            min = 0)
+        ),
+        column(width = 6,
+               numericInput(inputId = quantityId,
+                            label = unitLabel,
+                            value = quantityDefault,
+                            min = 0)))
+    )
   }
 }
 
@@ -137,7 +138,8 @@ makeActivity <- function(activity, data_subphase, actors){
                 selected_actor = out),
     
     # Insert columns for price and quantities
-    act_data %$%
+    act_data %>% 
+      filter(!rubro == "[Costo definido por el usuario]") %$%
       pmap(.l = list(rubro,
                      id,
                      unidades,
@@ -146,7 +148,26 @@ makeActivity <- function(activity, data_subphase, actors){
                      cantidades,
                      descripcion),
            .f = makeElement
-      )
+      ),
+    
+    box(title = "Otros costos",
+        status = "info",
+        width = 12,
+        collapsed = T,
+        collapsible = T,
+        act_data %>% 
+          filter(rubro == "[Costo definido por el usuario]") %$% # | concepto == "Otros costos directos"
+          pmap(.l = list(rubro,
+                         id,
+                         unidades,
+                         stringr::str_remove_all(unidades, "[$/]"),
+                         precio,
+                         cantidades,
+                         descripcion),
+               .f = makeElement
+          )
+        
+        )
   )
 }
 
@@ -179,14 +200,6 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
               icon = NULL, 
               color = "blue"
             )
-            # column(width = 12,
-            #        selectInput(
-            #          inputId = subphase_code,
-            #          label = "Responsable financiero",
-            #          choices = actors,
-            #          selected = selected_actor
-            #        )
-            # )
           )
         ),
         column(
@@ -209,12 +222,14 @@ makeSubphases <- function(data, phase, section, subphases_to_include = NULL, act
                       section == section) %>%
     arrange(subfase_orden)
   
+  # browser()
   if(phase == "Implementación" & section == "FIP"){
+    # browser()
     subfases <- subphases_to_include
-    numbers <- seq(1:length(subfases))
+    numbers <- ifelse(length(subfases) == 0, 1, 1:length(subfases))
   } else {
     subfases <- unique(data_fase$subfase)
-    numbers <- seq(1:length(subfases))
+    numbers <- 1:length(subfases)
   }
   
   tagList(

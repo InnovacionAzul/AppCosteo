@@ -49,7 +49,7 @@ source("helpers.R")
 # DEFAULTS
 default_actors <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip.xlsx",
+    "www/test.xlsx",
     sheet = 1,
     na = c("", "N/A")
   ) %>%
@@ -61,31 +61,30 @@ default_n <- length(default_actors)
 # REMA sheet
 rema_data <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip.xlsx",
+    "www/test.xlsx",
     sheet = 2,
     na = c("", "N/A")
   ) %>%
   janitor::clean_names() %>%
-  arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
-    precio = 0, #ifelse(is.na(precio), 0, precio),
-    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
+    precio = 0,
+    cantidades = 0,
     unidades = ifelse(is.na(unidades), "$/unidad", unidades),
-    fase_duracion = 12 * fase_duracion
+    fase_duracion = 12
   )
 
 # FIP sheet
 fip_data <- readxl::read_xlsx(
-  "www/defaults_rema_fip.xlsx",
+  "www/test.xlsx",
   sheet = 3,
   na = c("", "N/A")) %>%
   janitor::clean_names() %>%
   arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
-    precio = 0, #ifelse(is.na(precio), 0, precio),
-    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
+    precio = 0, 
+    cantidades = 0, 
     unidades = ifelse(is.na(unidades), "$/unidad", unidades),
-    fase_duracion = 12 * fase_duracion
+    fase_duracion = 12
   )
 
 # Combine sheets into a single tibble
@@ -1119,10 +1118,12 @@ mutate(eventos = case_when(actividad_frecuencia == "Única" ~ 1,
   # VALUE BOXES ----------------------------------------------------------------
   # Value box with total cost in USD for marine reserves
   output$REMAtotalUSD <- renderInfoBox({
+    
+    money <- scales::dollar_format(big.mark = ",", decimal.mark = ".")
 
     infoBox(
       title = "Costo total (Reserva)",
-      value = prettyNum(totals_rv$rema, big.mark = ","),
+      value = money(totals_rv$rema),
       subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
@@ -1133,9 +1134,11 @@ mutate(eventos = case_when(actividad_frecuencia == "Única" ~ 1,
   ### Value box with total cost in USD for FIP
   output$FIPtotalUSD <- renderInfoBox({
     
+    money <- scales::dollar_format(big.mark = ",", decimal.mark = ".")
+    
     infoBox(
       title = "Costo total (FIP)",
-      value = prettyNum(totals_rv$fip, big.mark = ","),
+      value = money(totals_rv$fip),
       subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
