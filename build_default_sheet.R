@@ -73,7 +73,9 @@ rema_data <- readxl::read_xlsx(
          subfase, subfase_code, subfase_orden,
          concepto, actividad, actividad_code, actividad_orden, actividad_frecuencia, code,
          rubro, descripcion, responsable, unidades, cantidades, precio) %>% 
-  mutate(id = paste(tolower(section), fase_code, subfase_code, actividad_code, code, sep = "_"))
+  mutate(id = paste(tolower(section), fase_code, subfase_code, actividad_code, code, sep = "_"),
+         descriptcion = ifelse(descripcion == "Definido por el usuario", "Ingresa descripción", descripcion),
+         unidades = ifelse(unidades == "Definido por el usuario", "Ingresa unidades", unidades))
 
 fip_data <- readxl::read_xlsx(
   "www/defaults_rema_fip_13Ene23.xlsx",
@@ -100,7 +102,9 @@ fip_data <- readxl::read_xlsx(
          subfase, subfase_code, subfase_orden,
          concepto, actividad, actividad_code, actividad_orden, actividad_frecuencia, code,
          rubro, descripcion, responsable, unidades, cantidades, precio) %>% 
-  mutate(id = paste(tolower(section), fase_code, subfase_code, actividad_code, code, sep = "_"))
+  mutate(id = paste(tolower(section), fase_code, subfase_code, actividad_code, code, sep = "_"),
+         descriptcion = ifelse(descripcion == "Definido por el usuario", "Ingresa descripción", descripcion),
+         unidades = ifelse(unidades == "Definido por el usuario", "Ingresa unidades", unidades))
 
 writexl::write_xlsx(
   x = list(

@@ -100,7 +100,7 @@ ui <-
   dashboardPage(
     title = "Sistema de Costeo",
     header = dashboardHeader(
-      title = img(src = "img/COBI_logo.png", height = "52px")
+      title = img(src = "img/COBI-logotipo-horizontal-blanco.png", height = "52px")
     ),
     sidebar = dashboardSidebar(
       width = 275,

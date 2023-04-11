@@ -95,7 +95,12 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
                numericInput(inputId = quantityId,
                             label = unitLabel,
                             value = quantityDefault,
-                            min = 0)))
+                            min = 0)),
+        # column(width = 4,
+               # selectInput(inputId = "A",
+                           # label = "Responsable financiero",
+                           # choices = c("A", "B")))
+        )
     )
   }
 }
@@ -155,6 +160,13 @@ makeActivity <- function(activity, data_subphase, actors){
         width = 12,
         collapsed = T,
         collapsible = T,
+        column(
+          width = 6,
+          h4("Precio")),
+        column(
+          width = 6,
+          h4("Cantidad")
+        ),
         act_data %>% 
           filter(rubro == "[Costo definido por el usuario]") %$% # | concepto == "Otros costos directos"
           pmap(.l = list(rubro,
