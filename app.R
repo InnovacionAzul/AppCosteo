@@ -500,7 +500,7 @@ server <- function(input, output) {
                                        sheet = 1,
                                        na = c("", "N/A")) %>%
                        janitor::clean_names() %>%
-                       drop_na() %>% 
+                       drop_na(titulo) %>% 
                        pull(titulo) %>% 
                        unique())
     
@@ -508,7 +508,7 @@ server <- function(input, output) {
                                         sheet = 1,
                                         na = c("", "N/A")) %>%
                         janitor::clean_names() %>%
-                        drop_na() %>% 
+                        drop_na(autor) %>% 
                         pull(autor) %>% 
                         unique())
     
@@ -516,7 +516,7 @@ server <- function(input, output) {
                                        sheet = 1,
                                        na = c("", "N/A")) %>%
                        janitor::clean_names() %>%
-                       drop_na() %>% 
+                       drop_na(notas) %>% 
                        pull(notas) %>% 
                        unique())
     
