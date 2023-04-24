@@ -85,22 +85,18 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
     tagList(
       titleId,
       fluidRow(
-        column(width = 6,
-               numericInput(inputId = priceId,
-                            label = costLabel,
-                            value = priceDefault,
-                            min = 0)
-        ),
-        column(width = 6,
-               numericInput(inputId = quantityId,
-                            label = unitLabel,
-                            value = quantityDefault,
-                            min = 0)),
-        # column(width = 4,
-               # selectInput(inputId = "A",
-                           # label = "Responsable financiero",
-                           # choices = c("A", "B")))
-        )
+            column(width = 6,
+                   numericInput(inputId = priceId,
+                                label = costLabel,
+                                value = priceDefault,
+                                min = 0)
+            ),
+            column(width = 6,
+                   numericInput(inputId = quantityId,
+                                label = unitLabel,
+                                value = quantityDefault,
+                                min = 0))
+      )
     )
   }
 }
@@ -201,7 +197,7 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
       style = "border: 1px solid lightgray; margin: 15px; padding: 15px 15px 0px 0px; border-radius: 5px;",
       fluidRow(
         column(
-          width = 4,
+          width = 3,
           box(
             width = 12,
             background = "blue",
@@ -215,7 +211,7 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
           )
         ),
         column(
-          width = 8,
+          width = 9,
           map(.x = activities,
               .f = makeActivity,
               data_subphase = data_subphase,
