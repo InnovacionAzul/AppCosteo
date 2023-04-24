@@ -83,6 +83,8 @@ fip_data <- readxl::read_xlsx(
   na = c("", "N/A")) %>%
   janitor::clean_names() %>%
   select(-c(contains("orde"), contains("code"), responsable, cantidades, precio, id)) %>%
+  mutate(subfase = factor(x = subfase, levels = unique(subfase)),
+         actividad = factor(x = actividad, levels = unique(actividad))) %>% 
   group_by(fase) %>% 
   nest() %>% 
   mutate(fase_code = cur_group_id(),
