@@ -82,6 +82,9 @@ if(!is.null(params$plot1)){
 ```{r, echo=F, message=F, warning=F}
 if(nrow(params$summary_dat) > 0){
 d2 <- params$summary_dat %>%
+  mutate(concepto = ifelse(concepto == "Otro",
+                           paste(concepto, descripcion, sep = ": "),
+                           concepto)) %>% 
   group_by(section, concepto, fase) %>%
   summarize(`Actividades` = n_distinct(actividad),
             `Total ($)` = format(sum(total, na.rm = T), big.mark = ",")) %>%
