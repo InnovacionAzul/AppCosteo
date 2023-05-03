@@ -49,7 +49,7 @@ source("helpers.R")
 # DEFAULTS
 default_actors <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip2.xlsx",
+    "www/test.xlsx",
     sheet = 1,
     na = c("", "N/A")
   ) %>%
@@ -61,31 +61,30 @@ default_n <- length(default_actors)
 # REMA sheet
 rema_data <-
   readxl::read_xlsx(
-    "www/defaults_rema_fip2.xlsx",
+    "www/test.xlsx",
     sheet = 2,
     na = c("", "N/A")
   ) %>%
   janitor::clean_names() %>%
-  arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
-    precio = 0, #ifelse(is.na(precio), 0, precio),
-    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
+    precio = 0,
+    cantidades = 0,
     unidades = ifelse(is.na(unidades), "$/unidad", unidades),
-    fase_duracion = 12 * fase_duracion
+    fase_duracion = 12
   )
 
 # FIP sheet
 fip_data <- readxl::read_xlsx(
-  "www/defaults_rema_fip.xlsx",
+  "www/test.xlsx",
   sheet = 3,
   na = c("", "N/A")) %>%
   janitor::clean_names() %>%
   arrange(fase, subfase_orden, actividad_orden) %>%
   mutate(
-    precio = 0, #ifelse(is.na(precio), 0, precio),
-    cantidades = 0, #ifelse(is.na(cantidades), 0, cantidades),
+    precio = 0, 
+    cantidades = 0, 
     unidades = ifelse(is.na(unidades), "$/unidad", unidades),
-    fase_duracion = 12 * fase_duracion
+    fase_duracion = 12
   )
 
 # Combine sheets into a single tibble
@@ -101,7 +100,7 @@ ui <-
   dashboardPage(
     title = "Sistema de Costeo",
     header = dashboardHeader(
-      title = img(src = "img/COBI_logo.png", height = "52px")
+      title = img(src = "img/COBI-logotipo-horizontal-blanco.png", height = "52px")
     ),
     sidebar = dashboardSidebar(
       width = 275,
@@ -416,7 +415,6 @@ server <- function(input, output) {
             label = "Notas",
             resize = "both"
           ),
-          #uiOutput(outputId = "n_actors_ui"),
           numericInput(
             inputId = "n_actors",
             label = "Número de actores",
@@ -483,6 +481,9 @@ server <- function(input, output) {
   
   # Define values pertaining to actors -----------------------------------------
   values <- reactiveValues(
+    title = "",
+    author = "",
+    notes = "",
     n = default_n,
     actors = default_actors,
     user_actors = NULL,
@@ -495,19 +496,50 @@ server <- function(input, output) {
     
     file <- input$budget_upload
     
+    values$title <- (readxl::read_xlsx(file$datapath,
+                                       sheet = 1,
+                                       na = c("", "N/A")) %>%
+                       janitor::clean_names() %>%
+                       drop_na(titulo) %>% 
+                       pull(titulo) %>% 
+                       unique())
+    
+    values$author <- (readxl::read_xlsx(file$datapath,
+                                        sheet = 1,
+                                        na = c("", "N/A")) %>%
+                        janitor::clean_names() %>%
+                        drop_na(autor) %>% 
+                        pull(autor) %>% 
+                        unique())
+    
+    values$notes <- (readxl::read_xlsx(file$datapath,
+                                       sheet = 1,
+                                       na = c("", "N/A")) %>%
+                       janitor::clean_names() %>%
+                       drop_na(notas) %>% 
+                       pull(notas) %>% 
+                       unique())
+    
     values$user_actors <- (readxl::read_xlsx(file$datapath,
-                      sheet = 1,
-                      na = c("", "N/A")) %>%
-      janitor::clean_names() %>%
-      pull(actores) %>% 
-      unique())
+                                             sheet = 1,
+                                             na = c("", "N/A")) %>%
+                             janitor::clean_names() %>%
+                             pull(actores) %>% 
+                             unique())
     
     values$n <- length(values$user_actors)
     
+    # browser()
+    
+    updateTextInput(inputId = "title",
+                    value = values$title)
+    updateTextInput(inputId = "author",
+                    value = values$author)
+    updateTextAreaInput(inputId = "notes",
+                        value = values$notes)
     updateNumericInput(inputId = "n_actors",
                        value = values$n,
                        min = 1)
-    
   })
   
   # Define actors --------------------------------------------------------------
@@ -980,6 +1012,7 @@ server <- function(input, output) {
   
   ### Get totals for each activity
   totals <- reactive({
+    # browser()
     
     # Combine rema and fip cost and quantity data
     dat <- input_rv$rema %>%
@@ -1025,16 +1058,14 @@ server <- function(input, output) {
      inner_join(responsible, by = "resp_id") %>% 
      select(-c(freq_id, resp_id)) %>% # delete temp codes
      # calculate number of times each activity will occur and total cost
-     mutate(
-       eventos = ceiling(
-         (fase_duracion / 12) * case_when(
-           actividad_frecuencia == "Mensual" ~ 12,
-           actividad_frecuencia == "Trimestral" ~ 4,
-           actividad_frecuencia == "Semestral" ~ 2,
-           actividad_frecuencia == "Anual" ~ 1,
-           actividad_frecuencia == "Trienal" ~ 1/3,
-           TRUE ~ 0)),
-       total = precio * cantidades * eventos) %>%
+mutate(eventos = case_when(actividad_frecuencia == "Única" ~ 1,
+                                actividad_frecuencia == "Mensual" ~ fase_duracion,
+                                actividad_frecuencia == "Trimestral" ~ ceiling(fase_duracion/3),
+                                actividad_frecuencia == "Semestral" ~ ceiling(fase_duracion/6),
+                                actividad_frecuencia == "Anual" ~ ceiling(fase_duracion/12),
+                                actividad_frecuencia == "Trienal" ~ ceiling((fase_duracion/12)/3),
+                                T ~ 0),
+            total =  precio * cantidades * eventos) %>%
      select(
        section,
        fase,
@@ -1055,14 +1086,13 @@ server <- function(input, output) {
        total,
        -c(eventos, etapa)
      )
-    
     # Add any user input descriptions and units for "otra" expenses
     c$descripcion[c$id %in% otra_rv$df$id] <- otra_rv$df$des
     c$unidades[c$id %in% otra_rv$df$id] <- otra_rv$df$uni
     
     # Return
     c
-   
+    
   })
   
   ### Update totals (REMA)
@@ -1088,10 +1118,12 @@ server <- function(input, output) {
   # VALUE BOXES ----------------------------------------------------------------
   # Value box with total cost in USD for marine reserves
   output$REMAtotalUSD <- renderInfoBox({
+    
+    money <- scales::dollar_format(big.mark = ",", decimal.mark = ".")
 
     infoBox(
       title = "Costo total (Reserva)",
-      value = prettyNum(totals_rv$rema, big.mark = ","),
+      value = money(totals_rv$rema),
       subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
@@ -1102,9 +1134,11 @@ server <- function(input, output) {
   ### Value box with total cost in USD for FIP
   output$FIPtotalUSD <- renderInfoBox({
     
+    money <- scales::dollar_format(big.mark = ",", decimal.mark = ".")
+    
     infoBox(
       title = "Costo total (FIP)",
-      value = prettyNum(totals_rv$fip, big.mark = ","),
+      value = money(totals_rv$fip),
       subtitle = "MXN",
       icon = icon("dollar-sign"),
       fill = T,
@@ -1274,7 +1308,7 @@ server <- function(input, output) {
       
       writexl::write_xlsx(
         x = list(
-          METAADATA = tibble(Titulo = c(input$title, rep("", values$n -1)),
+          METADATA = tibble(Titulo = c(input$title, rep("", values$n -1)),
                              Autor = c(input$author, rep("", values$n -1)),
                              Notas = c(input$notes, rep("", values$n -1)),
                              Actores = values$ui_actors[values$ui_actors != "No Asignado"]),
@@ -1368,7 +1402,7 @@ server <- function(input, output) {
   
   # Keep track of manual changes to the names of "other inputs" ----------
   observe({
-    
+
     valid_otra_cost_inputs <- otra_rv$df$id[which(paste0("des_p_", otra_rv$df$id) %in% names(input))]
 
     req(length(valid_otra_cost_inputs) > 0)
@@ -1381,7 +1415,7 @@ server <- function(input, output) {
                                                 des = input[[.y]])
                                        })
     
-    otra_rv$df$des[otra_rv$df$id %in% otra_cost_names$activity_id] <- otra_cost_names
+    otra_rv$df$des[otra_rv$df$id %in% otra_cost_names$activity_id] <- otra_cost_names$des
     
   })
   
@@ -1400,7 +1434,7 @@ server <- function(input, output) {
                                                 des = input[[.y]])
                                        })
     
-    otra_rv$df$uni[otra_rv$df$id %in% otra_unit_names$activity_id] <- otra_unit_names
+    otra_rv$df$uni[otra_rv$df$id %in% otra_unit_names$activity_id] <- otra_unit_names$des
     
   })
 

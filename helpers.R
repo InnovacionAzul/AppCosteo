@@ -38,23 +38,25 @@ boxHeaderUI <- function(activity_id, default, actors, selected_actor){
 }
 
 ### Create cost and quantity input row for every activity
-makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NULL, quantityDefault = NULL, tooltipText = NULL, cost_data = NULL){
+makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NULL, quantityDefault = NULL, descText = NULL){
   # Define inputId labels for cost and units
   priceId <- paste0("p_", pairId)
   quantityId <- paste0("c_", pairId)
   
-  # Define cost and unit defaults for numeric inputs
-  if(is.null(priceDefault)) {
-    priceDefault <- cost_data$precio[cost_data$id == pairId]
-  }
-  if(is.null(quantityDefault)){
-    quantityDefault <- cost_data$cantidades[cost_data$id == pairId]
-  }
-  if(is.null(tooltipText)){
-    tooltipText <- cost_data$descripcion[cost_data$id == pairId]
-  }
+  # # Define cost and unit defaults for numeric inputs
+  # if(is.null(priceDefault)) {
+  #   priceDefault <- cost_data$precio[cost_data$id == pairId]
+  # }
+  # if(is.null(quantityDefault)){
+  #   quantityDefault <- cost_data$cantidades[cost_data$id == pairId]
+  # }
+  # if(is.null(descText)){
+  #   descText <- cost_data$descripcion[cost_data$id == pairId]
+  # }
   
   if(titleId == "[Costo definido por el usuario]"){
+    # browser()
+    
     
     tagList(
       titleId,
@@ -62,7 +64,7 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
         column(width = 6,
                textInput(inputId = paste0("des_", priceId),
                          label = NULL,
-                         value = "Definido por el usuario"),
+                         value = descText),
                numericInput(inputId = priceId,
                             label = NULL,
                             value = priceDefault,
@@ -71,40 +73,31 @@ makeElement <- function(titleId, pairId, costLabel, unitLabel, priceDefault = NU
         column(width = 6,
                textInput(inputId = paste0("des_", quantityId),
                          label = NULL,
-                         value = "unidades"),
+                         value = unitLabel),
                numericInput(inputId = quantityId,
                             label = NULL,
                             value = quantityDefault,
-                            min = 0))),
-      bsTooltip(id = priceId,
-                title = tooltipText,
-                placement = "right",
-                trigger = "hover",
-                options = list(container = "body"))
+                            min = 0)))
     )
     
   }else{
-  
-  tagList(
-    titleId,
-    fluidRow(
-      column(width = 6,
-             numericInput(inputId = priceId,
-                          label = costLabel,
-                          value = priceDefault,
-                          min = 0)
-      ),
-      column(width = 6,
-             numericInput(inputId = quantityId,
-                          label = unitLabel,
-                          value = quantityDefault,
-                          min = 0))),
-    bsTooltip(id = priceId,
-              title = tooltipText,
-              placement = "right",
-              trigger = "hover",
-              options = list(container = "body"))
-  )
+    
+    tagList(
+      titleId,
+      fluidRow(
+            column(width = 6,
+                   numericInput(inputId = priceId,
+                                label = costLabel,
+                                value = priceDefault,
+                                min = 0)
+            ),
+            column(width = 6,
+                   numericInput(inputId = quantityId,
+                                label = unitLabel,
+                                value = quantityDefault,
+                                min = 0))
+      )
+    )
   }
 }
 
@@ -146,15 +139,43 @@ makeActivity <- function(activity, data_subphase, actors){
                 selected_actor = out),
     
     # Insert columns for price and quantities
-    act_data %$%
+    act_data %>% 
+      filter(!rubro == "[Costo definido por el usuario]") %$%
       pmap(.l = list(rubro,
                      id,
                      unidades,
                      stringr::str_remove_all(unidades, "[$/]"),
                      precio,
-                     cantidades),
+                     cantidades,
+                     descripcion),
            .f = makeElement
-      )
+      ),
+    
+    box(title = "Otros costos",
+        status = "info",
+        width = 12,
+        collapsed = T,
+        collapsible = T,
+        column(
+          width = 6,
+          h4("Precio")),
+        column(
+          width = 6,
+          h4("Cantidad")
+        ),
+        act_data %>% 
+          filter(rubro == "[Costo definido por el usuario]") %$% # | concepto == "Otros costos directos"
+          pmap(.l = list(rubro,
+                         id,
+                         unidades,
+                         stringr::str_remove_all(unidades, "[$/]"),
+                         precio,
+                         cantidades,
+                         descripcion),
+               .f = makeElement
+          )
+        
+        )
   )
 }
 
@@ -176,7 +197,7 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
       style = "border: 1px solid lightgray; margin: 15px; padding: 15px 15px 0px 0px; border-radius: 5px;",
       fluidRow(
         column(
-          width = 4,
+          width = 3,
           box(
             width = 12,
             background = "blue",
@@ -187,18 +208,10 @@ makeSubphase <- function(subphase, number, data_fase, actors = NULL){
               icon = NULL, 
               color = "blue"
             )
-            # column(width = 12,
-            #        selectInput(
-            #          inputId = subphase_code,
-            #          label = "Responsable financiero",
-            #          choices = actors,
-            #          selected = selected_actor
-            #        )
-            # )
           )
         ),
         column(
-          width = 8,
+          width = 9,
           map(.x = activities,
               .f = makeActivity,
               data_subphase = data_subphase,
@@ -217,12 +230,14 @@ makeSubphases <- function(data, phase, section, subphases_to_include = NULL, act
                       section == section) %>%
     arrange(subfase_orden)
   
+  # browser()
   if(phase == "Implementación" & section == "FIP"){
+    # browser()
     subfases <- subphases_to_include
-    numbers <- seq(1:length(subfases))
+    numbers <- ifelse(length(subfases) == 0, 1, 1:length(subfases))
   } else {
     subfases <- unique(data_fase$subfase)
-    numbers <- seq(1:length(subfases))
+    numbers <- 1:length(subfases)
   }
   
   tagList(
